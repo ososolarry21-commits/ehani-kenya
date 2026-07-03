@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import './globals.css'
 import Footer from './components/footer'
 import { createClient } from '@supabase/supabase-js'
+import { metadata } from './metadata'
 
 // Initialize Supabase for the logout function
 const supabase = createClient(
