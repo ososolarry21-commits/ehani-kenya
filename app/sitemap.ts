@@ -8,7 +8,7 @@ const supabase = createClient(
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // IMPORTANT: Use your current Vercel URL here!
-  const baseUrl = 'https://vesta-kenya-fawn.vercel.app' 
+  const baseUrl = 'https://ehani.co.ke' 
 
   // Fetch all verified listings
   const { data: listings } = await supabase
