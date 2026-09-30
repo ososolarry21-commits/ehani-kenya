@@ -49,7 +49,7 @@ export default function Footer() {
       </div>
       
       <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>
-        © 2026 Vesta Kenya. All rights reserved.
+        © 2026 Ehani Kenya. All rights reserved.
       </p>
     </footer>
   )
