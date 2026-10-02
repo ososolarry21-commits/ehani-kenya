@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export default function Footer() {
   return (
     <footer style={{ 
@@ -48,6 +50,21 @@ export default function Footer() {
         </a>
       </div>
       
+      {/* Added Terms & Conditions Link */}
+      <div style={{ marginBottom: 16 }}>
+        <Link 
+          href="/terms" 
+          style={{ 
+            color: '#D4873A', 
+            textDecoration: 'none', 
+            fontSize: 12, 
+            fontWeight: 600 
+          }}
+        >
+          Terms & Conditions | Privacy Policy
+        </Link>
+      </div>
+
       <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>
         © 2026 Ehani Kenya. All rights reserved.
       </p>
