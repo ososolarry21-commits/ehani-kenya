@@ -199,7 +199,7 @@ console.log('Detected role:', dbRole)
             }} 
           />
           <p style={{ color: '#6B5B4E', margin: 0, fontSize: 13, letterSpacing: '0.5px' }}>
-            Student Accommodation Platform
+            Search. Settle. Study.
           </p>
         </div>
         
