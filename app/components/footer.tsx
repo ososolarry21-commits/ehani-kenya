@@ -9,6 +9,7 @@ export default function Footer() {
       textAlign: 'center', 
       marginTop: 'auto' 
     }}>
+      {/* Contact Section */}
       <h3 style={{ margin: '0 0 20px 0', fontSize: 18, fontWeight: 700 }}>
         Need Help? Contact Customer Support
       </h3>
@@ -18,7 +19,7 @@ export default function Footer() {
         justifyContent: 'center', 
         gap: 24, 
         flexWrap: 'wrap', 
-        marginBottom: 24 
+        marginBottom: 30 
       }}>
         <a 
           href="tel:0710236242" 
@@ -46,25 +47,32 @@ export default function Footer() {
             borderRadius: 8
           }}
         >
-           Airtel: 0107 650 275
+           📞 Airtel: 0107 650 275
         </a>
       </div>
-      
-      {/* Added Terms & Conditions Link */}
-      <div style={{ marginBottom: 16 }}>
-        <Link 
-          href="/terms" 
-          style={{ 
-            color: '#D4873A', 
-            textDecoration: 'none', 
-            fontSize: 12, 
-            fontWeight: 600 
-          }}
-        >
-          Terms & Conditions | Privacy Policy
+
+      {/* Navigation Links Section */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        gap: 20, 
+        flexWrap: 'wrap', 
+        marginBottom: 20,
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        paddingTop: 20
+      }}>
+        <Link href="/" style={{ color: '#D4873A', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
+          Home
+        </Link>
+        <Link href="/about" style={{ color: '#D4873A', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
+          About Us
+        </Link>
+        <Link href="/terms" style={{ color: '#D4873A', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
+          Terms & Privacy
         </Link>
       </div>
-
+      
+      {/* Copyright Section */}
       <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>
         © 2026 Ehani Kenya. All rights reserved.
       </p>
