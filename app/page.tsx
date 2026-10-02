@@ -189,7 +189,7 @@ console.log('Detected role:', dbRole)
         }}>
           <img 
             src="/logo.png" 
-            alt="Vesta" 
+            alt="Ehani" 
             style={{ 
               height: '100px', 
               width: 'auto',
