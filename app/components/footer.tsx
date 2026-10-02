@@ -67,6 +67,9 @@ export default function Footer() {
         <Link href="/about" style={{ color: '#D4873A', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
           About Us
         </Link>
+        <Link href="/landlords" style={{ color: '#D4873A', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
+          For Landlords
+        </Link>
         <Link href="/terms" style={{ color: '#D4873A', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
           Terms & Privacy
         </Link>
