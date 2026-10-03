@@ -28,8 +28,23 @@ export default function BrowseListings() {
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) console.error('Error fetching listings:', error);
-    else setListings(data || []);
+    if (error) {
+      console.error('Error fetching listings:', error);
+      setLoading(false);
+      return;
+    }
+
+    // SMART SORTING: Featured (1) > Verified (2) > Basic/Undefined (3)
+    const sortedData = (data || []).sort((a, b) => {
+      const tierValue = (tier: string | undefined) => {
+        if (tier === 'featured') return 1;
+        if (tier === 'verified') return 2;
+        return 3; // basic or null/undefined
+      };
+      return tierValue(a.tier) - tierValue(b.tier);
+    });
+
+    setListings(sortedData);
     setLoading(false);
   }
 
@@ -90,7 +105,7 @@ export default function BrowseListings() {
         >
           <img
             src="/logo.png"
-            alt="Vesta"
+            alt="Ehani"
             style={{
               height: '45px',
               width: 'auto',
@@ -212,7 +227,7 @@ export default function BrowseListings() {
               transition: 'all 0.2s ease',
             }}
           >
-            {showFilters ? '✕ Hide Filters' : '️ Show Filters'}
+            {showFilters ? '✕ Hide Filters' : '⚙️ Show Filters'}
           </button>
 
           {showFilters && (
@@ -374,26 +389,28 @@ export default function BrowseListings() {
                   >
                     {listing.type}
                   </div>
-                  {listing.is_verified && (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: 10,
-                        left: 10,
-                        background: 'linear-gradient(135deg, #007BFF, #0056b3)',
-                        color: 'white',
-                        padding: '4px 10px',
-                        borderRadius: 6,
-                        fontSize: 10,
-                        fontWeight: 800,
-                        boxShadow: '0 2px 10px rgba(0,123,255,0.3)',
-                      }}
-                    >
-                      ★ VERIFIED
+                  
+                  {/* --- NEW TIER BADGES --- */}
+                  {listing.tier === 'featured' && (
+                    <div style={{ position: 'absolute', top: 10, left: 10, background: 'linear-gradient(135deg, #F59E0B, #D97706)', color: 'white', padding: '4px 10px', borderRadius: 6, fontSize: 10, fontWeight: 800, boxShadow: '0 2px 10px rgba(245, 158, 11, 0.4)' }}>
+                      🌟 TOP PICK
+                    </div>
+                  )}
+                  {listing.tier === 'verified' && (
+                    <div style={{ position: 'absolute', top: 10, left: 10, background: 'linear-gradient(135deg, #22C55E, #16A34A)', color: 'white', padding: '4px 10px', borderRadius: 6, fontSize: 10, fontWeight: 800, boxShadow: '0 2px 10px rgba(34, 197, 94, 0.3)' }}>
+                      🛡️ VERIFIED
                     </div>
                   )}
                 </div>
+                
                 <div style={{ padding: 16 }}>
+                  {/* --- BASIC WARNING BANNER --- */}
+                  {(!listing.tier || listing.tier === 'basic') && (
+                    <div style={{ background: '#FEF08A', color: '#854D0E', padding: '8px', borderRadius: 6, fontSize: 11, fontWeight: 'bold', marginBottom: 12, border: '1px solid #EAB308', textAlign: 'center' }}>
+                      ⚠️ UNVERIFIED. Proceed with caution.
+                    </div>
+                  )}
+
                   <h3
                     style={{
                       margin: '0 0 6px 0',
