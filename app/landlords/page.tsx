@@ -1,8 +1,6 @@
 import Link from 'next/link'
 
 export default function LandlordsPage() {
-  const whatsappNumber = "254710236242"; 
-
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '40px 20px', fontFamily: 'sans-serif', color: '#333' }}>
       <Link href="/" style={{ color: '#D4873A', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}>
@@ -18,7 +16,7 @@ export default function LandlordsPage() {
         </p>
       </div>
 
-      {/* HOW VERIFICATION WORKS - CRITICAL FOR TRUST */}
+      {/* HOW VERIFICATION WORKS */}
       <div style={{ background: '#F0EAE3', padding: '30px', borderRadius: '12px', marginBottom: '50px', textAlign: 'center' }}>
         <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#1C1209', marginBottom: '20px' }}>
           🛡️ How Our Physical Verification Works
@@ -40,7 +38,7 @@ export default function LandlordsPage() {
             <p style={{ fontSize: '14px', color: '#555', margin: 0 }}>Our Ehani field agents physically visit the property to confirm it exists and is safe.</p>
           </div>
           <div style={{ flex: '1 1 250px', maxWidth: '300px' }}>
-            <div style={{ fontSize: '32px', marginBottom: '10px' }}>4️⃣</div>
+            <div style={{ fontSize: '32px', marginBottom: '10px' }}>4️</div>
             <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 8px 0' }}>You Get Calls</h3>
             <p style={{ fontSize: '14px', color: '#555', margin: 0 }}>Once approved, your listing gets the Green Badge and your phone number is revealed.</p>
           </div>
@@ -99,6 +97,7 @@ export default function LandlordsPage() {
 
       </div>
 
+      {/* BOTTOM CTA SECTION - UPDATED FOR SALES EMAIL */}
       <div style={{ marginTop: '60px', textAlign: 'center', background: '#f9f9f9', padding: '40px 30px', borderRadius: '12px' }}>
         <h3 style={{ fontSize: '24px', fontWeight: '800', color: '#1C1209', marginBottom: '12px' }}>
           Ready to fill your vacancies?
@@ -106,15 +105,15 @@ export default function LandlordsPage() {
         <p style={{ color: '#666', marginBottom: '24px', fontSize: '16px', maxWidth: '600px', margin: '0 auto 24px auto' }}>
           Create an account above to upload your property directly. 
           <br />
-          <strong style={{ color: '#D4873A' }}>Are you a Property Agent managing multiple houses?</strong> Message us for bulk listing discounts!
+          <strong style={{ color: '#D4873A' }}>Are you a Property Agent managing multiple houses?</strong> Contact our sales team for bulk listing discounts!
         </p>
         
         <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
           <a href="/" style={{ color: '#1C1209', fontWeight: '700', fontSize: '16px', textDecoration: 'none', border: '2px solid #1C1209', padding: '12px 24px', borderRadius: '8px', background: 'white' }}>
             Create Account
           </a>
-          <a href={`https://wa.me/${whatsappNumber}`} target="_blank" style={{ color: 'white', fontWeight: '700', fontSize: '16px', textDecoration: 'none', background: '#25D366', padding: '12px 24px', borderRadius: '8px' }}>
-            💬 Chat with Ehani Team
+          <a href="mailto:sales@ehani.co.ke?subject=Agent Bulk Listing Inquiry" style={{ color: 'white', fontWeight: '700', fontSize: '16px', textDecoration: 'none', background: '#D4873A', padding: '12px 24px', borderRadius: '8px' }}>
+            📧 Contact Sales Team
           </a>
         </div>
       </div>
