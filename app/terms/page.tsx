@@ -2,95 +2,121 @@ import Link from 'next/link'
 
 export default function TermsPage() {
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px', fontFamily: 'sans-serif', color: '#333' }}>
-      <Link href="/" style={{ color: '#D4873A', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}>
-        ← Back to Home
-      </Link>
+    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '60px 20px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif', color: '#1C1209', background: '#FFFFFF' }}>
       
-      <h1 style={{ fontSize: '32px', fontWeight: '800', color: '#1C1209', marginTop: '20px', marginBottom: '10px' }}>
-        Terms and Conditions & Privacy Policy
-      </h1>
-      <p style={{ color: '#666', marginBottom: '30px' }}>Last Updated: October 1, 2026</p>
+      {/* Navigation */}
+      <div style={{ marginBottom: '60px' }}>
+        <Link href="/" style={{ color: '#6B5B4E', textDecoration: 'none', fontSize: '14px', fontWeight: '500', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          Back to Home
+        </Link>
+      </div>
 
-      <h2 style={{ fontSize: '20px', fontWeight: '700', marginTop: '24px', marginBottom: '12px' }}>1. Introduction</h2>
-      <p style={{ lineHeight: '1.6', marginBottom: '16px' }}>
-        Welcome to Ehani Kenya ("we," "our," or "us"). These Terms and Conditions ("Terms") govern your use of our website (ehani.co.ke) and services. By accessing or using Ehani Kenya, you agree to be bound by these Terms. If you do not agree, please do not use our platform.
-      </p>
+      {/* Header */}
+      <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+        <h1 style={{ fontSize: '40px', fontWeight: '800', color: '#1C1209', marginBottom: '16px', letterSpacing: '-1px' }}>
+          Terms of Service & Privacy Policy
+        </h1>
+        <p style={{ fontSize: '16px', color: '#6B5B4E', maxWidth: '600px', margin: '0 auto' }}>
+          Last updated: October 2026. Please read these terms carefully before using the Ehani Kenya platform.
+        </p>
+      </div>
 
-      <h2 style={{ fontSize: '20px', fontWeight: '700', marginTop: '24px', marginBottom: '12px' }}>2. Nature of Our Services</h2>
-      <p style={{ lineHeight: '1.6', marginBottom: '16px' }}>
-        Ehani Kenya is an online technology platform that connects <strong>students in higher learning institutions</strong> seeking accommodation ("Students") with property owners and agents ("Landlords"). 
-      </p>
-      <p style={{ lineHeight: '1.6', marginBottom: '16px' }}>
-        <strong>We are an intermediary:</strong> Ehani Kenya is not a real estate agent, property manager, or landlord. We do not own, manage, or lease the properties listed on our platform. While we strive to verify listings, we do not guarantee the physical condition, legality, or continuous availability of any property listed. Students are strongly advised to physically inspect any property before making any rental payments directly to a Landlord.
-      </p>
+      {/* Terms of Service Section */}
+      <div style={{ marginBottom: '60px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+          <div style={{ width: '40px', height: '40px', background: '#FDF8F3', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D4873A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          </div>
+          <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#1C1209', margin: 0 }}>Terms of Service</h2>
+        </div>
 
-      <h2 style={{ fontSize: '20px', fontWeight: '700', marginTop: '24px', marginBottom: '12px' }}>3. User Accounts and Responsibilities</h2>
-      <p style={{ lineHeight: '1.6', marginBottom: '16px' }}>
-        To use certain features, you must create an account. You are responsible for maintaining the confidentiality of your account and password.
-      </p>
-      <p style={{ lineHeight: '1.6', marginBottom: '16px' }}>
-        <strong>Students:</strong> You agree to use the platform solely for finding accommodation. You will not harass, spam, or misrepresent yourself to Landlords.
-      </p>
-      <p style={{ lineHeight: '1.6', marginBottom: '16px' }}>
-        <strong>Landlords/Agents:</strong> You agree to provide accurate, truthful, and up-to-date information regarding your properties. You must have the legal right to lease the property you list.
-      </p>
+        <div style={{ paddingLeft: '52px' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1C1209', marginBottom: '8px' }}>1. Acceptance of Terms</h3>
+            <p style={{ fontSize: '15px', color: '#4B5563', lineHeight: '1.6', margin: 0 }}>
+              By accessing or using the Ehani Kenya platform ("Platform"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our services.
+            </p>
+          </div>
 
-      <h2 style={{ fontSize: '20px', fontWeight: '700', marginTop: '24px', marginBottom: '12px' }}>4. Verification and Payments</h2>
-      <p style={{ lineHeight: '1.6', marginBottom: '16px' }}>
-        <strong>Verification Fee:</strong> To build trust, Landlords may be required to pay a one-time verification fee (currently KSh 500) via M-Pesa. 
-      </p>
-      <p style={{ lineHeight: '1.6', marginBottom: '16px' }}>
-        <strong>What "Verified" Means:</strong> A "Verified" badge indicates that Ehani Kenya has collected basic documentation and confirmed the Landlord's identity and contact details. It does not constitute a legal guarantee of the property's structural integrity or legal compliance.
-      </p>
-      <p style={{ lineHeight: '1.6', marginBottom: '16px' }}>
-        <strong>Refunds:</strong> Verification fees are non-refundable once the verification process has been initiated, as they cover administrative and technical costs.
-      </p>
+          <div style={{ marginBottom: '24px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1C1209', marginBottom: '8px' }}>2. User Obligations</h3>
+            <p style={{ fontSize: '15px', color: '#4B5563', lineHeight: '1.6', margin: 0 }}>
+              <strong>Landlords and Agents:</strong> You warrant that all property listings, photos, and pricing information provided are accurate and that you have the legal right to lease the property. 
+              <br /><br />
+              <strong>Students and Tenants:</strong> You agree to use the Platform solely for the purpose of finding accommodation and to interact with landlords in a respectful and lawful manner.
+            </p>
+          </div>
 
-      <h2 style={{ fontSize: '20px', fontWeight: '700', marginTop: '24px', marginBottom: '12px' }}>5. Limitation of Liability</h2>
-      <p style={{ lineHeight: '1.6', marginBottom: '16px' }}>
-        To the maximum extent permitted by the laws of Kenya, Ehani Kenya shall not be liable for any indirect, incidental, or consequential damages arising from disputes between Students and Landlords regarding rent, deposits, or property conditions, or any inaccuracies in the listings provided by Landlords.
-      </p>
+          <div style={{ marginBottom: '24px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1C1209', marginBottom: '8px' }}>3. Prohibited Conduct</h3>
+            <p style={{ fontSize: '15px', color: '#4B5563', lineHeight: '1.6', margin: 0 }}>
+              Users are strictly prohibited from posting fraudulent listings, engaging in rental scams, misrepresenting property conditions, or using the Platform for any unlawful activities. Ehani Kenya reserves the right to terminate accounts that violate these policies without notice.
+            </p>
+          </div>
 
-      <h2 style={{ fontSize: '20px', fontWeight: '700', marginTop: '24px', marginBottom: '12px' }}>6. Privacy Policy (Data Protection)</h2>
-      <p style={{ lineHeight: '1.6', marginBottom: '16px' }}>
-        We are committed to protecting your personal data in accordance with the <strong>Data Protection Act, 2019 of Kenya</strong>.
-      </p>
-      <p style={{ lineHeight: '1.6', marginBottom: '16px' }}>
-        <strong>Data We Collect:</strong> We collect names, phone numbers, email addresses, and M-Pesa transaction details.
-      </p>
-      <p style={{ lineHeight: '1.6', marginBottom: '16px' }}>
-        <strong>How We Use It:</strong> We use this data to facilitate connections between Students and Landlords, process verification payments, and send service updates.
-      </p>
-      <p style={{ lineHeight: '1.6', marginBottom: '16px' }}>
-        <strong>Data Sharing:</strong> We do not sell your data. We only share necessary contact details (like a Landlord's phone number) with a Student when the Student expresses genuine interest in a listing.
-      </p>
-      <p style={{ lineHeight: '1.6', marginBottom: '16px' }}>
-        <strong>Your Rights:</strong> You have the right to request access to, correction, or deletion of your personal data by contacting us at support@ehani.co.ke.
-      </p>
+          <div style={{ marginBottom: '24px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1C1209', marginBottom: '8px' }}>4. Platform Role & Limitation of Liability</h3>
+            <p style={{ fontSize: '15px', color: '#4B5563', lineHeight: '1.6', margin: 0 }}>
+              Ehani Kenya acts as an intermediary technology platform connecting property owners with prospective tenants. While we conduct physical verification checks on "Verified" listings, we do not own or manage the properties. We are not liable for any disputes, damages, or losses arising from rental agreements entered into between users.
+            </p>
+          </div>
+        </div>
+      </div>
 
-      <h2 style={{ fontSize: '20px', fontWeight: '700', marginTop: '24px', marginBottom: '12px' }}>7. Prohibited Activities</h2>
-      <p style={{ lineHeight: '1.6', marginBottom: '16px' }}>
-        You agree not to use the platform to post fraudulent or misleading listings, discriminate against any user based on race, gender, religion, or ethnicity, or attempt to hack, disrupt, or reverse-engineer the Ehani Kenya platform.
-      </p>
+      {/* Privacy Policy Section */}
+      <div style={{ marginBottom: '60px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+          <div style={{ width: '40px', height: '40px', background: '#FDF8F3', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D4873A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          </div>
+          <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#1C1209', margin: 0 }}>Privacy Policy</h2>
+        </div>
 
-      <h2 style={{ fontSize: '20px', fontWeight: '700', marginTop: '24px', marginBottom: '12px' }}>8. Governing Law and Dispute Resolution</h2>
-      <p style={{ lineHeight: '1.6', marginBottom: '16px' }}>
-        These Terms shall be governed by and construed in accordance with the laws of the Republic of Kenya. Any disputes arising from these Terms shall first be resolved through amicable mediation. If unresolved, the dispute shall be subject to the exclusive jurisdiction of the courts of Kenya.
-      </p>
+        <div style={{ paddingLeft: '52px' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1C1209', marginBottom: '8px' }}>1. Information We Collect</h3>
+            <p style={{ fontSize: '15px', color: '#4B5563', lineHeight: '1.6', margin: 0 }}>
+              We collect information you provide directly to us, such as your name, email address, phone number, and property details when you create an account or list a property. We also collect automated data like IP addresses and browser types to improve our services.
+            </p>
+          </div>
 
-      <h2 style={{ fontSize: '20px', fontWeight: '700', marginTop: '24px', marginBottom: '12px' }}>9. Contact Us</h2>
-      <p style={{ lineHeight: '1.6', marginBottom: '16px' }}>
-        If you have any questions about these Terms, please contact us at:
-      </p>
-      <p style={{ lineHeight: '1.6', marginBottom: '16px' }}>
-        <strong>Email:</strong> support@ehani.co.ke<br />
-        <strong>Phone:</strong> +254 710 236 242
-      </p>
+          <div style={{ marginBottom: '24px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1C1209', marginBottom: '8px' }}>2. How We Use Your Information</h3>
+            <p style={{ fontSize: '15px', color: '#4B5563', lineHeight: '1.6', margin: 0 }}>
+              Your information is used to facilitate connections between landlords and students, process verification fees, send platform updates, and improve our verification algorithms. We do not sell, trade, or rent your personal identification information to third parties.
+            </p>
+          </div>
 
-      <div style={{ marginTop: '50px', borderTop: '1px solid #eee', paddingTop: '20px', textAlign: 'center' }}>
-        <Link href="/" style={{ color: '#D4873A', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}>
-          ← Back to Home
+          <div style={{ marginBottom: '24px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1C1209', marginBottom: '8px' }}>3. Data Security</h3>
+            <p style={{ fontSize: '15px', color: '#4B5563', lineHeight: '1.6', margin: 0 }}>
+              We implement industry-standard security measures to protect your data against unauthorized access, alteration, or destruction. However, no method of transmission over the internet is 100% secure, and we cannot guarantee absolute security.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Contact Section */}
+      <div style={{ background: '#F9FAFB', padding: '40px', borderRadius: '16px', border: '1px solid #F0EAE3', textAlign: 'center' }}>
+        <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#1C1209', marginBottom: '12px' }}>Questions or Concerns?</h3>
+        <p style={{ fontSize: '15px', color: '#6B5B4E', marginBottom: '24px', lineHeight: '1.6' }}>
+          If you have any questions regarding these terms or our privacy practices, please contact our legal and support team.
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
+          <a href="mailto:support@ehani.co.ke" style={{ color: '#1C1209', fontWeight: '600', fontSize: '14px', textDecoration: 'none', background: 'white', padding: '10px 20px', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
+            support@ehani.co.ke
+          </a>
+          <a href="mailto:sales@ehani.co.ke" style={{ color: '#1C1209', fontWeight: '600', fontSize: '14px', textDecoration: 'none', background: 'white', padding: '10px 20px', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
+            sales@ehani.co.ke
+          </a>
+        </div>
+      </div>
+
+      {/* Footer Link */}
+      <div style={{ marginTop: '60px', textAlign: 'center' }}>
+        <Link href="/" style={{ color: '#6B5B4E', textDecoration: 'none', fontSize: '13px', fontWeight: '500' }}>
+          © 2026 Ehani Kenya. All rights reserved.
         </Link>
       </div>
     </div>
