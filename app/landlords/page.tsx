@@ -23,17 +23,17 @@ export default function LandlordsPage() {
         </h2>
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '30px', textAlign: 'left' }}>
           <div style={{ flex: '1 1 250px', maxWidth: '300px' }}>
-            <div style={{ fontSize: '32px', marginBottom: '10px' }}>1️⃣</div>
+            <div style={{ fontSize: '32px', marginBottom: '10px' }}>1️</div>
             <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 8px 0' }}>You Upload</h3>
             <p style={{ fontSize: '14px', color: '#555', margin: 0 }}>Create an account and upload your property photos and details directly to the site.</p>
           </div>
           <div style={{ flex: '1 1 250px', maxWidth: '300px' }}>
-            <div style={{ fontSize: '32px', marginBottom: '10px' }}>2️⃣</div>
+            <div style={{ fontSize: '32px', marginBottom: '10px' }}>2️</div>
             <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 8px 0' }}>You Upgrade</h3>
             <p style={{ fontSize: '14px', color: '#555', margin: 0 }}>Pay the KSh 500 verification fee to request an inspection.</p>
           </div>
           <div style={{ flex: '1 1 250px', maxWidth: '300px' }}>
-            <div style={{ fontSize: '32px', marginBottom: '10px' }}>3️⃣</div>
+            <div style={{ fontSize: '32px', marginBottom: '10px' }}>3️</div>
             <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 8px 0' }}>We Inspect</h3>
             <p style={{ fontSize: '14px', color: '#555', margin: 0 }}>Our Ehani field agents physically visit the property to confirm it exists and is safe.</p>
           </div>
