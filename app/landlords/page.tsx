@@ -1,6 +1,8 @@
 import Link from 'next/link'
 
 export default function LandlordsPage() {
+  const whatsappNumber = "254710236242"; 
+
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '40px 20px', fontFamily: 'sans-serif', color: '#333' }}>
       <Link href="/" style={{ color: '#D4873A', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold' }}>
@@ -12,8 +14,37 @@ export default function LandlordsPage() {
           List Your Property on Ehani Kenya
         </h1>
         <p style={{ fontSize: '18px', color: '#666', maxWidth: '600px', margin: '0 auto' }}>
-          Reach thousands of students in higher learning institutions. Choose the plan that fits your needs and start getting calls today.
+          Upload your property details directly to our platform and reach thousands of verified students.
         </p>
+      </div>
+
+      {/* HOW VERIFICATION WORKS - CRITICAL FOR TRUST */}
+      <div style={{ background: '#F0EAE3', padding: '30px', borderRadius: '12px', marginBottom: '50px', textAlign: 'center' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#1C1209', marginBottom: '20px' }}>
+          🛡️ How Our Physical Verification Works
+        </h2>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '30px', textAlign: 'left' }}>
+          <div style={{ flex: '1 1 250px', maxWidth: '300px' }}>
+            <div style={{ fontSize: '32px', marginBottom: '10px' }}>1️⃣</div>
+            <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 8px 0' }}>You Upload</h3>
+            <p style={{ fontSize: '14px', color: '#555', margin: 0 }}>Create an account and upload your property photos and details directly to the site.</p>
+          </div>
+          <div style={{ flex: '1 1 250px', maxWidth: '300px' }}>
+            <div style={{ fontSize: '32px', marginBottom: '10px' }}>2️⃣</div>
+            <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 8px 0' }}>You Upgrade</h3>
+            <p style={{ fontSize: '14px', color: '#555', margin: 0 }}>Pay the KSh 500 verification fee to request an inspection.</p>
+          </div>
+          <div style={{ flex: '1 1 250px', maxWidth: '300px' }}>
+            <div style={{ fontSize: '32px', marginBottom: '10px' }}>3️⃣</div>
+            <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 8px 0' }}>We Inspect</h3>
+            <p style={{ fontSize: '14px', color: '#555', margin: 0 }}>Our Ehani field agents physically visit the property to confirm it exists and is safe.</p>
+          </div>
+          <div style={{ flex: '1 1 250px', maxWidth: '300px' }}>
+            <div style={{ fontSize: '32px', marginBottom: '10px' }}>4️⃣</div>
+            <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 8px 0' }}>You Get Calls</h3>
+            <p style={{ fontSize: '14px', color: '#555', margin: 0 }}>Once approved, your listing gets the Green Badge and your phone number is revealed.</p>
+          </div>
+        </div>
       </div>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '24px' }}>
@@ -23,13 +54,13 @@ export default function LandlordsPage() {
           <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#1C1209', margin: '0 0 8px 0' }}>Basic Listing</h3>
           <p style={{ fontSize: '32px', fontWeight: '800', color: '#1C1209', margin: '0 0 16px 0' }}>FREE</p>
           <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px 0', lineHeight: '1.8', color: '#555' }}>
-            <li>✅ List up to 1 property</li>
+            <li>✅ Upload up to 1 property</li>
             <li>✅ Appears in standard search</li>
             <li>⚠️ Phone number hidden behind safety warning</li>
             <li>❌ No "Verified" badge</li>
           </ul>
-          <a href="mailto:support@ehani.co.ke?subject=New Basic Listing Request" style={{ display: 'block', textAlign: 'center', background: '#f0f0f0', color: '#333', padding: '12px', borderRadius: '8px', textDecoration: 'none', fontWeight: '600' }}>
-            Get Started Free
+          <a href="/" style={{ display: 'block', textAlign: 'center', background: '#f0f0f0', color: '#333', padding: '12px', borderRadius: '8px', textDecoration: 'none', fontWeight: '600' }}>
+            Create Free Account
           </a>
         </div>
 
@@ -39,15 +70,15 @@ export default function LandlordsPage() {
             MOST POPULAR
           </div>
           <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#1C1209', margin: '0 0 8px 0' }}>Verified Listing</h3>
-          <p style={{ fontSize: '32px', fontWeight: '800', color: '#D4873A', margin: '0 0 16px 0' }}>KSh 500 <span style={{ fontSize: '14px', fontWeight: '400', color: '#666' }}>/ listing</span></p>
+          <p style={{ fontSize: '32px', fontWeight: '800', color: '#D4873A', margin: '0 0 16px 0' }}>KSh 500 <span style={{ fontSize: '14px', fontWeight: '400', color: '#666' }}>/ inspection</span></p>
           <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px 0', lineHeight: '1.8', color: '#555' }}>
-            <li>✅ <strong>Manual ID & Photo Check</strong> (No spam!)</li>
+            <li>✅ <strong>Physical Agent Inspection</strong></li>
             <li>✅ Official 🛡️ "Ehani Verified" Green Badge</li>
             <li>✅ Phone number clearly visible</li>
             <li>✅ Priority placement in search results</li>
           </ul>
-          <a href="mailto:support@ehani.co.ke?subject=Verified Listing Request" style={{ display: 'block', textAlign: 'center', background: '#D4873A', color: 'white', padding: '12px', borderRadius: '8px', textDecoration: 'none', fontWeight: '600' }}>
-            Get Verified Now
+          <a href="/" style={{ display: 'block', textAlign: 'center', background: '#D4873A', color: 'white', padding: '12px', borderRadius: '8px', textDecoration: 'none', fontWeight: '600' }}>
+            List Property to Verify
           </a>
         </div>
 
@@ -61,19 +92,31 @@ export default function LandlordsPage() {
             <li>✅ Pinned to the top of campus search</li>
             <li>✅ Featured in weekly student broadcasts</li>
           </ul>
-          <a href="mailto:support@ehani.co.ke?subject=Featured Listing Request" style={{ display: 'block', textAlign: 'center', background: '#1C1209', color: 'white', padding: '12px', borderRadius: '8px', textDecoration: 'none', fontWeight: '600' }}>
-            Maximize Visibility
+          <a href="/" style={{ display: 'block', textAlign: 'center', background: '#1C1209', color: 'white', padding: '12px', borderRadius: '8px', textDecoration: 'none', fontWeight: '600' }}>
+             List Property to Feature
           </a>
         </div>
 
       </div>
 
-      <div style={{ marginTop: '60px', textAlign: 'center', background: '#f9f9f9', padding: '30px', borderRadius: '12px' }}>
-        <h3 style={{ fontSize: '22px', fontWeight: '700', color: '#1C1209', marginBottom: '12px' }}>Ready to list your property?</h3>
-        <p style={{ color: '#666', marginBottom: '20px' }}>Email us your property details, photos, and your ID, and we will get you set up within 24 hours.</p>
-        <a href="mailto:support@ehani.co.ke" style={{ color: '#D4873A', fontWeight: '700', fontSize: '18px', textDecoration: 'none' }}>
-          📧 support@ehani.co.ke
-        </a>
+      <div style={{ marginTop: '60px', textAlign: 'center', background: '#f9f9f9', padding: '40px 30px', borderRadius: '12px' }}>
+        <h3 style={{ fontSize: '24px', fontWeight: '800', color: '#1C1209', marginBottom: '12px' }}>
+          Ready to fill your vacancies?
+        </h3>
+        <p style={{ color: '#666', marginBottom: '24px', fontSize: '16px', maxWidth: '600px', margin: '0 auto 24px auto' }}>
+          Create an account above to upload your property directly. 
+          <br />
+          <strong style={{ color: '#D4873A' }}>Are you a Property Agent managing multiple houses?</strong> Message us for bulk listing discounts!
+        </p>
+        
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
+          <a href="/" style={{ color: '#1C1209', fontWeight: '700', fontSize: '16px', textDecoration: 'none', border: '2px solid #1C1209', padding: '12px 24px', borderRadius: '8px', background: 'white' }}>
+            Create Account
+          </a>
+          <a href={`https://wa.me/${whatsappNumber}`} target="_blank" style={{ color: 'white', fontWeight: '700', fontSize: '16px', textDecoration: 'none', background: '#25D366', padding: '12px 24px', borderRadius: '8px' }}>
+            💬 Chat with Ehani Team
+          </a>
+        </div>
       </div>
 
       <div style={{ marginTop: '50px', borderTop: '1px solid #eee', paddingTop: '20px', textAlign: 'center' }}>
