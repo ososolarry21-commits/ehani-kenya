@@ -1,5 +1,5 @@
 'use client'
-import { PaystackButton } from 'react-paystack'
+import { usePaystackPayment } from 'react-paystack'
 import { useState } from 'react'
 
 interface PaystackCheckoutProps {
@@ -19,7 +19,7 @@ export default function PaystackCheckout({ email, amount, tier, onSuccess }: Pay
     reference: new Date().getTime().toString(),
     email: email,
     amount: amountInKobo,
-    publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '', // We will add this key next
+    publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '', 
     metadata: {
       custom_fields: [
         {
@@ -31,41 +31,41 @@ export default function PaystackCheckout({ email, amount, tier, onSuccess }: Pay
     },
   }
 
-  const handlePaystackSuccessAction = (reference: any) => {
-    // This is where we will eventually tell Supabase to update the database!
+  // This is the magic hook that opens the Paystack popup
+  const initializePayment = usePaystackPayment(config)
+
+  const handleSuccess = (reference: any) => {
     console.log("Payment successful:", reference)
     onSuccess(reference.reference)
     setLoading(false)
   }
 
-  const handlePaystackCloseAction = () => {
+  const handleClose = () => {
     console.log("Payment window closed")
     setLoading(false)
   }
 
-  const componentProps = {
-    ...config,
-    text: loading ? 'Processing...' : `Pay KSh ${amount.toLocaleString()} for ${tier === 'verified' ? 'Verification' : 'Featured'}`,
-    onSuccess: handlePaystackSuccessAction,
-    onClose: handlePaystackCloseAction,
-  }
-
   return (
-    <PaystackButton 
-      {...componentProps} 
-      className="paystack-btn"
+    <button
+      onClick={() => {
+        setLoading(true)
+        initializePayment(handleSuccess, handleClose)
+      }}
+      disabled={loading}
       style={{
         width: '100%',
         padding: '14px',
-        background: '#D4873A',
+        background: loading ? '#ccc' : '#D4873A',
         color: 'white',
         border: 'none',
         borderRadius: '8px',
-        cursor: 'pointer',
+        cursor: loading ? 'not-allowed' : 'pointer',
         fontWeight: '700',
         fontSize: '15px',
         marginTop: '10px'
       }}
-    />
+    >
+      {loading ? 'Processing...' : `Pay KSh ${amount.toLocaleString()} for ${tier === 'verified' ? 'Verification' : 'Featured'}`}
+    </button>
   )
 }
