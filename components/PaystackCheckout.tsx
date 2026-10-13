@@ -14,9 +14,10 @@ export default function PaystackCheckout({ email, amount, tier, onSuccess }: Pay
 
   // IMPORTANT: Paystack calculates amounts in Kobo/Cents. KSh 1 = 100.
   const amountInKobo = amount * 100 
+  const reference = new Date().getTime().toString()
 
   const config = {
-    reference: new Date().getTime().toString(),
+    reference,
     email: email,
     amount: amountInKobo,
     publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '', 
@@ -29,27 +30,25 @@ export default function PaystackCheckout({ email, amount, tier, onSuccess }: Pay
         },
       ],
     },
+    // We put the callbacks directly in the config to satisfy TypeScript
+    onSuccess: () => {
+      console.log("Payment successful:", reference)
+      onSuccess(reference)
+      setLoading(false)
+    },
+    onClose: () => {
+      console.log("Payment window closed")
+      setLoading(false)
+    },
   }
 
-  // This is the magic hook that opens the Paystack popup
   const initializePayment = usePaystackPayment(config)
-
-  const handleSuccess = (reference: any) => {
-    console.log("Payment successful:", reference)
-    onSuccess(reference.reference)
-    setLoading(false)
-  }
-
-  const handleClose = () => {
-    console.log("Payment window closed")
-    setLoading(false)
-  }
 
   return (
     <button
       onClick={() => {
         setLoading(true)
-        initializePayment(handleSuccess, handleClose)
+        initializePayment() // No arguments needed now!
       }}
       disabled={loading}
       style={{
