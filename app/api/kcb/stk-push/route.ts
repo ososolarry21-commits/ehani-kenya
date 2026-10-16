@@ -3,48 +3,65 @@ import { NextResponse } from 'next/server'
 export async function POST(request: Request) {
   try {
     const { phoneNumber, amount, invoiceNumber } = await request.json()
-    const callbackUrl = process.env.NEXT_PUBLIC_KCB_CALLBACK_URL || 'https://posthere.io/f613-4b7f-b82b' // Fallback for testing
+    
+    // Get credentials from Vercel
+    const consumerKey = process.env.KCB_BUNI_CONSUMER_KEY
+    const consumerSecret = process.env.KCB_BUNI_CONSUMER_SECRET
+    const callbackUrl = process.env.KCB_CALLBACK_URL // Make sure this is set in Vercel!
 
-    // 1. Get the auth token first
-    const tokenRes = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/kcb/get-token`)
+    if (!consumerKey || !consumerSecret) {
+      return NextResponse.json({ error: 'Missing KCB credentials' }, { status: 500 })
+    }
+
+    // 1. Generate Token directly from KCB (No internal fetch needed!)
+    const credentials = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64')
+    
+    const tokenRes = await fetch('https://sandbox.buni.kcbgroup.com/token?grant_type=client_credentials', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Basic ${credentials}`,
+      },
+      body: 'grant_type=client_credentials',
+    })
+
     const tokenData = await tokenRes.json()
     
-    if (!tokenData.accessToken) {
+    if (!tokenData.access_token) {
+      console.error('Token generation failed:', tokenData)
       return NextResponse.json({ error: 'Failed to authenticate with KCB' }, { status: 500 })
     }
 
-    // 2. Format the payload exactly as per KCB Spec
-    const payload = {
-      phoneNumber: phoneNumber, // e.g., "254712345678"
-      amount: amount.toString(), // e.g., "500"
-      invoiceNumber: `522533-${invoiceNumber}`, // KCB Paybill is 522533
-      sharedShortCode: true,
-      orgShortCode: "",
-      orgPassKey: "",
-      transactionDescription: "Ehani Homes Verification",
-      callbackUrl: callbackUrl,
-    }
-
-    // 3. Send the STK Push request to KCB Sandbox
-    // Note: Change to 'https://uat.buni.kcbgroup.com/api/v1/mpesa/express' for production
-    const stkResponse = await fetch('https://sandbox.buni.kcbgroup.com/api/v1/mpesa/express', {
+    // 2. Send the STK Push Request
+    // Note: Using the exact URL format from your KCB Buni screenshot
+    const stkResponse = await fetch('https://sandbox.buni.kcbgroup.com/mm/api/request/1.0.0', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${tokenData.accessToken}`,
+        'Authorization': `Bearer ${tokenData.access_token}`,
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        phoneNumber: phoneNumber, // e.g., "254710236242"
+        amount: amount.toString(), // e.g., "500"
+        invoiceNumber: `522533-${invoiceNumber}`, // KCB Paybill is 522533
+        sharedShortCode: true,
+        orgShortCode: "",
+        orgPassKey: "",
+        transactionDescription: "Ehani Homes Verification",
+        callbackUrl: callbackUrl,
+      }),
     })
 
     const result = await stkResponse.json()
 
     if (!stkResponse.ok) {
-      return NextResponse.json({ error: 'STK Push failed', details: result }, { status: stkResponse.status })
+      console.error('STK Push failed:', result)
+      return NextResponse.json({ error: result.fault?.message || 'STK Push failed' }, { status: stkResponse.status })
     }
 
     return NextResponse.json({ 
       success: true, 
-      message: result.header?.statusDescription || 'Request accepted for processing',
+      message: result.header?.statusDescription || 'Request accepted',
       checkoutRequestId: result.response?.CheckoutRequestID 
     })
 
