@@ -9,10 +9,13 @@ export async function POST(request: Request) {
     const consumerSecret = process.env.KCB_BUNI_CONSUMER_SECRET
     const callbackUrl = process.env.KCB_CALLBACK_URL
 
-    // Debug: Log what we have (check Vercel logs after testing)
-    console.log('KCB Keys present:', !!consumerKey, !!consumerSecret)
+    console.log('=== KCB STK PUSH DEBUG ===')
+    console.log('Consumer Key present:', !!consumerKey)
+    console.log('Consumer Secret present:', !!consumerSecret)
     console.log('Callback URL:', callbackUrl)
-    console.log('Phone:', phoneNumber, 'Amount:', amount)
+    console.log('Phone:', phoneNumber)
+    console.log('Amount:', amount)
+    console.log('Invoice:', invoiceNumber)
 
     if (!consumerKey || !consumerSecret) {
       return NextResponse.json({ error: 'Missing KCB credentials' }, { status: 500 })
@@ -22,8 +25,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing callback URL' }, { status: 500 })
     }
 
-    // Step 1: Get token from KCB
-    const credentials = btoa(`${consumerKey}:${consumerSecret}`)
+    // Step 1: Generate Authentication Token (from KCB spec)
+    const credentials = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64')
     
     const tokenResponse = await fetch('https://sandbox.buni.kcbgroup.com/token?grant_type=client_credentials', {
       method: 'POST',
@@ -35,40 +38,45 @@ export async function POST(request: Request) {
     })
 
     const tokenData = await tokenResponse.json()
-    console.log('Token response:', tokenData)
+    console.log('Token Response:', tokenData)
 
     if (!tokenResponse.ok || !tokenData.access_token) {
       return NextResponse.json({ 
         error: 'Authentication failed', 
-        details: tokenData 
+        details: tokenData.fault?.message || 'Check your credentials'
       }, { status: 401 })
     }
 
-    // Step 2: Send STK Push
+    // Step 2: Send STK Push Request (following KCB spec exactly)
+    const stkPayload = {
+      phoneNumber: phoneNumber,           // e.g., "254710236242"
+      amount: amount.toString(),          // e.g., "500"
+      invoiceNumber: `522533-${invoiceNumber}`, // KCB Paybill + reference
+      sharedShortCode: true,              // As per KCB spec
+      orgShortCode: "",                   // Optional - leave empty
+      orgPassKey: "",                     // Optional - leave empty
+      transactionDescription: "Ehani Homes Verification",
+      callbackUrl: callbackUrl,           // Must be HTTPS
+    }
+
+    console.log('Sending STK Payload:', JSON.stringify(stkPayload, null, 2))
+
     const stkResponse = await fetch('https://sandbox.buni.kcbgroup.com/mm/api/request/1.0.0', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${tokenData.access_token}`,
       },
-      body: JSON.stringify({
-        phoneNumber: phoneNumber,
-        amount: amount.toString(),
-        invoiceNumber: `522533-${invoiceNumber}`,
-        sharedShortCode: true,
-        orgShortCode: '',
-        orgPassKey: '',
-        transactionDescription: 'Ehani Homes Verification',
-        callbackUrl: callbackUrl,
-      }),
+      body: JSON.stringify(stkPayload),
     })
 
     const result = await stkResponse.json()
-    console.log('STK Response:', result)
+    console.log('KCB Response:', result)
 
     if (!stkResponse.ok) {
       return NextResponse.json({ 
-        error: result.fault?.message || result.header?.statusDescription || 'STK Push failed' 
+        error: result.header?.statusDescription || result.fault?.message || 'STK Push failed',
+        details: result
       }, { status: stkResponse.status })
     }
 
@@ -79,7 +87,10 @@ export async function POST(request: Request) {
     })
 
   } catch (error: any) {
-    console.error('STK Push error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error('=== STK PUSH ERROR ===', error)
+    return NextResponse.json({ 
+      error: error.message || 'Internal server error',
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    }, { status: 500 })
   }
 }
