@@ -5,10 +5,12 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { phoneNumber, amount, invoiceNumber } = body
 
+    // ✅ Declare environment variables FIRST
     const consumerKey = process.env.KCB_BUNI_CONSUMER_KEY
     const consumerSecret = process.env.KCB_BUNI_CONSUMER_SECRET
     const callbackUrl = process.env.KCB_CALLBACK_URL
 
+    // ✅ Now log them (they're defined now)
     console.log('=== KCB STK PUSH DEBUG ===')
     console.log('Consumer Key present:', !!consumerKey)
     console.log('Consumer Secret present:', !!consumerSecret)
@@ -26,7 +28,6 @@ export async function POST(request: Request) {
     }
 
     // Step 1: Generate Authentication Token
-    // IMPORTANT: Use 'uat.buni.kcbgroup.com' NOT 'sandbox.buni.kcbgroup.com'
     const credentials = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64')
     
     const tokenResponse = await fetch('https://uat.buni.kcbgroup.com/token?grant_type=client_credentials', {
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
       const text = await tokenResponse.text()
       console.error('Token endpoint returned non-JSON:', text.substring(0, 200))
       return NextResponse.json({ 
-        error: 'KCB token endpoint returned HTML instead of JSON. Check URL.',
+        error: 'KCB token endpoint returned HTML instead of JSON',
         status: tokenResponse.status 
       }, { status: 500 })
     }
@@ -61,7 +62,6 @@ export async function POST(request: Request) {
     }
 
     // Step 2: Send STK Push Request
-    // IMPORTANT: Use 'uat.buni.kcbgroup.com' NOT 'sandbox.buni.kcbgroup.com'
     const stkPayload = {
       phoneNumber: phoneNumber,
       amount: amount.toString(),
