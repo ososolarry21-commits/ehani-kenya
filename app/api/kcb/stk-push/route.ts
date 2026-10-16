@@ -25,7 +25,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing callback URL' }, { status: 500 })
     }
 
-    // Step 1: Generate Authentication Token (from KCB spec)
+    // Step 1: Generate Authentication Token
+    // Using Buffer.from() for Node.js compatibility (NOT btoa)
     const credentials = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64')
     
     const tokenResponse = await fetch('https://sandbox.buni.kcbgroup.com/token?grant_type=client_credentials', {
@@ -38,7 +39,8 @@ export async function POST(request: Request) {
     })
 
     const tokenData = await tokenResponse.json()
-    console.log('Token Response:', tokenData)
+    console.log('Token Response Status:', tokenResponse.status)
+    console.log('Token Data:', tokenData)
 
     if (!tokenResponse.ok || !tokenData.access_token) {
       return NextResponse.json({ 
@@ -49,14 +51,14 @@ export async function POST(request: Request) {
 
     // Step 2: Send STK Push Request (following KCB spec exactly)
     const stkPayload = {
-      phoneNumber: phoneNumber,           // e.g., "254710236242"
-      amount: amount.toString(),          // e.g., "500"
-      invoiceNumber: `522533-${invoiceNumber}`, // KCB Paybill + reference
-      sharedShortCode: true,              // As per KCB spec
-      orgShortCode: "",                   // Optional - leave empty
-      orgPassKey: "",                     // Optional - leave empty
-      transactionDescription: "Ehani Homes Verification",
-      callbackUrl: callbackUrl,           // Must be HTTPS
+      phoneNumber: phoneNumber,
+      amount: amount.toString(),
+      invoiceNumber: `522533-${invoiceNumber}`,
+      sharedShortCode: true,
+      orgShortCode: '',
+      orgPassKey: '',
+      transactionDescription: 'Ehani Homes Verification',
+      callbackUrl: callbackUrl,
     }
 
     console.log('Sending STK Payload:', JSON.stringify(stkPayload, null, 2))
@@ -71,6 +73,7 @@ export async function POST(request: Request) {
     })
 
     const result = await stkResponse.json()
+    console.log('KCB Response Status:', stkResponse.status)
     console.log('KCB Response:', result)
 
     if (!stkResponse.ok) {
