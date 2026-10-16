@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
-import PaystackCheckout from '../../components/PaystackCheckout'
+import KcbPaymentButton from '../../components/KcbPaymentButton'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -20,9 +20,9 @@ export default function Dashboard() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [uploadingImages, setUploadingImages] = useState(false)
   
-  // Paystack Success State
-  const [processingDbUpdate, setProcessingDbUpdate] = useState(false)
-  
+  // KCB Payment State
+  const [phoneNumber, setPhoneNumber] = useState('')
+
   const router = useRouter()
 
   const [formData, setFormData] = useState({
@@ -46,22 +46,10 @@ export default function Dashboard() {
 
   async function checkUser() {
     const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      router.push('/')
-      return
-    }
+    if (!user) { router.push('/'); return }
   
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-  
-    if (profile?.role === 'student') {
-      router.push('/browse')
-      return
-    }
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    if (profile?.role === 'student') { router.push('/browse'); return }
   
     setUser(user)
     setProfile(profile)
@@ -83,6 +71,9 @@ export default function Dashboard() {
     }
   }
 
+  // ... [Keep your existing handleImageChange, toggleAmenity, uploadImages, handleAddListing, deleteListing, signOut functions exactly as they were] ...
+  // (For brevity, I am omitting the unchanged form logic here, but keep it in your file!)
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const selectedFiles = Array.from(e.target.files)
@@ -95,11 +86,8 @@ export default function Dashboard() {
   const toggleAmenity = (amenity: string) => {
     setFormData(prev => {
       const current = prev.amenities
-      if (current.includes(amenity)) {
-        return { ...prev, amenities: current.filter(a => a !== amenity) }
-      } else {
-        return { ...prev, amenities: [...current, amenity] }
-      }
+      if (current.includes(amenity)) return { ...prev, amenities: current.filter(a => a !== amenity) }
+      else return { ...prev, amenities: [...current, amenity] }
     })
   }
 
@@ -148,34 +136,6 @@ export default function Dashboard() {
     }
   }
 
-  // NEW: Handle Paystack Success
-  async function handlePaymentSuccess(reference: string, listingId: string, tier: 'verified' | 'featured') {
-    setProcessingDbUpdate(true)
-    try {
-      const updateData: any = { 
-        verification_payment_received: true,
-        payment_reference: reference 
-      }
-      
-      // Note: In a full setup, you might want a separate 'is_featured' column. 
-      // For now, we mark it as paid and your admin dashboard will handle the physical verification.
-      
-      const { error } = await supabase.from('listings').update(updateData).eq('id', listingId)
-      
-      if (error) {
-        alert('Payment successful, but failed to update listing. Please contact support with ref: ' + reference)
-      } else {
-        alert(`Payment successful! Your listing is now pending physical verification. Reference: ${reference}`)
-        await fetchListings(user.id)
-      }
-    } catch (error) {
-      console.error('DB Update Error:', error)
-      alert('An error occurred while updating your listing status.')
-    } finally {
-      setProcessingDbUpdate(false)
-    }
-  }
-
   async function deleteListing(id: string) {
     if (!confirm('Delete this listing?')) return
     const { error } = await supabase.from('listings').delete().eq('id', id)
@@ -186,6 +146,12 @@ export default function Dashboard() {
   async function signOut() {
     await supabase.auth.signOut()
     router.push('/')
+  }
+
+  // Handle what happens when the STK push is successfully SENT to the phone
+  function handleStkPushSent(checkoutRequestId: string, listingId: string, tier: string) {
+    alert(`M-Pesa prompt sent! Please check your phone (${phoneNumber}) to enter your PIN. Once paid, your listing will automatically update.`)
+    // Note: The actual database update happens silently via the /api/kcb/callback webhook.
   }
 
   if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>
@@ -209,6 +175,7 @@ export default function Dashboard() {
       </div>
 
       <div style={{ padding: '40px 60px', maxWidth: 1400, margin: '0 auto' }}>
+        {/* Stats Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 20, marginBottom: 40 }}>
           <div style={{ background: 'white', padding: 30, borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
             <div style={{ fontSize: 36, fontWeight: 800, color: '#D4873A', marginBottom: 8 }}>{stats.total}</div>
@@ -238,6 +205,7 @@ export default function Dashboard() {
           </button>
         </div>
 
+        {/* Add Listing Form */}
         {showAddForm && (
           <form onSubmit={handleAddListing} style={{ background: 'white', padding: 30, borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.06)', marginBottom: 40 }}>
             <h2 style={{ margin: '0 0 24px 0', color: '#1C1209' }}>Create New Listing</h2>
@@ -301,11 +269,12 @@ export default function Dashboard() {
                     <div style={{ display: 'flex', gap: 12, fontSize: 14, flexWrap: 'wrap', alignItems: 'center' }}>
                       <span style={{ background: '#F0EAE3', padding: '4px 10px', borderRadius: 6 }}>{listing.type}</span>
                       <span style={{ fontWeight: 700, color: '#D4873A' }}>KSh {listing.price?.toLocaleString()}/mo</span>
-                      <span style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>👁️ {listing.views || 0} views</span>
+                      <span style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>️ {listing.views || 0} views</span>
                       <span style={{ background: '#FFF3E0', color: '#E65100', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>📞 {listing.contacts || 0} contacts</span>
                     </div>
                   </div>
                 </div>
+                
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                   <span style={{ padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 600, background: listing.status === 'approved' ? '#D4EDDA' : listing.status === 'pending' ? '#FFF3CD' : '#F8D7DA', color: listing.status === 'approved' ? '#155724' : listing.status === 'pending' ? '#856404' : '#721C24' }}>
                     {listing.status === 'approved' ? 'Approved' : listing.status === 'pending' ? 'Pending' : 'Rejected'}
@@ -319,20 +288,29 @@ export default function Dashboard() {
                     <span style={{ background: '#E3F2FD', color: '#1976D2', padding: '6px 14px', borderRadius: 6, fontSize: 11, fontWeight: 600 }}>💰 Payment Received - Awaiting Agent Inspection</span>
                   )}
                   
-                  {/* PAYSTACK INTEGRATION HERE */}
-                  {!listing.is_verified && !listing.verification_payment_received && listing.status === 'approved' && user?.email && (
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <PaystackCheckout 
-                        email={user.email} 
+                  {/* KCB PAYMENT INTEGRATION */}
+                  {!listing.is_verified && !listing.verification_payment_received && listing.status === 'approved' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 220 }}>
+                      <input
+                        type="tel"
+                        placeholder="M-Pesa Phone (e.g. 0712...)"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #DDD0C4', fontSize: 14, outline: 'none' }}
+                      />
+                      <KcbPaymentButton 
+                        phoneNumber={phoneNumber} 
                         amount={500} 
                         tier="verified" 
-                        onSuccess={(ref) => handlePaymentSuccess(ref, listing.id, 'verified')} 
+                        listingId={listing.id} 
+                        onSuccess={(ref) => handleStkPushSent(ref, listing.id, 'verified')} 
                       />
-                      <PaystackCheckout 
-                        email={user.email} 
+                      <KcbPaymentButton 
+                        phoneNumber={phoneNumber} 
                         amount={1500} 
                         tier="featured" 
-                        onSuccess={(ref) => handlePaymentSuccess(ref, listing.id, 'featured')} 
+                        listingId={listing.id} 
+                        onSuccess={(ref) => handleStkPushSent(ref, listing.id, 'featured')} 
                       />
                     </div>
                   )}
