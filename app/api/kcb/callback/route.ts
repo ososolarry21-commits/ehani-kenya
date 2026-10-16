@@ -9,37 +9,44 @@ const supabase = createClient(
 export async function POST(request: Request) {
   try {
     const data = await request.json()
-    console.log('KCB Callback Received:', JSON.stringify(data, null, 2))
+    console.log('=== KCB CALLBACK RECEIVED ===')
+    console.log(JSON.stringify(data, null, 2))
 
     const stkCallback = data.Body?.stkCallback
 
     if (!stkCallback) {
-      return NextResponse.json({ status: 'failed', message: 'Invalid callback payload' }, { status: 400 })
+      return NextResponse.json({ status: 'failed', message: 'Invalid callback' }, { status: 400 })
     }
 
     const { MerchantRequestID, CheckoutRequestID, ResultCode, ResultDesc } = stkCallback
 
-    // ResultCode 0 means SUCCESS
+    console.log('Result Code:', ResultCode)
+    console.log('Result Desc:', ResultDesc)
+
+    // ResultCode 0 = SUCCESS
     if (ResultCode === 0) {
-      // Extract metadata if needed (Amount, MpesaReceiptNumber, etc.)
       const metadata = stkCallback.CallbackMetadata?.Item || []
       const mpesaReceipt = metadata.find((item: any) => item.Name === 'MpesaReceiptNumber')?.Value
+      const amount = metadata.find((item: any) => item.Name === 'Amount')?.Value
+      const phoneNumber = metadata.find((item: any) => item.Name === 'PhoneNumber')?.Value
 
-      // Update the listing in Supabase
-      // Note: We use MerchantRequestID or a custom reference to find the listing. 
-      // In a full setup, you'd map MerchantRequestID to your listing_id in a separate table.
-      // For now, we'll update based on a matching reference or you can manually verify via admin dashboard.
-      
-      console.log(`✅ Payment Successful! Receipt: ${mpesaReceipt}`)
-      
-      return NextResponse.json({ status: 'success', message: 'Callback processed' })
+      console.log('✅ Payment Success!')
+      console.log('Receipt:', mpesaReceipt)
+      console.log('Amount:', amount)
+      console.log('Phone:', phoneNumber)
+
+      // TODO: Update your database here
+      // You'll need to map MerchantRequestID to your listing_id
+      // For now, you can manually verify via admin dashboard
+
+      return NextResponse.json({ status: 'success', message: 'Payment verified' })
     } else {
-      console.log(`❌ Payment Failed: ${ResultDesc}`)
+      console.log('❌ Payment Failed:', ResultDesc)
       return NextResponse.json({ status: 'failed', message: ResultDesc })
     }
 
-  } catch (error) {
-    console.error('Callback processing error:', error)
-    return NextResponse.json({ status: 'error', message: 'Internal server error' }, { status: 500 })
+  } catch (error: any) {
+    console.error('Callback Error:', error)
+    return NextResponse.json({ status: 'error', message: error.message }, { status: 500 })
   }
 }
