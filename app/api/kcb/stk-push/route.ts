@@ -26,10 +26,10 @@ export async function POST(request: Request) {
     }
 
     // Step 1: Generate Authentication Token
-    // Using Buffer.from() for Node.js compatibility (NOT btoa)
+    // IMPORTANT: Use 'uat.buni.kcbgroup.com' NOT 'sandbox.buni.kcbgroup.com'
     const credentials = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64')
     
-    const tokenResponse = await fetch('https://sandbox.buni.kcbgroup.com/token?grant_type=client_credentials', {
+    const tokenResponse = await fetch('https://uat.buni.kcbgroup.com/token?grant_type=client_credentials', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -37,6 +37,17 @@ export async function POST(request: Request) {
       },
       body: 'grant_type=client_credentials',
     })
+
+    // Check if response is JSON before parsing
+    const contentType = tokenResponse.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await tokenResponse.text()
+      console.error('Token endpoint returned non-JSON:', text.substring(0, 200))
+      return NextResponse.json({ 
+        error: 'KCB token endpoint returned HTML instead of JSON. Check URL.',
+        status: tokenResponse.status 
+      }, { status: 500 })
+    }
 
     const tokenData = await tokenResponse.json()
     console.log('Token Response Status:', tokenResponse.status)
@@ -49,7 +60,8 @@ export async function POST(request: Request) {
       }, { status: 401 })
     }
 
-    // Step 2: Send STK Push Request (following KCB spec exactly)
+    // Step 2: Send STK Push Request
+    // IMPORTANT: Use 'uat.buni.kcbgroup.com' NOT 'sandbox.buni.kcbgroup.com'
     const stkPayload = {
       phoneNumber: phoneNumber,
       amount: amount.toString(),
@@ -63,7 +75,7 @@ export async function POST(request: Request) {
 
     console.log('Sending STK Payload:', JSON.stringify(stkPayload, null, 2))
 
-    const stkResponse = await fetch('https://sandbox.buni.kcbgroup.com/mm/api/request/1.0.0', {
+    const stkResponse = await fetch('https://uat.buni.kcbgroup.com/mm/api/request/1.0.0', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -71,6 +83,17 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify(stkPayload),
     })
+
+    // Check if response is JSON before parsing
+    const stkContentType = stkResponse.headers.get('content-type')
+    if (!stkContentType || !stkContentType.includes('application/json')) {
+      const text = await stkResponse.text()
+      console.error('STK endpoint returned non-JSON:', text.substring(0, 200))
+      return NextResponse.json({ 
+        error: 'KCB STK endpoint returned HTML instead of JSON',
+        status: stkResponse.status 
+      }, { status: 500 })
+    }
 
     const result = await stkResponse.json()
     console.log('KCB Response Status:', stkResponse.status)
