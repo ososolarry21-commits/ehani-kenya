@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     // 1. Generate Token (UAT Environment - as per KCB docs)
     const credentials = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64')
     
-    const tokenRes = await fetch('https://uat.buni.kcbgroup.com/token?grant_type=client_credentials', {
+    const tokenRes = await fetch('https://sandbox.buni.kcbgroup.com/token?grant_type=client_credentials', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     }
 
     // 3. Send STK Push - EXACT URL from your portal screenshot
-    const stkUrl = 'https://uat.buni.kcbgroup.com/mm/api/request/1.0.0'
+    const stkUrl = 'https://sandbox.buni.kcbgroup.com/mm/api/request/1.0.0'
     console.log('🎯 Hitting STK URL:', stkUrl)
     console.log('Payload:', JSON.stringify(stkPayload))
 
