@@ -40,9 +40,8 @@ export default function AdminPanel() {
     setLoading(false)
   }
 
-    async function fetchListings() {
+  async function fetchListings() {
     try {
-      // Fetch all listings
       const { data: listingsData, error: listingsError } = await supabase
         .from('listings')
         .select(`
@@ -63,7 +62,6 @@ export default function AdminPanel() {
         return
       }
 
-      // Fetch ALL assignments (not just completed) to debug
       const { data: assignmentsData, error: assignmentsError } = await supabase
         .from('verification_assignments')
         .select('listing_id, proof_url, status, agent_id')
@@ -73,21 +71,11 @@ export default function AdminPanel() {
         console.error('Error fetching assignments:', assignmentsError)
       }
 
-      console.log('📊 Listings:', listingsData.length)
-      console.log('📋 Assignments:', assignmentsData)
-
-      // Map proof images to listings
       const processed = listingsData.map(listing => {
         const completedAssignment = assignmentsData?.find(
           (a: any) => a.listing_id === listing.id && a.status === 'completed'
         )
         
-        console.log(`Listing "${listing.name}":`, {
-          hasProof: !!completedAssignment?.proof_url,
-          proofUrl: completedAssignment?.proof_url,
-          status: completedAssignment?.status
-        })
-
         return {
           ...listing,
           proof_image_url: completedAssignment?.proof_url || null,
@@ -100,6 +88,7 @@ export default function AdminPanel() {
       console.error('Fatal error in fetchListings:', error)
     }
   }
+
   async function fetchAgents() {
     const { data } = await supabase
       .from('profiles')
@@ -108,10 +97,27 @@ export default function AdminPanel() {
     if (data) setAgents(data)
   }
 
+  // 🪄 SMART APPROVE: Automatically verifies if payment is received and proof exists
   async function approveListing(listingId: string) {
     if (!confirm('Approve this listing?')) return
-    await supabase.from('listings').update({ status: 'approved' }).eq('id', listingId)
-    await fetchListings()
+    
+    const listing = listings.find(l => l.id === listingId)
+    const shouldAutoVerify = listing?.verification_payment_received && listing?.proof_image_url
+
+    try {
+      await supabase
+        .from('listings')
+        .update({ 
+          status: 'approved',
+          is_verified: shouldAutoVerify // 🪄 MAGIC: Auto-verifies if conditions are met!
+        })
+        .eq('id', listingId)
+      
+      alert(shouldAutoVerify ? '✅ Listing approved and automatically VERIFIED!' : '✅ Listing approved!')
+      await fetchListings()
+    } catch (error: any) {
+      alert('Error: ' + error.message)
+    }
   }
 
   async function rejectListing(listingId: string) {
@@ -120,19 +126,21 @@ export default function AdminPanel() {
     await fetchListings()
   }
 
+  // 🪄 BULLETPROOF VERIFY: Ensures status is approved AND is_verified is true
   async function verifyListing(listingId: string) {
-    if (!confirm('Mark this listing as verified?')) return
+    if (!confirm('Mark this listing as verified? This will show the Verified badge to the landlord.')) return
     
     try {
       await supabase
         .from('listings')
         .update({ 
-          is_verified: true,
+          status: 'approved', // Ensure it's approved
+          is_verified: true,  // 🪄 MAGIC: Flips the switch for the badge!
           verified_at: new Date().toISOString()
         })
         .eq('id', listingId)
       
-      alert('✅ Listing verified successfully!')
+      alert('✅ Listing verified successfully! The badge is now live.')
       await fetchListings()
     } catch (error: any) {
       alert('Error: ' + error.message)
@@ -147,7 +155,6 @@ export default function AdminPanel() {
 
     setAssigning(true)
     try {
-      // Check if assignment already exists
       const { data: existing } = await supabase
         .from('verification_assignments')
         .select('id, status')
@@ -166,7 +173,6 @@ export default function AdminPanel() {
         return
       }
 
-      // Create new assignment
       const { error } = await supabase
         .from('verification_assignments')
         .insert({
@@ -373,7 +379,6 @@ export default function AdminPanel() {
                       </span>
                     </div>
 
-                    {/* Show proof image if agent uploaded */}
                     {listing.proof_image_url && (
                       <div style={{ marginTop: 16, padding: 16, background: '#E8F5E9', borderRadius: 8 }}>
                         <p style={{ margin: '0 0 12px 0', fontSize: 13, color: '#2E7D32', fontWeight: 600 }}>
@@ -426,7 +431,6 @@ export default function AdminPanel() {
                           👷 Assign Agent
                         </button>
                         
-                        {/* Show Mark as Verified if proof exists */}
                         {listing.proof_image_url && (
                           <button 
                             onClick={() => verifyListing(listing.id)}
