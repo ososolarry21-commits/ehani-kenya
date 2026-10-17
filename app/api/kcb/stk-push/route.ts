@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing environment variables' }, { status: 500 })
     }
 
-    // 1. Generate Token (UAT Environment)
+    // 1. Generate Token (UAT Environment - as per KCB docs)
     const credentials = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64')
     
     const tokenRes = await fetch('https://uat.buni.kcbgroup.com/token?grant_type=client_credentials', {
@@ -33,13 +33,13 @@ export async function POST(request: Request) {
     
     if (!tokenRes.ok || !tokenData.access_token) {
       console.error('Token Error:', tokenData)
-      return NextResponse.json({ error: 'KCB Auth Failed' }, { status: 401 })
+      return NextResponse.json({ error: 'KCB Auth Failed - Check your keys' }, { status: 401 })
     }
 
     console.log('✅ Token obtained successfully')
 
-    // 2. Format Payload EXACTLY as per KCB Spec Document
-    // Spec says: Format: KCBTILLNO-YOURACCREF
+    // 2. Format Payload - EXACT format from KCB spec
+    // Format: KCBTILLNO-YOURACCREF
     const formattedInvoice = `522533-TEST123`
 
     const stkPayload = {
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
       callbackUrl: callbackUrl,
     }
 
-    // 3. Send STK Push to the CORRECT KCB Buni Endpoint
+    // 3. Send STK Push - EXACT URL from your portal screenshot
     const stkUrl = 'https://uat.buni.kcbgroup.com/mm/api/request/1.0.0'
     console.log('🎯 Hitting STK URL:', stkUrl)
     console.log('Payload:', JSON.stringify(stkPayload))
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
     try {
       result = JSON.parse(responseText)
     } catch (parseError) {
-      console.error('❌ KCB returned non-JSON. Raw response:', responseText.substring(0, 300))
+      console.error(' KCB returned non-JSON. Raw response:', responseText.substring(0, 300))
       return NextResponse.json({ error: 'KCB returned HTML instead of JSON' }, { status: 500 })
     }
 
