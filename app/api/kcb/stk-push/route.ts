@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing environment variables' }, { status: 500 })
     }
 
-    // 1. Generate Token
+    // 1. Generate Token (MUST be UAT)
     const credentials = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64')
     
     const tokenRes = await fetch('https://uat.buni.kcbgroup.com/token?grant_type=client_credentials', {
@@ -36,9 +36,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'KCB Auth Failed' }, { status: 401 })
     }
 
-    console.log('Token obtained successfully')
+    console.log('✅ Token obtained successfully')
 
-    // 2. Send STK Push - Try SANDBOX URL since you have sandbox keys
+    // 2. Format Payload EXACTLY as per KCB Spec
     const formattedInvoice = `522533-TEST123`
 
     const stkPayload = {
@@ -52,10 +52,12 @@ export async function POST(request: Request) {
       callbackUrl: callbackUrl,
     }
 
-    console.log('Sending Payload:', JSON.stringify(stkPayload))
+    // 3. Send STK Push (MUST be UAT, and correct API path)
+    const stkUrl = 'https://uat.buni.kcbgroup.com/api/v1/mpesa/express'
+    console.log('🎯 Hitting STK URL:', stkUrl)
+    console.log('Payload:', JSON.stringify(stkPayload))
 
-    // Try sandbox URL first
-    const stkRes = await fetch('https://sandbox.buni.kcbgroup.com/mm/api/request/1.0.0', {
+    const stkRes = await fetch(stkUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -64,29 +66,24 @@ export async function POST(request: Request) {
       body: JSON.stringify(stkPayload),
     })
 
-    // Check content type before parsing
+    // Check content type to prevent HTML crashes
     const contentType = stkRes.headers.get('content-type')
     console.log('Response Content-Type:', contentType)
     console.log('Response Status:', stkRes.status)
 
-    // Get response as text first
     const responseText = await stkRes.text()
-    console.log('Raw Response:', responseText.substring(0, 500))
-
-    // Try to parse as JSON
-    let result
-    try {
-      result = JSON.parse(responseText)
-    } catch (parseError) {
-      console.error('Failed to parse JSON. Raw response:', responseText)
+    
+    // If it's still returning HTML, we need to know
+    if (!contentType || !contentType.includes('application/json')) {
+      console.error('❌ KCB returned HTML instead of JSON. Raw response:', responseText.substring(0, 300))
       return NextResponse.json({ 
-        error: 'KCB returned HTML instead of JSON',
-        status: stkRes.status,
-        rawResponse: responseText.substring(0, 200)
+        error: 'KCB returned HTML (Wrong URL or Environment Mismatch)',
+        status: stkRes.status 
       }, { status: 500 })
     }
 
-    console.log('KCB Response:', result)
+    const result = JSON.parse(responseText)
+    console.log('✅ KCB JSON Response:', result)
 
     if (!stkRes.ok) {
       return NextResponse.json({ 
@@ -101,7 +98,7 @@ export async function POST(request: Request) {
     })
 
   } catch (error: any) {
-    console.error('CRASH:', error)
+    console.error('💥 CRASH:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
