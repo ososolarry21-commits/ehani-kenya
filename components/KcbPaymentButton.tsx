@@ -1,82 +1,79 @@
 'use client'
 import { useState } from 'react'
 
-interface PaymentProps {
-  phoneNumber: string
-  amount: number
-  tier: 'verified' | 'featured'
-  listingId: string
-  onSuccess: (checkoutRequestId: string) => void
-}
-
-export default function KcbPaymentButton({ phoneNumber, amount, tier, listingId, onSuccess }: PaymentProps) {
+// This component handles the button click and talks to your API
+export default function KcbPaymentButton({ phoneNumber, amount, tier, listingId, onSuccess }: any) {
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
 
   const handlePayment = async () => {
-    if (!phoneNumber || phoneNumber.length < 10) {
-      setMessage('Please enter a valid phone number (e.g., 0712345678)')
+    if (!phoneNumber) {
+      setError('Please enter a phone number first')
       return
     }
 
-    setLoading(true)
-    setMessage('')
+    // Format phone number to 254... (KCB requirement)
+    let formattedPhone = phoneNumber
+    if (phoneNumber.startsWith('0')) {
+      formattedPhone = '254' + phoneNumber.substring(1)
+    } else if (phoneNumber.startsWith('+254')) {
+      formattedPhone = phoneNumber.substring(1) 
+    }
 
-    // Format phone number to 2547XXXXXXXX
-    let formattedPhone = phoneNumber.replace(/\D/g, '')
-    if (formattedPhone.startsWith('0')) formattedPhone = '254' + formattedPhone.substring(1)
-    else if (!formattedPhone.startsWith('254')) formattedPhone = '254' + formattedPhone
+    setLoading(true)
+    setError('')
 
     try {
-      const response = await fetch('/api/kcb/stk-push', {
+      // Call the API route we built
+      const res = await fetch('/api/kcb/stk-push', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           phoneNumber: formattedPhone,
           amount: amount,
-          invoiceNumber: `${tier.toUpperCase()}-${listingId}`,
-        }),
+          invoiceNumber: `${tier}-${listingId}` 
+        })
       })
 
-      const data = await response.json()
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Payment request failed')
+      }
 
       if (data.success) {
-        setMessage('✅ Check your phone! Enter your M-Pesa PIN to complete.')
-        onSuccess(data.checkoutRequestId)
+        // Tell the dashboard that the request was sent successfully
+        onSuccess(data.checkoutRequestId, listingId, tier)
       } else {
-        setMessage(`❌ ${data.error || data.details?.header?.statusDescription || 'Payment failed'}`)
+        throw new Error(data.message || 'Unknown error')
       }
-    } catch (error) {
-      setMessage('❌ Network error. Please try again.')
+    } catch (err: any) {
+      setError(err.message || 'An error occurred')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div style={{ width: '100%', marginTop: '10px' }}>
-      <button
-        onClick={handlePayment}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: '100%' }}>
+      <button 
+        onClick={handlePayment} 
         disabled={loading}
         style={{
-          width: '100%',
-          padding: '14px',
-          background: loading ? '#ccc' : '#00C35D', // M-Pesa Green
+          padding: '10px',
+          background: loading ? '#ccc' : '#25D366', // M-Pesa Green
           color: 'white',
           border: 'none',
-          borderRadius: '8px',
+          borderRadius: 6,
           cursor: loading ? 'not-allowed' : 'pointer',
-          fontWeight: '700',
-          fontSize: '15px',
+          fontWeight: 700,
+          fontSize: 14,
+          width: '100%'
         }}
       >
-        {loading ? 'Sending Prompt...' : `Pay KSh ${amount.toLocaleString()} via M-Pesa`}
+        {loading ? 'Sending Request...' : `Pay KSh ${amount} via M-Pesa`}
       </button>
-      {message && (
-        <p style={{ fontSize: '12px', color: message.includes('✅') ? '#2A7A5A' : '#DC3545', marginTop: '8px', textAlign: 'center' }}>
-          {message}
-        </p>
-      )}
+      {error && <span style={{ color: 'red', fontSize: 12, textAlign: 'center' }}>{error}</span>}
     </div>
   )
 }
