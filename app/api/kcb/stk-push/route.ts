@@ -5,32 +5,22 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { phoneNumber, amount, invoiceNumber } = body
 
-    // ✅ Declare environment variables FIRST
     const consumerKey = process.env.KCB_BUNI_CONSUMER_KEY
     const consumerSecret = process.env.KCB_BUNI_CONSUMER_SECRET
     const callbackUrl = process.env.KCB_CALLBACK_URL
 
-    // ✅ Now log them (they're defined now)
     console.log('=== KCB STK PUSH DEBUG ===')
-    console.log('Consumer Key present:', !!consumerKey)
-    console.log('Consumer Secret present:', !!consumerSecret)
-    console.log('Callback URL:', callbackUrl)
-    console.log('Phone:', phoneNumber)
-    console.log('Amount:', amount)
-    console.log('Invoice:', invoiceNumber)
+    console.log('Keys present:', !!consumerKey, !!consumerSecret)
+    console.log('Callback:', callbackUrl)
 
-    if (!consumerKey || !consumerSecret) {
-      return NextResponse.json({ error: 'Missing KCB credentials' }, { status: 500 })
+    if (!consumerKey || !consumerSecret || !callbackUrl) {
+      return NextResponse.json({ error: 'Missing environment variables' }, { status: 500 })
     }
 
-    if (!callbackUrl) {
-      return NextResponse.json({ error: 'Missing callback URL' }, { status: 500 })
-    }
-
-    // Step 1: Generate Authentication Token
+    // 1. Generate Token (Using UAT URL from Spec)
     const credentials = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64')
     
-    const tokenResponse = await fetch('https://uat.buni.kcbgroup.com/token?grant_type=client_credentials', {
+    const tokenRes = await fetch('https://uat.buni.kcbgroup.com/token?grant_type=client_credentials', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -39,43 +29,33 @@ export async function POST(request: Request) {
       body: 'grant_type=client_credentials',
     })
 
-    // Check if response is JSON before parsing
-    const contentType = tokenResponse.headers.get('content-type')
-    if (!contentType || !contentType.includes('application/json')) {
-      const text = await tokenResponse.text()
-      console.error('Token endpoint returned non-JSON:', text.substring(0, 200))
-      return NextResponse.json({ 
-        error: 'KCB token endpoint returned HTML instead of JSON',
-        status: tokenResponse.status 
-      }, { status: 500 })
+    const tokenData = await tokenRes.json()
+    
+    if (!tokenRes.ok || !tokenData.access_token) {
+      console.error('Token Error:', tokenData)
+      return NextResponse.json({ error: 'KCB Auth Failed' }, { status: 401 })
     }
 
-    const tokenData = await tokenResponse.json()
-    console.log('Token Response Status:', tokenResponse.status)
-    console.log('Token Data:', tokenData)
+    // 2. Format Payload EXACTLY as per KCB Spec
+    // Spec says invoiceNumber format: KCBTILLNO-YOURACCREF
+    // KCB Paybill is 522533
+    const formattedInvoice = `522533-${invoiceNumber}`
 
-    if (!tokenResponse.ok || !tokenData.access_token) {
-      return NextResponse.json({ 
-        error: 'Authentication failed', 
-        details: tokenData.fault?.message || 'Check your credentials'
-      }, { status: 401 })
-    }
-
-    // Step 2: Send STK Push Request
     const stkPayload = {
-      phoneNumber: phoneNumber,
-      amount: amount.toString(),
-      invoiceNumber: `522533-${invoiceNumber}`,
-      sharedShortCode: true,
-      orgShortCode: '',
-      orgPassKey: '',
-      transactionDescription: 'Ehani Homes Verification',
-      callbackUrl: callbackUrl,
+      phoneNumber: phoneNumber,       // e.g., "254710236242"
+      amount: amount.toString(),      // e.g., "500" (Must be string per spec)
+      invoiceNumber: formattedInvoice, // e.g., "522533-VERIFIED-xyz"
+      sharedShortCode: true,          // Mandatory boolean per spec
+      orgShortCode: "",               // Optional
+      orgPassKey: "",                 // Optional
+      transactionDescription: "Ehani Homes Verification", // Optional
+      callbackUrl: callbackUrl,       // Mandatory secure URL
     }
 
-    console.log('Sending STK Payload:', JSON.stringify(stkPayload, null, 2))
+    console.log('Sending Payload:', JSON.stringify(stkPayload))
 
-    const stkResponse = await fetch('https://uat.buni.kcbgroup.com/mm/api/request/1.0.0', {
+    // 3. Send STK Push (Using UAT URL)
+    const stkRes = await fetch('https://uat.buni.kcbgroup.com/mm/api/request/1.0.0', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -84,39 +64,23 @@ export async function POST(request: Request) {
       body: JSON.stringify(stkPayload),
     })
 
-    // Check if response is JSON before parsing
-    const stkContentType = stkResponse.headers.get('content-type')
-    if (!stkContentType || !stkContentType.includes('application/json')) {
-      const text = await stkResponse.text()
-      console.error('STK endpoint returned non-JSON:', text.substring(0, 200))
-      return NextResponse.json({ 
-        error: 'KCB STK endpoint returned HTML instead of JSON',
-        status: stkResponse.status 
-      }, { status: 500 })
-    }
-
-    const result = await stkResponse.json()
-    console.log('KCB Response Status:', stkResponse.status)
+    const result = await stkRes.json()
     console.log('KCB Response:', result)
 
-    if (!stkResponse.ok) {
+    if (!stkRes.ok) {
       return NextResponse.json({ 
-        error: result.header?.statusDescription || result.fault?.message || 'STK Push failed',
-        details: result
-      }, { status: stkResponse.status })
+        error: result.header?.statusDescription || result.fault?.message || 'STK Failed' 
+      }, { status: stkRes.status })
     }
 
     return NextResponse.json({ 
       success: true, 
-      message: result.header?.statusDescription || 'Request accepted',
+      message: result.header?.statusDescription || 'Success',
       checkoutRequestId: result.response?.CheckoutRequestID 
     })
 
   } catch (error: any) {
-    console.error('=== STK PUSH ERROR ===', error)
-    return NextResponse.json({ 
-      error: error.message || 'Internal server error',
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    }, { status: 500 })
+    console.error('CRASH:', error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
