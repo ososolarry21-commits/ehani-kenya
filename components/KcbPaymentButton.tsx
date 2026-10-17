@@ -1,7 +1,6 @@
 'use client'
 import { useState } from 'react'
 
-// This component handles the button click and talks to your API
 export default function KcbPaymentButton({ phoneNumber, amount, tier, listingId, onSuccess }: any) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -12,7 +11,6 @@ export default function KcbPaymentButton({ phoneNumber, amount, tier, listingId,
       return
     }
 
-    // Format phone number to 254... (KCB requirement)
     let formattedPhone = phoneNumber
     if (phoneNumber.startsWith('0')) {
       formattedPhone = '254' + phoneNumber.substring(1)
@@ -24,7 +22,6 @@ export default function KcbPaymentButton({ phoneNumber, amount, tier, listingId,
     setError('')
 
     try {
-      // Call the API route we built
       const res = await fetch('/api/kcb/stk-push', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -42,7 +39,6 @@ export default function KcbPaymentButton({ phoneNumber, amount, tier, listingId,
       }
 
       if (data.success) {
-        // Tell the dashboard that the request was sent successfully
         onSuccess(data.checkoutRequestId, listingId, tier)
       } else {
         throw new Error(data.message || 'Unknown error')
@@ -61,7 +57,7 @@ export default function KcbPaymentButton({ phoneNumber, amount, tier, listingId,
         disabled={loading}
         style={{
           padding: '10px',
-          background: loading ? '#ccc' : '#25D366', // M-Pesa Green
+          background: loading ? '#ccc' : '#25D366',
           color: 'white',
           border: 'none',
           borderRadius: 6,
