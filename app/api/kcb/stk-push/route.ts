@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
     const credentials = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64')
     
-    // 1. Token Endpoint MUST be UAT (As explicitly stated in the KCB PDF Spec)
+    // 1. Token Endpoint (Proven to work)
     const tokenUrl = 'https://uat.buni.kcbgroup.com/token?grant_type=client_credentials'
     console.log('🎯 Hitting Token URL:', tokenUrl)
 
@@ -40,10 +40,7 @@ export async function POST(request: Request) {
       tokenData = JSON.parse(tokenText)
     } catch (e) {
       console.error('❌ TOKEN ENDPOINT RETURNED HTML! Snippet:', tokenText.substring(0, 300))
-      return NextResponse.json({ 
-        error: 'Token endpoint returned HTML. Check your keys.',
-        snippet: tokenText.substring(0, 200)
-      }, { status: 500 })
+      return NextResponse.json({ error: 'Token endpoint returned HTML' }, { status: 500 })
     }
 
     if (!tokenRes.ok || !tokenData.access_token) {
@@ -53,11 +50,12 @@ export async function POST(request: Request) {
 
     console.log('✅ Token obtained successfully')
 
-    // 2. STK Push Endpoint (Standard KCB WSO2 Gateway Path)
-    const stkUrl = 'https://uat.buni.kcbgroup.com/api/v1.0.0/mpesa/express'
+    // 2. STK Push Endpoint (EXACT URL from your KCB Developer Portal screenshot)
+    const stkUrl = 'https://uat.buni.kcbgroup.com/mm/api/request/1.0.0'
     console.log('🎯 Hitting STK URL:', stkUrl)
 
     // Format exactly as per PDF: KCBTILLNO-YOURACCREF
+    // KCB Paybill is 522533
     const formattedInvoice = `522533-${invoiceNumber}`
 
     const stkPayload = {
@@ -90,10 +88,7 @@ export async function POST(request: Request) {
       stkData = JSON.parse(stkText)
     } catch (e) {
       console.error('❌ STK ENDPOINT RETURNED HTML! Snippet:', stkText.substring(0, 300))
-      return NextResponse.json({ 
-        error: 'STK endpoint returned HTML.',
-        snippet: stkText.substring(0, 200)
-      }, { status: 500 })
+      return NextResponse.json({ error: 'STK endpoint returned HTML' }, { status: 500 })
     }
 
     console.log('✅ KCB JSON Response:', stkData)
