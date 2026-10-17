@@ -50,12 +50,11 @@ export async function POST(request: Request) {
 
     console.log('✅ Token obtained successfully')
 
-    // 2. STK Push Endpoint (EXACT URL from your KCB Developer Portal screenshot)
-    const stkUrl = 'https://uat.buni.kcbgroup.com/mm/api/request/1.0.0'
+    // 2. STK Push Endpoint (THE CORRECT URL with /stkpush suffix)
+    const stkUrl = 'https://uat.buni.kcbgroup.com/mm/api/request/1.0.0/stkpush'
     console.log('🎯 Hitting STK URL:', stkUrl)
 
     // Format exactly as per PDF: KCBTILLNO-YOURACCREF
-    // KCB Paybill is 522533
     const formattedInvoice = `522533-${invoiceNumber}`
 
     const stkPayload = {
