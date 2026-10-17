@@ -19,8 +19,8 @@ export async function POST(request: Request) {
 
     const credentials = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64')
     
-    // 1. Force Sandbox Token URL (since keys are from Sandbox portal)
-    const tokenUrl = 'https://sandbox.buni.kcbgroup.com/token?grant_type=client_credentials'
+    // 1. Token Endpoint MUST be UAT (As explicitly stated in the KCB PDF Spec)
+    const tokenUrl = 'https://uat.buni.kcbgroup.com/token?grant_type=client_credentials'
     console.log('🎯 Hitting Token URL:', tokenUrl)
 
     const tokenRes = await fetch(tokenUrl, {
@@ -32,10 +32,8 @@ export async function POST(request: Request) {
       body: 'grant_type=client_credentials',
     })
 
-    // Read as text FIRST to prevent JSON parse crashes
     const tokenText = await tokenRes.text()
     console.log('Token Response Status:', tokenRes.status)
-    console.log('Token Response Type:', tokenRes.headers.get('content-type'))
     
     let tokenData
     try {
@@ -43,7 +41,7 @@ export async function POST(request: Request) {
     } catch (e) {
       console.error('❌ TOKEN ENDPOINT RETURNED HTML! Snippet:', tokenText.substring(0, 300))
       return NextResponse.json({ 
-        error: 'Token endpoint returned HTML. Your keys might not match this environment.',
+        error: 'Token endpoint returned HTML. Check your keys.',
         snippet: tokenText.substring(0, 200)
       }, { status: 500 })
     }
@@ -55,20 +53,25 @@ export async function POST(request: Request) {
 
     console.log('✅ Token obtained successfully')
 
-    // 2. Send STK Push to Sandbox
-    const stkUrl = 'https://sandbox.buni.kcbgroup.com/mm/api/request/1.0.0'
+    // 2. STK Push Endpoint (Standard KCB WSO2 Gateway Path)
+    const stkUrl = 'https://uat.buni.kcbgroup.com/api/v1.0.0/mpesa/express'
     console.log('🎯 Hitting STK URL:', stkUrl)
+
+    // Format exactly as per PDF: KCBTILLNO-YOURACCREF
+    const formattedInvoice = `522533-${invoiceNumber}`
 
     const stkPayload = {
       phoneNumber: phoneNumber,
       amount: amount.toString(),
-      invoiceNumber: `522533-TEST123`, // Format: KCBTILLNO-YOURACCREF
+      invoiceNumber: formattedInvoice,
       sharedShortCode: true,
       orgShortCode: '',
       orgPassKey: '',
       transactionDescription: 'Ehani Homes Verification',
       callbackUrl: callbackUrl,
     }
+
+    console.log('Payload:', JSON.stringify(stkPayload))
 
     const stkRes = await fetch(stkUrl, {
       method: 'POST',
@@ -79,10 +82,8 @@ export async function POST(request: Request) {
       body: JSON.stringify(stkPayload),
     })
 
-    // Read as text FIRST to prevent JSON parse crashes
     const stkText = await stkRes.text()
     console.log('STK Response Status:', stkRes.status)
-    console.log('STK Response Type:', stkRes.headers.get('content-type'))
 
     let stkData
     try {
