@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     console.log('Sending Payload:', JSON.stringify(stkPayload))
 
     // 3. Send STK Push (Using UAT URL)
-    const stkRes = await fetch('https://uat.buni.kcbgroup.com/mm/api/request/1.0.0', {
+    const stkRes = await fetch('https://sandbox.buni.kcbgroup.com/mm/api/request/1.0.0', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
