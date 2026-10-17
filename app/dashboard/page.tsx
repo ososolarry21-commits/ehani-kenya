@@ -300,7 +300,7 @@ export default function Dashboard() {
                       />
                       <KcbPaymentButton 
                         phoneNumber={phoneNumber} 
-                        amount={500} 
+                        amount={50} 
                         tier="verified" 
                         listingId={listing.id} 
                         onSuccess={(ref) => handleStkPushSent(ref, listing.id, 'verified')} 
