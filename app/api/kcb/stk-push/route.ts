@@ -17,10 +17,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing environment variables' }, { status: 500 })
     }
 
-    // 1. Generate Token (UAT Environment - as per KCB docs)
     const credentials = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64')
     
-    const tokenRes = await fetch('https://sandbox.buni.kcbgroup.com/token?grant_type=client_credentials', {
+    // 1. Force Sandbox Token URL (since keys are from Sandbox portal)
+    const tokenUrl = 'https://sandbox.buni.kcbgroup.com/token?grant_type=client_credentials'
+    console.log('🎯 Hitting Token URL:', tokenUrl)
+
+    const tokenRes = await fetch(tokenUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -29,34 +32,43 @@ export async function POST(request: Request) {
       body: 'grant_type=client_credentials',
     })
 
-    const tokenData = await tokenRes.json()
+    // Read as text FIRST to prevent JSON parse crashes
+    const tokenText = await tokenRes.text()
+    console.log('Token Response Status:', tokenRes.status)
+    console.log('Token Response Type:', tokenRes.headers.get('content-type'))
     
+    let tokenData
+    try {
+      tokenData = JSON.parse(tokenText)
+    } catch (e) {
+      console.error('❌ TOKEN ENDPOINT RETURNED HTML! Snippet:', tokenText.substring(0, 300))
+      return NextResponse.json({ 
+        error: 'Token endpoint returned HTML. Your keys might not match this environment.',
+        snippet: tokenText.substring(0, 200)
+      }, { status: 500 })
+    }
+
     if (!tokenRes.ok || !tokenData.access_token) {
       console.error('Token Error:', tokenData)
-      return NextResponse.json({ error: 'KCB Auth Failed - Check your keys' }, { status: 401 })
+      return NextResponse.json({ error: 'KCB Auth Failed', details: tokenData }, { status: 401 })
     }
 
     console.log('✅ Token obtained successfully')
 
-    // 2. Format Payload - EXACT format from KCB spec
-    // Format: KCBTILLNO-YOURACCREF
-    const formattedInvoice = `522533-TEST123`
+    // 2. Send STK Push to Sandbox
+    const stkUrl = 'https://sandbox.buni.kcbgroup.com/mm/api/request/1.0.0'
+    console.log('🎯 Hitting STK URL:', stkUrl)
 
     const stkPayload = {
       phoneNumber: phoneNumber,
       amount: amount.toString(),
-      invoiceNumber: formattedInvoice,
+      invoiceNumber: `522533-TEST123`, // Format: KCBTILLNO-YOURACCREF
       sharedShortCode: true,
       orgShortCode: '',
       orgPassKey: '',
       transactionDescription: 'Ehani Homes Verification',
       callbackUrl: callbackUrl,
     }
-
-    // 3. Send STK Push - EXACT URL from your portal screenshot
-    const stkUrl = 'https://sandbox.buni.kcbgroup.com/mm/api/request/1.0.0'
-    console.log('🎯 Hitting STK URL:', stkUrl)
-    console.log('Payload:', JSON.stringify(stkPayload))
 
     const stkRes = await fetch(stkUrl, {
       method: 'POST',
@@ -67,33 +79,35 @@ export async function POST(request: Request) {
       body: JSON.stringify(stkPayload),
     })
 
-    const contentType = stkRes.headers.get('content-type')
-    console.log('Response Content-Type:', contentType)
-    console.log('Response Status:', stkRes.status)
+    // Read as text FIRST to prevent JSON parse crashes
+    const stkText = await stkRes.text()
+    console.log('STK Response Status:', stkRes.status)
+    console.log('STK Response Type:', stkRes.headers.get('content-type'))
 
-    const responseText = await stkRes.text()
-    
-    let result
+    let stkData
     try {
-      result = JSON.parse(responseText)
-    } catch (parseError) {
-      console.error(' KCB returned non-JSON. Raw response:', responseText.substring(0, 300))
-      return NextResponse.json({ error: 'KCB returned HTML instead of JSON' }, { status: 500 })
+      stkData = JSON.parse(stkText)
+    } catch (e) {
+      console.error('❌ STK ENDPOINT RETURNED HTML! Snippet:', stkText.substring(0, 300))
+      return NextResponse.json({ 
+        error: 'STK endpoint returned HTML.',
+        snippet: stkText.substring(0, 200)
+      }, { status: 500 })
     }
 
-    console.log('✅ KCB JSON Response:', result)
+    console.log('✅ KCB JSON Response:', stkData)
 
     if (!stkRes.ok) {
       return NextResponse.json({ 
-        error: result.header?.statusDescription || result.fault?.message || 'STK Failed',
-        details: result
+        error: stkData.header?.statusDescription || stkData.fault?.message || 'STK Failed',
+        details: stkData
       }, { status: stkRes.status })
     }
 
     return NextResponse.json({ 
       success: true, 
-      message: result.header?.statusDescription || 'Success',
-      checkoutRequestId: result.response?.CheckoutRequestID 
+      message: stkData.header?.statusDescription || 'Success',
+      checkoutRequestId: stkData.response?.CheckoutRequestID 
     })
 
   } catch (error: any) {
