@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing environment variables' }, { status: 500 })
     }
 
-    // 1. Generate Token (Using UAT URL from Spec)
+    // 1. Generate Token
     const credentials = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64')
     
     const tokenRes = await fetch('https://uat.buni.kcbgroup.com/token?grant_type=client_credentials', {
@@ -36,25 +36,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'KCB Auth Failed' }, { status: 401 })
     }
 
-    // 2. Format Payload EXACTLY as per KCB Spec
-    // Spec says invoiceNumber format: KCBTILLNO-YOURACCREF
-    // KCB Paybill is 522533
-    const formattedInvoice = `522533-${invoiceNumber}`
+    console.log('Token obtained successfully')
+
+    // 2. Send STK Push - Try SANDBOX URL since you have sandbox keys
+    const formattedInvoice = `522533-TEST123`
 
     const stkPayload = {
-      phoneNumber: phoneNumber,       // e.g., "254710236242"
-      amount: amount.toString(),      // e.g., "500" (Must be string per spec)
-      invoiceNumber: formattedInvoice, // e.g., "522533-VERIFIED-xyz"
-      sharedShortCode: true,          // Mandatory boolean per spec
-      orgShortCode: "",               // Optional
-      orgPassKey: "",                 // Optional
-      transactionDescription: "Ehani Homes Verification", // Optional
-      callbackUrl: callbackUrl,       // Mandatory secure URL
+      phoneNumber: phoneNumber,
+      amount: amount.toString(),
+      invoiceNumber: formattedInvoice,
+      sharedShortCode: true,
+      orgShortCode: '',
+      orgPassKey: '',
+      transactionDescription: 'Ehani Homes Verification',
+      callbackUrl: callbackUrl,
     }
 
     console.log('Sending Payload:', JSON.stringify(stkPayload))
 
-    // 3. Send STK Push (Using UAT URL)
+    // Try sandbox URL first
     const stkRes = await fetch('https://sandbox.buni.kcbgroup.com/mm/api/request/1.0.0', {
       method: 'POST',
       headers: {
@@ -64,7 +64,28 @@ export async function POST(request: Request) {
       body: JSON.stringify(stkPayload),
     })
 
-    const result = await stkRes.json()
+    // Check content type before parsing
+    const contentType = stkRes.headers.get('content-type')
+    console.log('Response Content-Type:', contentType)
+    console.log('Response Status:', stkRes.status)
+
+    // Get response as text first
+    const responseText = await stkRes.text()
+    console.log('Raw Response:', responseText.substring(0, 500))
+
+    // Try to parse as JSON
+    let result
+    try {
+      result = JSON.parse(responseText)
+    } catch (parseError) {
+      console.error('Failed to parse JSON. Raw response:', responseText)
+      return NextResponse.json({ 
+        error: 'KCB returned HTML instead of JSON',
+        status: stkRes.status,
+        rawResponse: responseText.substring(0, 200)
+      }, { status: 500 })
+    }
+
     console.log('KCB Response:', result)
 
     if (!stkRes.ok) {
