@@ -36,12 +36,12 @@ export default function BrowseListings() {
 
     // SMART SORTING: Featured (1) > Verified (2) > Basic/Undefined (3)
     const sortedData = (data || []).sort((a, b) => {
-      const tierValue = (tier: string | undefined) => {
-        if (tier === 'featured') return 1;
-        if (tier === 'verified') return 2;
+      const getTierValue = (listing: any) => {
+        if (listing.is_featured) return 1;
+        if (listing.is_verified) return 2;
         return 3; // basic or null/undefined
       };
-      return tierValue(a.tier) - tierValue(b.tier);
+      return getTierValue(a) - getTierValue(b);
     });
 
     setListings(sortedData);
@@ -390,22 +390,24 @@ export default function BrowseListings() {
                     {listing.type}
                   </div>
                   
-                  {/* --- NEW TIER BADGES --- */}
-                  {listing.tier === 'featured' && (
-                    <div style={{ position: 'absolute', top: 10, left: 10, background: 'linear-gradient(135deg, #F59E0B, #D97706)', color: 'white', padding: '4px 10px', borderRadius: 6, fontSize: 10, fontWeight: 800, boxShadow: '0 2px 10px rgba(245, 158, 11, 0.4)' }}>
-                      🌟 TOP PICK
-                    </div>
-                  )}
-                  {listing.tier === 'verified' && (
-                    <div style={{ position: 'absolute', top: 10, left: 10, background: 'linear-gradient(135deg, #22C55E, #16A34A)', color: 'white', padding: '4px 10px', borderRadius: 6, fontSize: 10, fontWeight: 800, boxShadow: '0 2px 10px rgba(34, 197, 94, 0.3)' }}>
-                      🛡️ VERIFIED
-                    </div>
-                  )}
+                  {/* --- UPDATED TIER BADGES (Stacked neatly) --- */}
+                  <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {listing.is_featured && (
+                      <div style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)', color: 'white', padding: '4px 10px', borderRadius: 6, fontSize: 10, fontWeight: 800, boxShadow: '0 2px 10px rgba(245, 158, 11, 0.4)', width: 'fit-content' }}>
+                        🌟 FEATURED
+                      </div>
+                    )}
+                    {listing.is_verified && (
+                      <div style={{ background: 'linear-gradient(135deg, #007BFF, #0056b3)', color: 'white', padding: '4px 10px', borderRadius: 6, fontSize: 10, fontWeight: 800, boxShadow: '0 2px 10px rgba(0, 123, 255, 0.3)', width: 'fit-content' }}>
+                        ✓ VERIFIED
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
                 <div style={{ padding: 16 }}>
                   {/* --- BASIC WARNING BANNER --- */}
-                  {(!listing.tier || listing.tier === 'basic') && (
+                  {!listing.is_verified && !listing.is_featured && (
                     <div style={{ background: '#FEF08A', color: '#854D0E', padding: '8px', borderRadius: 6, fontSize: 11, fontWeight: 'bold', marginBottom: 12, border: '1px solid #EAB308', textAlign: 'center' }}>
                       ⚠️ UNVERIFIED. Proceed with caution.
                     </div>
