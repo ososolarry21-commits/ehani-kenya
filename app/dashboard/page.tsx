@@ -82,6 +82,12 @@ export default function Dashboard() {
     }
   }
 
+  // 🆕 NEW: Function to remove a specific image by its index
+  const removeImage = (indexToRemove: number) => {
+    setImages(prev => prev.filter((_, index) => index !== indexToRemove))
+    setImagePreviews(prev => prev.filter((_, index) => index !== indexToRemove))
+  }
+
   const toggleAmenity = (amenity: string) => {
     setFormData(prev => {
       const current = prev.amenities
@@ -208,7 +214,7 @@ export default function Dashboard() {
           <form onSubmit={handleAddListing} style={{ background: 'white', padding: 30, borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.06)', marginBottom: 40 }}>
             <h2 style={{ margin: '0 0 24px 0', color: '#1C1209' }}>Create New Listing</h2>
             
-            {/* 🆕 UPDATED: Friendly Image Upload UI */}
+            {/* 🆕 UPDATED: Friendly Image Upload UI with Remove Button */}
             <div style={{ marginBottom: 24 }}>
               <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#1C1209' }}>Property Images</label>
               <p style={{ fontSize: 13, color: '#6B5B4E', marginBottom: 12, marginTop: 0 }}>
@@ -247,8 +253,34 @@ export default function Dashboard() {
               {imagePreviews.length > 0 && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 10, marginTop: 16 }}>
                   {imagePreviews.map((preview, index) => (
-                    <div key={index} style={{ borderRadius: 8, overflow: 'hidden', aspectRatio: '1' }}>
+                    <div key={index} style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', aspectRatio: '1' }}>
                       <img src={preview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      
+                      {/* 🆕 NEW: Remove Button */}
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        style={{
+                          position: 'absolute',
+                          top: 4,
+                          right: 4,
+                          background: 'rgba(220, 53, 69, 0.9)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: 24,
+                          height: 24,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 14,
+                          fontWeight: 'bold',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }}
+                      >
+                        ✕
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -342,7 +374,7 @@ export default function Dashboard() {
                       {!listing.is_verified && !listing.verification_payment_received && (
                         <KcbPaymentButton 
                           phoneNumber={phoneNumber} 
-                          amount={50} 
+                          amount={500} 
                           tier="verified" 
                           listingId={listing.id} 
                           onSuccess={(ref: any) => handleStkPushSent(ref, listing.id, 'verified')} 
@@ -352,7 +384,7 @@ export default function Dashboard() {
                       {!listing.is_featured && (
                         <KcbPaymentButton 
                           phoneNumber={phoneNumber} 
-                          amount={50} 
+                          amount={1500} 
                           tier="featured" 
                           listingId={listing.id} 
                           onSuccess={(ref: any) => handleStkPushSent(ref, listing.id, 'featured')} 
