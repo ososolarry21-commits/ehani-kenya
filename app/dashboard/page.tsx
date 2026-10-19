@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
-import KcbPaymentButton from '../../components/KcbPaymentButton'
+import KcbPaymentButton from '../components/KcbPaymentButton'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -71,12 +71,14 @@ export default function Dashboard() {
     }
   }
 
+  // 🆕 UPDATED: Appends new images instead of replacing them
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const selectedFiles = Array.from(e.target.files)
-      setImages(selectedFiles)
+      setImages(prev => [...prev, ...selectedFiles])
       const previews = selectedFiles.map(file => URL.createObjectURL(file))
-      setImagePreviews(previews)
+      setImagePreviews(prev => [...prev, ...previews])
+      e.target.value = '' // Reset input so selecting the same file again works
     }
   }
 
@@ -145,7 +147,6 @@ export default function Dashboard() {
     router.push('/')
   }
 
-  // Handle what happens when the STK push is successfully SENT to the phone
   function handleStkPushSent(checkoutRequestId: string, listingId: string, tier: string) {
     const tierName = tier === 'verified' ? 'Verification (KSh 50)' : 'Featured (KSh 50)' 
     alert(`M-Pesa prompt sent for ${tierName}! Please check your phone (${phoneNumber}) to enter your PIN.`)
@@ -206,15 +207,54 @@ export default function Dashboard() {
         {showAddForm && (
           <form onSubmit={handleAddListing} style={{ background: 'white', padding: 30, borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.06)', marginBottom: 40 }}>
             <h2 style={{ margin: '0 0 24px 0', color: '#1C1209' }}>Create New Listing</h2>
+            
+            {/* 🆕 UPDATED: Friendly Image Upload UI */}
             <div style={{ marginBottom: 24 }}>
               <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#1C1209' }}>Property Images</label>
-              <input type="file" accept="image/*" multiple onChange={handleImageChange} style={{ width: '100%', padding: '12px', border: '2px dashed #DDD0C4', borderRadius: 8 }} />
+              <p style={{ fontSize: 13, color: '#6B5B4E', marginBottom: 12, marginTop: 0 }}>
+                Tap the button below to add photos. You can add more photos anytime!
+              </p>
+              
+              <input 
+                type="file" 
+                accept="image/*" 
+                multiple 
+                onChange={handleImageChange} 
+                style={{ display: 'none' }} 
+                id="image-upload-btn" 
+              />
+              
+              <label 
+                htmlFor="image-upload-btn" 
+                style={{ 
+                  display: 'inline-block', 
+                  padding: '12px 24px', 
+                  background: '#F0EAE3', 
+                  color: '#1C1209', 
+                  borderRadius: 8, 
+                  cursor: 'pointer', 
+                  fontWeight: 600, 
+                  border: '2px dashed #DDD0C4', 
+                  marginBottom: 16,
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#E8DFD5'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#F0EAE3'}
+              >
+                📸 {images.length > 0 ? 'Add More Photos' : 'Choose Photos'}
+              </label>
+
               {imagePreviews.length > 0 && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 10, marginTop: 16 }}>
-                  {imagePreviews.map((preview, index) => <div key={index} style={{ borderRadius: 8, overflow: 'hidden', aspectRatio: '1' }}><img src={preview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>)}
+                  {imagePreviews.map((preview, index) => (
+                    <div key={index} style={{ borderRadius: 8, overflow: 'hidden', aspectRatio: '1' }}>
+                      <img src={preview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                  ))}
                 </div>
-                )}
+              )}
             </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16 }}>
               <input placeholder="Property Name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8 }} />
               <select value={formData.type} onChange={(e) => setFormData({...formData, type: e.target.value})} style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8 }}>
@@ -251,7 +291,7 @@ export default function Dashboard() {
         
         {listings.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 60, background: 'white', borderRadius: 16 }}>
-            <div style={{ fontSize: 64, marginBottom: 20 }}></div>
+            <div style={{ fontSize: 64, marginBottom: 20 }}>📭</div>
             <h3 style={{ color: '#1C1209', marginBottom: 12 }}>No listings yet</h3>
           </div>
         ) : (
@@ -267,7 +307,7 @@ export default function Dashboard() {
                       <span style={{ background: '#F0EAE3', padding: '4px 10px', borderRadius: 6 }}>{listing.type}</span>
                       <span style={{ fontWeight: 700, color: '#D4873A' }}>KSh {listing.price?.toLocaleString()}/mo</span>
                       <span style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>👁️ {listing.views || 0} views</span>
-                      <span style={{ background: '#FFF3E0', color: '#E65100', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}> {listing.contacts || 0} contacts</span>
+                      <span style={{ background: '#FFF3E0', color: '#E65100', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>📞 {listing.contacts || 0} contacts</span>
                     </div>
                   </div>
                 </div>
@@ -277,12 +317,10 @@ export default function Dashboard() {
                     {listing.status === 'approved' ? 'Approved' : listing.status === 'pending' ? 'Pending' : 'Rejected'}
                   </span>
                   
-                  {/* VERIFIED BADGE */}
                   {listing.is_verified && (
                     <span style={{ background: 'linear-gradient(135deg, #007BFF, #0056b3)', color: 'white', padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 700 }}>✓ VERIFIED</span>
                   )}
 
-                  {/* FEATURED BADGE */}
                   {listing.is_featured && (
                     <span style={{ background: 'linear-gradient(135deg, #FFD700, #FFA500)', color: '#1C1209', padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 700 }}>⭐ FEATURED</span>
                   )}
@@ -291,7 +329,6 @@ export default function Dashboard() {
                     <span style={{ background: '#E3F2FD', color: '#1976D2', padding: '6px 14px', borderRadius: 6, fontSize: 11, fontWeight: 600 }}>💰 Verification Payment Received - Awaiting Agent</span>
                   )}
                   
-                  {/* KCB PAYMENT INTEGRATION */}
                   {listing.status === 'approved' && (!listing.is_verified || !listing.is_featured) && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 220 }}>
                       <input
@@ -302,22 +339,20 @@ export default function Dashboard() {
                         style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #DDD0C4', fontSize: 14, outline: 'none' }}
                       />
                       
-                      {/* Verified Payment Button (Only shows if not yet paid/verified) */}
                       {!listing.is_verified && !listing.verification_payment_received && (
                         <KcbPaymentButton 
                           phoneNumber={phoneNumber} 
-                          amount={50} // ⚠️ CHANGE TO 500 WHEN LIVE
+                          amount={50} 
                           tier="verified" 
                           listingId={listing.id} 
                           onSuccess={(ref: any) => handleStkPushSent(ref, listing.id, 'verified')} 
                         />
                       )}
 
-                      {/* Featured Payment Button (Only shows if not yet featured) */}
                       {!listing.is_featured && (
                         <KcbPaymentButton 
                           phoneNumber={phoneNumber} 
-                          amount={50} // ⚠️ CHANGE TO 1500 WHEN LIVE
+                          amount={50} 
                           tier="featured" 
                           listingId={listing.id} 
                           onSuccess={(ref: any) => handleStkPushSent(ref, listing.id, 'featured')} 
