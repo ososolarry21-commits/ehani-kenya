@@ -79,7 +79,6 @@ export default function ListingDetails() {
   }
 
   const handleContactClick = () => {
-    // If unverified, we still show the contact box, but it will render the warning instead of the number
     if (!listing.is_verified) {
       setShowContact(true)
       return
@@ -137,274 +136,308 @@ export default function ListingDetails() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#FDF8F3', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
-      {/* Navigation */}
-      <nav style={{ background: 'white', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 15px rgba(0,0,0,0.05)', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => router.push('/')}>
-          <img src="/logo.png" alt="Ehani" style={{ height: '45px', width: 'auto', objectFit: 'contain' }} />
-        </div>
-        <button onClick={() => router.push('/browse')} style={{ padding: '8px 16px', background: '#F0EAE3', color: '#1C1209', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
-          ← Back to Listings
-        </button>
-      </nav>
+    <>
+      {/* 🆕 AEO: JSON-LD Schema for Real Estate Listing */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": listing.name,
+            "description": listing.description || `Verified ${listing.type} in ${listing.area}, ${listing.city}`,
+            "image": listing.images?.[0] || "",
+            "category": "Rental Property",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": listing.city,
+              "addressRegion": "Nairobi",
+              "addressCountry": "KE",
+              "streetAddress": listing.area
+            },
+            "offers": {
+              "@type": "Offer",
+              "price": listing.price,
+              "priceCurrency": "KES",
+              "availability": "https://schema.org/InStock"
+            },
+            "brand": {
+              "@type": "Brand",
+              "name": "Ehani Homes"
+            }
+          })
+        }}
+      />
 
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '20px' }}>
-        {/* Image Gallery */}
-        <div style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', marginBottom: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-          <div style={{ 
-            height: 400, 
-            background: (() => {
-              const images = listing.images || [];
-              const currentImg = Array.isArray(images) ? images[currentImage] : images;
-              return currentImg ? `url("${currentImg}") center/cover` : 'linear-gradient(135deg, #D4873A, #E8B86D)';
-            })(),
-            transition: 'background 0.3s ease'
-          }} />
-          
-          {/* Navigation Arrows */}
-          {(() => {
-            const images = listing.images || [];
-            const imageCount = Array.isArray(images) ? images.length : (images ? 1 : 0);
+      <div style={{ minHeight: '100vh', background: '#FDF8F3', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
+        {/* Navigation */}
+        <nav style={{ background: 'white', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 15px rgba(0,0,0,0.05)', position: 'sticky', top: 0, zIndex: 100 }}>
+          <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => router.push('/')}>
+            <img src="/logo.png" alt="Ehani" style={{ height: '45px', width: 'auto', objectFit: 'contain' }} />
+          </div>
+          <button onClick={() => router.push('/browse')} style={{ padding: '8px 16px', background: '#F0EAE3', color: '#1C1209', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
+            ← Back to Listings
+          </button>
+        </nav>
+
+        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '20px' }}>
+          {/* Image Gallery */}
+          <div style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', marginBottom: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+            <div style={{ 
+              height: 400, 
+              background: (() => {
+                const images = listing.images || [];
+                const currentImg = Array.isArray(images) ? images[currentImage] : images;
+                return currentImg ? `url("${currentImg}") center/cover` : 'linear-gradient(135deg, #D4873A, #E8B86D)';
+              })(),
+              transition: 'background 0.3s ease'
+            }} />
             
-            return imageCount > 1 ? (
-              <>
-                <button 
-                  onClick={() => setCurrentImage(prev => prev === 0 ? imageCount - 1 : prev - 1)}
-                  style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '50%', width: 40, height: 40, cursor: 'pointer', fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1C1209' }}
-                >
-                  ‹
-                </button>
-                <button 
-                  onClick={() => setCurrentImage(prev => prev === imageCount - 1 ? 0 : prev + 1)}
-                  style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '50%', width: 40, height: 40, cursor: 'pointer', fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1C1209' }}
-                >
-                  ›
-                </button>
-                
-                <div style={{ position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 6 }}>
-                  {Array.from({ length: imageCount }, (_, idx) => (
-                    <div key={idx} style={{ width: 8, height: 8, borderRadius: '50%', background: idx === currentImage ? 'white' : 'rgba(255,255,255,0.5)', transition: 'all 0.2s' }} />
-                  ))}
-                </div>
-              </>
-            ) : null;
-          })()}
-          
-          {/* UPDATED BADGES */}
-          <div style={{ position: 'absolute', top: 16, left: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {listing.is_featured && (
-              <span style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)', color: 'white', padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 800, boxShadow: '0 2px 10px rgba(245, 158, 11, 0.4)', width: 'fit-content' }}>
-                🌟 FEATURED
-              </span>
-            )}
-            {listing.is_verified && (
-              <span style={{ background: 'linear-gradient(135deg, #007BFF, #0056b3)', color: 'white', padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 800, boxShadow: '0 2px 10px rgba(0, 123, 255, 0.3)', width: 'fit-content' }}>
-                ✓ VERIFIED
-              </span>
-            )}
-            <span style={{ background: 'rgba(28,18,9,0.85)', color: 'white', padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 700, backdropFilter: 'blur(4px)', width: 'fit-content' }}>
-              {listing.type}
-            </span>
-          </div>
-        </div>
-
-        {/* Content Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
-          {/* Left Column: Details */}
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 16 }}>
-              <div style={{ flex: 1 }}>
-                <h1 style={{ margin: '0 0 8px 0', fontSize: 28, fontWeight: 800, color: '#1C1209' }}>{listing.name}</h1>
-                <p style={{ margin: 0, fontSize: 16, color: '#6B5B4E' }}>📍 {listing.area}, {listing.city}</p>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 24, fontWeight: 800, color: '#D4873A' }}>KSh {listing.price?.toLocaleString()}</div>
-                <div style={{ fontSize: 13, color: '#6B5B4E' }}>per month</div>
-              </div>
-            </div>
-
-            {/* UNVERIFIED WARNING BANNER */}
-            {!listing.is_verified && (
-              <div style={{ background: '#FEF08A', color: '#854D0E', padding: '12px', borderRadius: 8, fontSize: 13, fontWeight: 'bold', marginBottom: 16, border: '1px solid #EAB308', display: 'flex', alignItems: 'center', gap: 8 }}>
-                ⚠️ UNVERIFIED LISTING. Ehani has not inspected this property. Proceed with caution.
-              </div>
-            )}
-
-            <div style={{ background: 'white', padding: 24, borderRadius: 12, marginBottom: 20, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-              <h3 style={{ margin: '0 0 16px 0', color: '#1C1209', fontSize: 18 }}>Property Details</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <div>
-                  <div style={{ fontSize: 12, color: '#999', marginBottom: 4 }}>Type</div>
-                  <div style={{ fontWeight: 600, color: '#1C1209' }}>{listing.type}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 12, color: '#999', marginBottom: 4 }}>Gender</div>
-                  <div style={{ fontWeight: 600, color: '#1C1209' }}>{listing.gender}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 12, color: '#999', marginBottom: 4 }}>Deposit</div>
-                  <div style={{ fontWeight: 600, color: '#1C1209' }}>{listing.deposit ? `KSh ${listing.deposit.toLocaleString()}` : 'None'}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 12, color: '#999', marginBottom: 4 }}>Distance</div>
-                  <div style={{ fontWeight: 600, color: '#1C1209' }}>{listing.distance || 'N/A'}</div>
-                </div>
-              </div>
-            </div>
-
-            {listing.description && (
-              <div style={{ background: 'white', padding: 24, borderRadius: 12, marginBottom: 20, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-                <h3 style={{ margin: '0 0 12px 0', color: '#1C1209', fontSize: 18 }}>Description</h3>
-                <p style={{ margin: 0, color: '#4a4a4a', lineHeight: 1.6, fontSize: 15 }}>{listing.description}</p>
-              </div>
-            )}
-
-            {listing.amenities && listing.amenities.length > 0 && (
-              <div style={{ background: 'white', padding: 24, borderRadius: 12, marginBottom: 20, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-                <h3 style={{ margin: '0 0 16px 0', color: '#1C1209', fontSize: 18 }}>Amenities</h3>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {listing.amenities.map((amenity: string, idx: number) => (
-                    <span key={idx} style={{ background: '#F0EAE3', color: '#1C1209', padding: '6px 12px', borderRadius: 6, fontSize: 13, fontWeight: 600 }}>
-                      ✓ {amenity}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Right Column: Contact & Info */}
-          <div>
-            <div style={{ background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.06)', position: 'sticky', top: 90 }}>
-              <h3 style={{ margin: '0 0 20px 0', color: '#1C1209', fontSize: 18 }}>Interested in this property?</h3>
+            {/* Navigation Arrows */}
+            {(() => {
+              const images = listing.images || [];
+              const imageCount = Array.isArray(images) ? images.length : (images ? 1 : 0);
               
-              <button 
-                onClick={handleSaveProperty}
-                disabled={saving}
-                style={{ 
-                  width: '100%', padding: '14px', background: isSaved ? '#E8F5E9' : 'white', color: isSaved ? '#2E7D32' : '#1C1209', 
-                  border: '2px solid #DDD0C4', borderRadius: 10, cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 15,
-                  marginBottom: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.2s'
-                }}
-              >
-                {saving ? 'Processing...' : (isSaved ? '❤️ Saved to Favorites' : '🤍 Save to Favorites')}
-              </button>
-
-              {!showContact ? (
-                <button 
-                  onClick={handleContactClick}
-                  style={{ 
-                    width: '100%', padding: '16px', background: 'linear-gradient(135deg, #00C35D, #009E4B)', color: 'white', border: 'none', 
-                    borderRadius: 10, cursor: 'pointer', fontWeight: 700, fontSize: 16, boxShadow: '0 4px 15px rgba(0, 195, 93, 0.3)',
-                    transition: 'transform 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                >
-                  📞 Contact Landlord
-                </button>
-              ) : (
-                // VERIFICATION LOGIC FOR CONTACT REVEAL
-                !listing.is_verified ? (
-                  <div style={{ background: '#FEF08A', padding: 20, borderRadius: 10, border: '1px solid #EAB308', textAlign: 'center' }}>
-                    <div style={{ fontSize: 32, marginBottom: 12 }}>🔒</div>
-                    <div style={{ fontSize: 14, color: '#854D0E', fontWeight: 700, marginBottom: 12 }}>
-                      Contact Details Hidden
-                    </div>
-                    <p style={{ fontSize: 13, color: '#854D0E', marginBottom: 16, lineHeight: 1.5 }}>
-                      This listing is unverified. For your safety, we do not display direct contact info for unverified properties. 
-                      <br/><br/>
-                      Please contact Ehani Support to request verification of this property.
-                    </p>
-                    <a 
-                      href={`mailto:support@ehani.co.ke?subject=Verification Request for Property: ${listing.name}`}
-                      style={{ 
-                        display: 'block', width: '100%', padding: '12px', background: '#D4873A', color: 'white', 
-                        border: 'none', borderRadius: 8, textDecoration: 'none', fontWeight: 700, fontSize: 14, boxSizing: 'border-box'
-                      }}
-                    >
-                      📧 Email Support to Verify
-                    </a>
+              return imageCount > 1 ? (
+                <>
+                  <button 
+                    onClick={() => setCurrentImage(prev => prev === 0 ? imageCount - 1 : prev - 1)}
+                    style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '50%', width: 40, height: 40, cursor: 'pointer', fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1C1209' }}
+                  >
+                    ‹
+                  </button>
+                  <button 
+                    onClick={() => setCurrentImage(prev => prev === imageCount - 1 ? 0 : prev + 1)}
+                    style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '50%', width: 40, height: 40, cursor: 'pointer', fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1C1209' }}
+                  >
+                    ›
+                  </button>
+                  
+                  <div style={{ position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 6 }}>
+                    {Array.from({ length: imageCount }, (_, idx) => (
+                      <div key={idx} style={{ width: 8, height: 8, borderRadius: '50%', background: idx === currentImage ? 'white' : 'rgba(255,255,255,0.5)', transition: 'all 0.2s' }} />
+                    ))}
                   </div>
-                ) : (
-                  // VERIFIED CONTACT REVEAL
-                  <div style={{ background: '#E8F5E9', padding: 20, borderRadius: 10, border: '1px solid #C8E6C9' }}>
-                    <div style={{ fontSize: 14, color: '#2E7D32', fontWeight: 600, marginBottom: 16 }}>
-                      ✅ Contact Details Revealed
-                    </div>
-                    
-                    <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Landlord Name</div>
-                      <div style={{ fontWeight: 700, color: '#1C1209', fontSize: 16 }}>{landlord?.name || 'Property Manager'}</div>
-                    </div>
-                    
-                    <div style={{ marginBottom: 20 }}>
-                      <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Phone Number</div>
-                      <div style={{ fontWeight: 700, color: '#1C1209', fontSize: 16 }}>
-                        {(() => {
-                          let displayPhone = landlord?.phone?.replace(/\D/g, '') || ''
-                          if (displayPhone.startsWith('0')) displayPhone = '+254' + displayPhone.substring(1)
-                          else if (displayPhone.startsWith('254')) displayPhone = '+' + displayPhone
-                          else if (!displayPhone.startsWith('+')) displayPhone = '+254' + displayPhone
-                          return displayPhone
-                        })()}
-                      </div>
-                    </div>
-                    
-                    <button 
-                      onClick={() => {
-                        let whatsappPhone = landlord?.phone?.replace(/\D/g, '') || ''
-                        if (whatsappPhone.startsWith('0')) whatsappPhone = '254' + whatsappPhone.substring(1)
-                        else if (whatsappPhone.startsWith('+')) whatsappPhone = whatsappPhone.substring(1)
-                        
-                        const message = `Hi, I'm interested in ${listing.name} - KSh ${listing.price?.toLocaleString()}/month. Is it still available?`
-                        window.open(`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`, '_blank')
-                      }}
-                      style={{ width: '100%', padding: '14px', background: '#25D366', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 15, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-                    >
-                      💬 Chat on WhatsApp
-                    </button>
-                    
-                    <button 
-                      onClick={() => {
-                        let callPhone = landlord?.phone?.replace(/\D/g, '') || ''
-                        if (callPhone.startsWith('0')) callPhone = '+254' + callPhone.substring(1)
-                        else if (callPhone.startsWith('254')) callPhone = '+' + callPhone
-                        else if (!callPhone.startsWith('+')) callPhone = '+254' + callPhone
-                        
-                        window.location.href = `tel:${callPhone}`
-                      }}
-                      style={{ width: '100%', padding: '14px', background: '#007BFF', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 15, marginBottom: 10 }}
-                    >
-                      📞 Call Now
-                    </button>
-                    
-                    {landlord?.email && (
-                      <button 
-                        onClick={() => window.location.href = `mailto:${landlord.email}?subject=Inquiry about ${listing.name}`}
-                        style={{ width: '100%', padding: '12px', background: 'white', color: '#007BFF', border: '2px solid #007BFF', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}
-                      >
-                        ✉️ Send Email
-                      </button>
-                    )}
-                  </div>
-                )
+                </>
+              ) : null;
+            })()}
+            
+            {/* UPDATED BADGES */}
+            <div style={{ position: 'absolute', top: 16, left: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {listing.is_featured && (
+                <span style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)', color: 'white', padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 800, boxShadow: '0 2px 10px rgba(245, 158, 11, 0.4)', width: 'fit-content' }}>
+                   FEATURED
+                </span>
               )}
-              
-              <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #eee' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <span style={{ color: '#6B5B4E', fontSize: 14 }}>Nearest Institution</span>
-                  <span style={{ fontWeight: 600, color: '#1C1209', fontSize: 14 }}>{listing.institution}</span>
+              {listing.is_verified && (
+                <span style={{ background: 'linear-gradient(135deg, #007BFF, #0056b3)', color: 'white', padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 800, boxShadow: '0 2px 10px rgba(0, 123, 255, 0.3)', width: 'fit-content' }}>
+                  ✓ VERIFIED
+                </span>
+              )}
+              <span style={{ background: 'rgba(28,18,9,0.85)', color: 'white', padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 700, backdropFilter: 'blur(4px)', width: 'fit-content' }}>
+                {listing.type}
+              </span>
+            </div>
+          </div>
+
+          {/* Content Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+            {/* Left Column: Details */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 16 }}>
+                <div style={{ flex: 1 }}>
+                  <h1 style={{ margin: '0 0 8px 0', fontSize: 28, fontWeight: 800, color: '#1C1209' }}>{listing.name}</h1>
+                  <p style={{ margin: 0, fontSize: 16, color: '#6B5B4E' }}> {listing.area}, {listing.city}</p>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#6B5B4E', fontSize: 14 }}>Property ID</span>
-                  <span style={{ fontWeight: 600, color: '#999', fontSize: 12 }}>#{listing.id.substring(0, 8)}</span>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: 24, fontWeight: 800, color: '#D4873A' }}>KSh {listing.price?.toLocaleString()}</div>
+                  <div style={{ fontSize: 13, color: '#6B5B4E' }}>per month</div>
+                </div>
+              </div>
+
+              {/* UNVERIFIED WARNING BANNER */}
+              {!listing.is_verified && (
+                <div style={{ background: '#FEF08A', color: '#854D0E', padding: '12px', borderRadius: 8, fontSize: 13, fontWeight: 'bold', marginBottom: 16, border: '1px solid #EAB308', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  ⚠️ UNVERIFIED LISTING. Ehani has not inspected this property. Proceed with caution.
+                </div>
+              )}
+
+              <div style={{ background: 'white', padding: 24, borderRadius: 12, marginBottom: 20, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
+                <h3 style={{ margin: '0 0 16px 0', color: '#1C1209', fontSize: 18 }}>Property Details</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div>
+                    <div style={{ fontSize: 12, color: '#999', marginBottom: 4 }}>Type</div>
+                    <div style={{ fontWeight: 600, color: '#1C1209' }}>{listing.type}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 12, color: '#999', marginBottom: 4 }}>Gender</div>
+                    <div style={{ fontWeight: 600, color: '#1C1209' }}>{listing.gender}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 12, color: '#999', marginBottom: 4 }}>Deposit</div>
+                    <div style={{ fontWeight: 600, color: '#1C1209' }}>{listing.deposit ? `KSh ${listing.deposit.toLocaleString()}` : 'None'}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 12, color: '#999', marginBottom: 4 }}>Distance</div>
+                    <div style={{ fontWeight: 600, color: '#1C1209' }}>{listing.distance || 'N/A'}</div>
+                  </div>
+                </div>
+              </div>
+
+              {listing.description && (
+                <div style={{ background: 'white', padding: 24, borderRadius: 12, marginBottom: 20, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
+                  <h3 style={{ margin: '0 0 12px 0', color: '#1C1209', fontSize: 18 }}>Description</h3>
+                  <p style={{ margin: 0, color: '#4a4a4a', lineHeight: 1.6, fontSize: 15 }}>{listing.description}</p>
+                </div>
+              )}
+
+              {listing.amenities && listing.amenities.length > 0 && (
+                <div style={{ background: 'white', padding: 24, borderRadius: 12, marginBottom: 20, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
+                  <h3 style={{ margin: '0 0 16px 0', color: '#1C1209', fontSize: 18 }}>Amenities</h3>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {listing.amenities.map((amenity: string, idx: number) => (
+                      <span key={idx} style={{ background: '#F0EAE3', color: '#1C1209', padding: '6px 12px', borderRadius: 6, fontSize: 13, fontWeight: 600 }}>
+                        ✓ {amenity}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Right Column: Contact & Info */}
+            <div>
+              <div style={{ background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.06)', position: 'sticky', top: 90 }}>
+                <h3 style={{ margin: '0 0 20px 0', color: '#1C1209', fontSize: 18 }}>Interested in this property?</h3>
+                
+                <button 
+                  onClick={handleSaveProperty}
+                  disabled={saving}
+                  style={{ 
+                    width: '100%', padding: '14px', background: isSaved ? '#E8F5E9' : 'white', color: isSaved ? '#2E7D32' : '#1C1209', 
+                    border: '2px solid #DDD0C4', borderRadius: 10, cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 15,
+                    marginBottom: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.2s'
+                  }}
+                >
+                  {saving ? 'Processing...' : (isSaved ? '❤️ Saved to Favorites' : '🤍 Save to Favorites')}
+                </button>
+
+                {!showContact ? (
+                  <button 
+                    onClick={handleContactClick}
+                    style={{ 
+                      width: '100%', padding: '16px', background: 'linear-gradient(135deg, #00C35D, #009E4B)', color: 'white', border: 'none', 
+                      borderRadius: 10, cursor: 'pointer', fontWeight: 700, fontSize: 16, boxShadow: '0 4px 15px rgba(0, 195, 93, 0.3)',
+                      transition: 'transform 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                  >
+                     Contact Landlord
+                  </button>
+                ) : (
+                  // VERIFICATION LOGIC FOR CONTACT REVEAL
+                  !listing.is_verified ? (
+                    <div style={{ background: '#FEF08A', padding: 20, borderRadius: 10, border: '1px solid #EAB308', textAlign: 'center' }}>
+                      <div style={{ fontSize: 32, marginBottom: 12 }}>🔒</div>
+                      <div style={{ fontSize: 14, color: '#854D0E', fontWeight: 700, marginBottom: 12 }}>
+                        Contact Details Hidden
+                      </div>
+                      <p style={{ fontSize: 13, color: '#854D0E', marginBottom: 16, lineHeight: 1.5 }}>
+                        This listing is unverified. For your safety, we do not display direct contact info for unverified properties. 
+                        <br/><br/>
+                        Please contact Ehani Support to request verification of this property.
+                      </p>
+                      <a 
+                        href={`mailto:support@ehani.co.ke?subject=Verification Request for Property: ${listing.name}`}
+                        style={{ 
+                          display: 'block', width: '100%', padding: '12px', background: '#D4873A', color: 'white', 
+                          border: 'none', borderRadius: 8, textDecoration: 'none', fontWeight: 700, fontSize: 14, boxSizing: 'border-box'
+                        }}
+                      >
+                        📧 Email Support to Verify
+                      </a>
+                    </div>
+                  ) : (
+                    // VERIFIED CONTACT REVEAL
+                    <div style={{ background: '#E8F5E9', padding: 20, borderRadius: 10, border: '1px solid #C8E6C9' }}>
+                      <div style={{ fontSize: 14, color: '#2E7D32', fontWeight: 600, marginBottom: 16 }}>
+                        ✅ Contact Details Revealed
+                      </div>
+                      
+                      <div style={{ marginBottom: 16 }}>
+                        <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Landlord Name</div>
+                        <div style={{ fontWeight: 700, color: '#1C1209', fontSize: 16 }}>{landlord?.name || 'Property Manager'}</div>
+                      </div>
+                      
+                      <div style={{ marginBottom: 20 }}>
+                        <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Phone Number</div>
+                        <div style={{ fontWeight: 700, color: '#1C1209', fontSize: 16 }}>
+                          {(() => {
+                            let displayPhone = landlord?.phone?.replace(/\D/g, '') || ''
+                            if (displayPhone.startsWith('0')) displayPhone = '+254' + displayPhone.substring(1)
+                            else if (displayPhone.startsWith('254')) displayPhone = '+' + displayPhone
+                            else if (!displayPhone.startsWith('+')) displayPhone = '+254' + displayPhone
+                            return displayPhone
+                          })()}
+                        </div>
+                      </div>
+                      
+                      <button 
+                        onClick={() => {
+                          let whatsappPhone = landlord?.phone?.replace(/\D/g, '') || ''
+                          if (whatsappPhone.startsWith('0')) whatsappPhone = '254' + whatsappPhone.substring(1)
+                          else if (whatsappPhone.startsWith('+')) whatsappPhone = whatsappPhone.substring(1)
+                          
+                          const message = `Hi, I'm interested in ${listing.name} - KSh ${listing.price?.toLocaleString()}/month. Is it still available?`
+                          window.open(`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`, '_blank')
+                        }}
+                        style={{ width: '100%', padding: '14px', background: '#25D366', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 15, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                      >
+                        💬 Chat on WhatsApp
+                      </button>
+                      
+                      <button 
+                        onClick={() => {
+                          let callPhone = landlord?.phone?.replace(/\D/g, '') || ''
+                          if (callPhone.startsWith('0')) callPhone = '+254' + callPhone.substring(1)
+                          else if (callPhone.startsWith('254')) callPhone = '+' + callPhone
+                          else if (!callPhone.startsWith('+')) callPhone = '+254' + callPhone
+                          
+                          window.location.href = `tel:${callPhone}`
+                        }}
+                        style={{ width: '100%', padding: '14px', background: '#007BFF', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 15, marginBottom: 10 }}
+                      >
+                        📞 Call Now
+                      </button>
+                      
+                      {landlord?.email && (
+                        <button 
+                          onClick={() => window.location.href = `mailto:${landlord.email}?subject=Inquiry about ${listing.name}`}
+                          style={{ width: '100%', padding: '12px', background: 'white', color: '#007BFF', border: '2px solid #007BFF', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}
+                        >
+                          ✉️ Send Email
+                        </button>
+                      )}
+                    </div>
+                  )
+                )}
+                
+                <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #eee' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <span style={{ color: '#6B5B4E', fontSize: 14 }}>Nearest Institution</span>
+                    <span style={{ fontWeight: 600, color: '#1C1209', fontSize: 14 }}>{listing.institution}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#6B5B4E', fontSize: 14 }}>Property ID</span>
+                    <span style={{ fontWeight: 600, color: '#999', fontSize: 12 }}>#{listing.id.substring(0, 8)}</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
