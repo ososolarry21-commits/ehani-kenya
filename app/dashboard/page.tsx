@@ -309,7 +309,7 @@ export default function Dashboard() {
                           amount={50} // ⚠️ CHANGE TO 500 WHEN LIVE
                           tier="verified" 
                           listingId={listing.id} 
-                          onSuccess={(ref) => handleStkPushSent(ref, listing.id, 'verified')} 
+                          onSuccess={(ref: any) => handleStkPushSent(ref, listing.id, 'verified')} 
                         />
                       )}
 
@@ -320,7 +320,7 @@ export default function Dashboard() {
                           amount={50} // ⚠️ CHANGE TO 1500 WHEN LIVE
                           tier="featured" 
                           listingId={listing.id} 
-                          onSuccess={(ref) => handleStkPushSent(ref, listing.id, 'featured')} 
+                          onSuccess={(ref: any) => handleStkPushSent(ref, listing.id, 'featured')} 
                         />
                       )}
                     </div>
