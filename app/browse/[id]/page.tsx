@@ -79,8 +79,8 @@ export default function ListingDetails() {
   }
 
   const handleContactClick = () => {
-    // If basic, we still show the contact box, but it will render the warning instead of the number
-    if (!listing.tier || listing.tier === 'basic') {
+    // If unverified, we still show the contact box, but it will render the warning instead of the number
+    if (!listing.is_verified) {
       setShowContact(true)
       return
     }
@@ -190,19 +190,19 @@ export default function ListingDetails() {
             ) : null;
           })()}
           
-          {/* NEW TIER BADGES */}
-          <div style={{ position: 'absolute', top: 16, left: 16, display: 'flex', gap: 8 }}>
-            {listing.tier === 'featured' && (
-              <span style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)', color: 'white', padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 800, boxShadow: '0 2px 10px rgba(245, 158, 11, 0.4)' }}>
-                🌟 TOP PICK
+          {/* UPDATED BADGES */}
+          <div style={{ position: 'absolute', top: 16, left: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {listing.is_featured && (
+              <span style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)', color: 'white', padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 800, boxShadow: '0 2px 10px rgba(245, 158, 11, 0.4)', width: 'fit-content' }}>
+                🌟 FEATURED
               </span>
             )}
-            {listing.tier === 'verified' && (
-              <span style={{ background: 'linear-gradient(135deg, #22C55E, #16A34A)', color: 'white', padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 800, boxShadow: '0 2px 10px rgba(34, 197, 94, 0.3)' }}>
-                🛡️ VERIFIED
+            {listing.is_verified && (
+              <span style={{ background: 'linear-gradient(135deg, #007BFF, #0056b3)', color: 'white', padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 800, boxShadow: '0 2px 10px rgba(0, 123, 255, 0.3)', width: 'fit-content' }}>
+                ✓ VERIFIED
               </span>
             )}
-            <span style={{ background: 'rgba(28,18,9,0.85)', color: 'white', padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 700, backdropFilter: 'blur(4px)' }}>
+            <span style={{ background: 'rgba(28,18,9,0.85)', color: 'white', padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 700, backdropFilter: 'blur(4px)', width: 'fit-content' }}>
               {listing.type}
             </span>
           </div>
@@ -223,8 +223,8 @@ export default function ListingDetails() {
               </div>
             </div>
 
-            {/* BASIC WARNING BANNER */}
-            {(!listing.tier || listing.tier === 'basic') && (
+            {/* UNVERIFIED WARNING BANNER */}
+            {!listing.is_verified && (
               <div style={{ background: '#FEF08A', color: '#854D0E', padding: '12px', borderRadius: 8, fontSize: 13, fontWeight: 'bold', marginBottom: 16, border: '1px solid #EAB308', display: 'flex', alignItems: 'center', gap: 8 }}>
                 ⚠️ UNVERIFIED LISTING. Ehani has not inspected this property. Proceed with caution.
               </div>
@@ -304,8 +304,8 @@ export default function ListingDetails() {
                   📞 Contact Landlord
                 </button>
               ) : (
-                // TIER LOGIC FOR CONTACT REVEAL
-                (!listing.tier || listing.tier === 'basic') ? (
+                // VERIFICATION LOGIC FOR CONTACT REVEAL
+                !listing.is_verified ? (
                   <div style={{ background: '#FEF08A', padding: 20, borderRadius: 10, border: '1px solid #EAB308', textAlign: 'center' }}>
                     <div style={{ fontSize: 32, marginBottom: 12 }}>🔒</div>
                     <div style={{ fontSize: 14, color: '#854D0E', fontWeight: 700, marginBottom: 12 }}>
@@ -327,7 +327,7 @@ export default function ListingDetails() {
                     </a>
                   </div>
                 ) : (
-                  // VERIFIED / FEATURED CONTACT REVEAL
+                  // VERIFIED CONTACT REVEAL
                   <div style={{ background: '#E8F5E9', padding: 20, borderRadius: 10, border: '1px solid #C8E6C9' }}>
                     <div style={{ fontSize: 14, color: '#2E7D32', fontWeight: 600, marginBottom: 16 }}>
                       ✅ Contact Details Revealed
@@ -342,7 +342,7 @@ export default function ListingDetails() {
                       <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Phone Number</div>
                       <div style={{ fontWeight: 700, color: '#1C1209', fontSize: 16 }}>
                         {(() => {
-                          let displayPhone = landlord.phone.replace(/\D/g, '')
+                          let displayPhone = landlord?.phone?.replace(/\D/g, '') || ''
                           if (displayPhone.startsWith('0')) displayPhone = '+254' + displayPhone.substring(1)
                           else if (displayPhone.startsWith('254')) displayPhone = '+' + displayPhone
                           else if (!displayPhone.startsWith('+')) displayPhone = '+254' + displayPhone
@@ -353,7 +353,7 @@ export default function ListingDetails() {
                     
                     <button 
                       onClick={() => {
-                        let whatsappPhone = landlord.phone.replace(/\D/g, '')
+                        let whatsappPhone = landlord?.phone?.replace(/\D/g, '') || ''
                         if (whatsappPhone.startsWith('0')) whatsappPhone = '254' + whatsappPhone.substring(1)
                         else if (whatsappPhone.startsWith('+')) whatsappPhone = whatsappPhone.substring(1)
                         
@@ -367,7 +367,7 @@ export default function ListingDetails() {
                     
                     <button 
                       onClick={() => {
-                        let callPhone = landlord.phone.replace(/\D/g, '')
+                        let callPhone = landlord?.phone?.replace(/\D/g, '') || ''
                         if (callPhone.startsWith('0')) callPhone = '+254' + callPhone.substring(1)
                         else if (callPhone.startsWith('254')) callPhone = '+' + callPhone
                         else if (!callPhone.startsWith('+')) callPhone = '+254' + callPhone
