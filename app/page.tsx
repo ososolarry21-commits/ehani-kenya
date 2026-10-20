@@ -60,7 +60,7 @@ export default function Home() {
     setLoading(false)
   }
 
-  // FEATURE 1: 3-Strike Lockout
+  // FEATURE 1: 3-Strike Lockout & SECURE PROFILE CHECK
   async function logIn() {
     setLoading(true)
     setMsg('')
@@ -101,41 +101,52 @@ export default function Home() {
       localStorage.removeItem(`failed_attempts_${email}`)
       localStorage.removeItem(`lockout_time_${email}`)
 
+      // Fetch the profile from the database
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role, is_locked')
         .eq('id', data.user.id)
         .single()
 
-      if (profileError) {
-        console.error('Error fetching profile:', profileError)
+      // 🛑 CRITICAL SECURITY FIX: If profile is missing or error, BLOCK login.
+      if (profileError || !profile) {
+        setMsg('⚠️ Account profile not found. Please sign up again or contact support.')
+        await supabase.auth.signOut()
+        setLoading(false)
+        return
       }
 
-      if (profile?.is_locked) {
+      // Check if admin locked the account
+      if (profile.is_locked) {
         setMsg('🔒 Your account has been locked by an administrator. Please contact support.')
         await supabase.auth.signOut()
         setLoading(false)
         return
       }
 
-      const dbRole = profile?.role || 'student'
+      const dbRole = profile.role // No more defaulting to 'student'!
 
+      // Strict Role Matching
       if (dbRole === 'admin' && role !== 'landlord') {
         setMsg('⚠️ This is an Admin account. Please select the "Landlord" button to log in.')
+        await supabase.auth.signOut()
         setLoading(false)
         return
       }
       if (dbRole === 'agent' && role !== 'landlord') {
         setMsg('⚠️ This is an Agent account. Please select the "Landlord" button to log in.')
+        await supabase.auth.signOut()
         setLoading(false)
         return
       }
       if (dbRole !== role && dbRole !== 'admin' && dbRole !== 'agent') {
         setMsg(`⚠️ This account is registered as a ${dbRole}. Please select the ${dbRole} button to log in.`)
+        await supabase.auth.signOut()
         setLoading(false)
         return
       }
 
+      // Successful Routing
       if (dbRole === 'student') {
         window.location.href = '/browse'
       } else if (dbRole === 'admin') {
