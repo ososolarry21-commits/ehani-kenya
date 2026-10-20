@@ -41,7 +41,7 @@ export default function SignupPage() {
     
     if (error) {
       if (error.message.includes('already registered')) {
-        setMsg('️ Email already exists. Please log in.')
+        setMsg('⚠️ Email already exists. Please log in.')
       } else {
         setMsg(error.message)
       }
@@ -50,7 +50,6 @@ export default function SignupPage() {
     }
 
     if (data.user) {
-      // ✅ Profile created automatically by trigger
       setMsg('✅ Account created! Please check your email to verify before logging in.')
     }
     setLoading(false)
@@ -74,10 +73,31 @@ export default function SignupPage() {
         maxWidth: 450,
         width: '100%'
       }}>
-        {/* LOGO */}
-        <div style={{ textAlign: 'center', marginBottom: 30 }}>
-          <img src="/logo.png" alt="Ehani" style={{ height: '100px', width: 'auto', marginBottom: '8px' }} />
-          <p style={{ color: '#6B5B4E', margin: 0, fontSize: 13 }}>Search. Settle. Study.</p>
+        {/* LOGO - CENTERED */}
+        <div style={{ 
+          textAlign: 'center', 
+          marginBottom: 30,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center'
+        }}>
+          <img 
+            src="/logo.png" 
+            alt="Ehani" 
+            style={{ 
+              height: '100px', 
+              width: 'auto',
+              maxWidth: '100%',
+              objectFit: 'contain',
+              marginBottom: '8px',
+              display: 'block',
+              marginLeft: 'auto',
+              marginRight: 'auto'
+            }} 
+          />
+          <p style={{ color: '#6B5B4E', margin: 0, fontSize: 13, letterSpacing: '0.5px' }}>
+            Search. Settle. Study.
+          </p>
         </div>
 
         <h2 style={{ margin: '0 0 24px 0', color: '#1C1209', textAlign: 'center' }}>Create Your Account</h2>
@@ -87,7 +107,7 @@ export default function SignupPage() {
           placeholder="Full Name"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
-          style={{ width: '100%', padding: '12px 14px', marginBottom: 12, border: '1px solid #DDD0C4', borderRadius: 8, fontSize: 16 }}
+          style={{ width: '100%', padding: '12px 14px', marginBottom: 12, border: '1px solid #DDD0C4', borderRadius: 8, fontSize: 16, boxSizing: 'border-box' }}
         />
 
         {/* Phone Number */}
@@ -95,7 +115,7 @@ export default function SignupPage() {
           placeholder="Phone Number (e.g., 0712345678)"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          style={{ width: '100%', padding: '12px 14px', marginBottom: 12, border: '1px solid #DDD0C4', borderRadius: 8, fontSize: 16 }}
+          style={{ width: '100%', padding: '12px 14px', marginBottom: 12, border: '1px solid #DDD0C4', borderRadius: 8, fontSize: 16, boxSizing: 'border-box' }}
         />
         
         {/* Email */}
@@ -103,7 +123,7 @@ export default function SignupPage() {
           placeholder="Email Address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          style={{ width: '100%', padding: '12px 14px', marginBottom: 12, border: '1px solid #DDD0C4', borderRadius: 8, fontSize: 16 }}
+          style={{ width: '100%', padding: '12px 14px', marginBottom: 12, border: '1px solid #DDD0C4', borderRadius: 8, fontSize: 16, boxSizing: 'border-box' }}
         />
         
         {/* Password */}
@@ -113,14 +133,14 @@ export default function SignupPage() {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            style={{ width: '100%', padding: '12px 45px 12px 14px', border: '1px solid #DDD0C4', borderRadius: 8, fontSize: 16 }}
+            style={{ width: '100%', padding: '12px 45px 12px 14px', border: '1px solid #DDD0C4', borderRadius: 8, fontSize: 16, boxSizing: 'border-box' }}
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer' }}
+            style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '20px', padding: '4px' }}
           >
-            {showPassword ? '' : '👁️'}
+            {showPassword ? '🙈' : '️'}
           </button>
         </div>
 
