@@ -1,6 +1,7 @@
 'use client'
 import { createClient } from '@supabase/supabase-js'
 import { useState } from 'react'
+import Link from 'next/navigation'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -8,8 +9,6 @@ const supabase = createClient(
 )
 
 export default function Home() {
-  const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -17,54 +16,7 @@ export default function Home() {
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // FEATURE 2: Complete Signup with Name and Phone
-  async function signUp() {
-    setLoading(true)
-    setMsg('')
-    
-    // Basic validation
-    if (!name || !phone || !email || !password) {
-      setMsg('⚠️ Please fill in all fields.')
-      setLoading(false)
-      return
-    }
-
-    const { data, error } = await supabase.auth.signUp({ 
-      email, 
-      password,
-      options: { 
-        data: { 
-          role: role,
-          full_name: name,
-          phone: phone
-        } 
-      }
-    })
-    
-    if (error) {
-      if (error.message.includes('already registered') || error.message.includes('User already registered')) {
-        setMsg('⚠️ An account with this email already exists. Please log in instead.')
-      } else {
-        setMsg(error.message)
-      }
-      setLoading(false)
-      return
-    }
-
-    if (data.user) {
-      // ✅ The database trigger automatically creates the profile!
-      // We removed the manual upsert to prevent RLS blocking.
-      
-      if (role === 'student') {
-        window.location.href = '/browse'
-      } else {
-        window.location.href = '/dashboard'
-      }
-    }
-    setLoading(false)
-  }
-
-  // FEATURE 1: 3-Strike Lockout & SECURE PROFILE CHECK
+  // SECURE LOGIN
   async function logIn() {
     setLoading(true)
     setMsg('')
@@ -93,7 +45,7 @@ export default function Home() {
       
       if (newAttempts >= 3) {
         localStorage.setItem(`lockout_time_${email}`, Date.now().toString())
-        setMsg('🔒 Account temporarily locked due to too many failed attempts. Try again in 15 minutes.')
+        setMsg('🔒 Account temporarily locked. Try again in 15 minutes.')
       } else {
         setMsg(`⚠️ Invalid credentials. ${3 - newAttempts} attempts remaining.`)
       }
@@ -105,52 +57,44 @@ export default function Home() {
       localStorage.removeItem(`failed_attempts_${email}`)
       localStorage.removeItem(`lockout_time_${email}`)
 
-      // Fetch the profile from the database
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role, is_locked')
         .eq('id', data.user.id)
         .single()
 
-      // 🛑 CRITICAL SECURITY FIX: If profile is missing or error, BLOCK login.
       if (profileError || !profile) {
-        setMsg('⚠️ Account profile not found. Please sign up again or contact support.')
+        setMsg('⚠️ Account profile not found. Please sign up again.')
         await supabase.auth.signOut()
         setLoading(false)
         return
       }
 
-      // Check if admin locked the account
       if (profile.is_locked) {
-        setMsg('🔒 Your account has been locked by an administrator. Please contact support.')
+        setMsg('🔒 Account locked by admin. Contact support.')
         await supabase.auth.signOut()
         setLoading(false)
         return
       }
 
-      const dbRole = profile.role // No more defaulting to 'student'!
+      const dbRole = profile.role
 
-      // Strict Role Matching
       if (dbRole === 'admin' && role !== 'landlord') {
-        setMsg('⚠️ This is an Admin account. Please select the "Landlord" button to log in.')
-        await supabase.auth.signOut()
+        setMsg('⚠️ Admin account. Select "Landlord" to login.')
         setLoading(false)
         return
       }
       if (dbRole === 'agent' && role !== 'landlord') {
-        setMsg('⚠️ This is an Agent account. Please select the "Landlord" button to log in.')
-        await supabase.auth.signOut()
+        setMsg('⚠️ Agent account. Select "Landlord" to login.')
         setLoading(false)
         return
       }
       if (dbRole !== role && dbRole !== 'admin' && dbRole !== 'agent') {
-        setMsg(`⚠️ This account is registered as a ${dbRole}. Please select the ${dbRole} button to log in.`)
-        await supabase.auth.signOut()
+        setMsg(`⚠️ Account is ${dbRole}. Select ${dbRole} button.`)
         setLoading(false)
         return
       }
 
-      // Successful Routing
       if (dbRole === 'student') {
         window.location.href = '/browse'
       } else if (dbRole === 'admin') {
@@ -166,43 +110,6 @@ export default function Home() {
 
   return (
     <>
-      {/* 🆕 AEO: JSON-LD Schema for FAQ */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            "mainEntity": [
-              {
-                "@type": "Question",
-                "name": "What is Ehani Homes?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "Ehani Homes is Kenya's first student accommodation platform that physically verifies every landlord and property to ensure safety, accurate pricing, and trust for students."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "How does Ehani Homes verify properties?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "Landlords pay a verification fee, after which we assign a local agent to physically visit the property, take proof photos, and confirm the amenities. Only then does the listing get the 'Verified' badge."
-                }
-              },
-              {
-                "@type": "Question",
-                "name": "Is it safe to rent through Ehani Homes?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "Yes. We only reveal the direct contact details of landlords for properties that have passed our physical agent verification. Unverified listings are clearly marked with a warning to protect students."
-                }
-              }
-            ]
-          })
-        }}
-      />
-
       <div style={{ 
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -244,30 +151,6 @@ export default function Home() {
             </p>
           </div>
           
-          {/* 🆕 Full Name Input */}
-          <input
-            placeholder="Full Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            style={{ 
-              width: '100%', padding: '12px 14px', marginBottom: 12, boxSizing: 'border-box', 
-              border: '1px solid #DDD0C4', borderRadius: 8, fontSize: 16,
-              color: '#000000', background: '#FFFFFF', outline: 'none'
-            }}
-          />
-
-          {/* 🆕 Phone Number Input */}
-          <input
-            placeholder="Phone Number (e.g., 0712345678)"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            style={{ 
-              width: '100%', padding: '12px 14px', marginBottom: 12, boxSizing: 'border-box', 
-              border: '1px solid #DDD0C4', borderRadius: 8, fontSize: 16,
-              color: '#000000', background: '#FFFFFF', outline: 'none'
-            }}
-          />
-          
           {/* Email Input */}
           <input
             placeholder="Email Address"
@@ -280,7 +163,7 @@ export default function Home() {
             }}
           />
           
-          {/* Password Input with Show/Hide Toggle */}
+          {/* Password Input */}
           <div style={{ position: 'relative', marginBottom: 16 }}>
             <input
               type={showPassword ? 'text' : 'password'}
@@ -299,9 +182,8 @@ export default function Home() {
               style={{
                 position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
                 background: 'transparent', border: 'none', cursor: 'pointer',
-                fontSize: '20px', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                fontSize: '20px', padding: '4px'
               }}
-              title={showPassword ? 'Hide password' : 'Show password'}
             >
               {showPassword ? '🙈' : '👁️'}
             </button>
@@ -321,7 +203,7 @@ export default function Home() {
                   border: '1px solid #DDD0C4', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 
                 }}
               >
-                🎓 Student
+                 Student
               </button>
               <button 
                 type="button"
@@ -338,37 +220,56 @@ export default function Home() {
             </div>
           </div>
           
-          {/* Login and Signup Buttons */}
-          <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-            <button 
-              onClick={logIn} 
-              disabled={loading}
-              style={{ flex: 1, padding: '12px', background: '#D4873A', color: 'white', border: 'none', borderRadius: 8, cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 14, opacity: loading ? 0.6 : 1 }}
-            >
-              {loading ? 'Processing...' : 'Log In'}
-            </button>
-            <button 
-              onClick={signUp} 
-              disabled={loading}
-              style={{ flex: 1, padding: '12px', background: '#333', color: 'white', border: 'none', borderRadius: 8, cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: 14, opacity: loading ? 0.6 : 1 }}
-            >
-              {loading ? 'Processing...' : 'Sign Up'}
-            </button>
-          </div>
+          {/* Login Button */}
+          <button 
+            onClick={logIn} 
+            disabled={loading}
+            style={{ 
+              width: '100%', padding: '14px', background: '#D4873A', color: 'white', 
+              border: 'none', borderRadius: 8, cursor: loading ? 'not-allowed' : 'pointer', 
+              fontWeight: 700, fontSize: 16, marginBottom: 16, opacity: loading ? 0.6 : 1 
+            }}
+          >
+            {loading ? 'Processing...' : 'Log In'}
+          </button>
 
           {/* Error Message */}
           {msg && (
-            <div style={{ padding: 12, background: '#F8D7DA', color: '#721C24', borderRadius: 8, fontSize: 13, textAlign: 'center', marginBottom: 16, border: '1px solid #F5C6CB' }}>
+            <div style={{ 
+              padding: 12, background: '#F8D7DA', color: '#721C24', 
+              borderRadius: 8, fontSize: 13, textAlign: 'center', marginBottom: 16 
+            }}>
               {msg}
             </div>
           )}
 
+          {/* Create Account Link */}
+          <div style={{ textAlign: 'center', marginBottom: 16 }}>
+            <p style={{ color: '#6B5B4E', fontSize: 13, marginBottom: 8 }}>
+              Don't have an account?
+            </p>
+            <button 
+              onClick={() => window.location.href = '/signup'}
+              style={{ 
+                padding: '10px 24px', background: '#333', color: 'white', 
+                border: 'none', borderRadius: 8, cursor: 'pointer', 
+                fontWeight: 600, fontSize: 14 
+              }}
+            >
+              Create Account →
+            </button>
+          </div>
+
           {/* Browse Link */}
-          <div style={{ marginTop: 20, textAlign: 'center' }}>
+          <div style={{ textAlign: 'center' }}>
             <p style={{ color: '#6B5B4E', fontSize: 13, marginBottom: 8 }}>Just browsing?</p>
             <button 
               onClick={() => window.location.href = '/browse'}
-              style={{ padding: '10px 24px', background: 'transparent', color: '#D4873A', border: '2px solid #D4873A', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}
+              style={{ 
+                padding: '10px 24px', background: 'transparent', color: '#D4873A', 
+                border: '2px solid #D4873A', borderRadius: 8, cursor: 'pointer', 
+                fontWeight: 600, fontSize: 13 
+              }}
             >
               Browse Student Housing →
             </button>
