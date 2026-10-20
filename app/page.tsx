@@ -47,7 +47,7 @@ export default function Home() {
       const now = Date.now()
       if (now - lockoutTime < 15 * 60 * 1000) { 
         const minutesLeft = Math.ceil((15 * 60 * 1000 - (now - lockoutTime)) / 60000)
-        setMsg(` Too many failed attempts. Please try again in ${minutesLeft} minutes.`)
+        setMsg(`🔒 Too many failed attempts. Please try again in ${minutesLeft} minutes.`)
         setLoading(false)
         return
       } else {
@@ -82,14 +82,14 @@ export default function Home() {
         .single()
 
       if (profileError || !profile) {
-        setMsg('️ Account profile not found. Please sign up again.')
+        setMsg('⚠️ Account profile not found. Please sign up again.')
         await supabase.auth.signOut()
         setLoading(false)
         return
       }
 
       if (profile.is_locked) {
-        setMsg(' Account locked by admin. Contact support.')
+        setMsg('🔒 Account locked by admin. Contact support.')
         await supabase.auth.signOut()
         setLoading(false)
         return
@@ -122,7 +122,7 @@ export default function Home() {
   }
 
   // 🎨 Shared Input Style
-const inputStyle: React.CSSProperties = { 
+  const inputStyle: React.CSSProperties = { 
     width: '100%', padding: '14px 16px', marginBottom: 12, boxSizing: 'border-box', 
     border: '1px solid #E0D8D0', borderRadius: 10, fontSize: 15,
     color: '#1C1209', background: '#FAFAFA', outline: 'none', transition: 'all 0.2s'
@@ -131,7 +131,7 @@ const inputStyle: React.CSSProperties = {
   return (
     <div style={{ 
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #FDF8F3 0%, #E8DFD5 100%)', // Warm brand background
+      background: 'linear-gradient(135deg, #FDF8F3 0%, #E8DFD5 100%)', 
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -142,13 +142,29 @@ const inputStyle: React.CSSProperties = {
         background: 'white',
         padding: '40px 35px',
         borderRadius: 20,
-        boxShadow: '0 10px 40px rgba(28, 18, 9, 0.08)', // Soft, modern shadow
+        boxShadow: '0 10px 40px rgba(28, 18, 9, 0.08)', 
         maxWidth: 420,
         width: '100%'
       }}>
-        {/* LOGO */}
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <img src="/logo.png" alt="Ehani" style={{ height: '80px', width: 'auto', marginBottom: '4px' }} />
+        {/* 🆕 LOGO - PERFECTLY CENTERED WITH FLEXBOX */}
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          textAlign: 'center', 
+          marginBottom: 24 
+        }}>
+          <img 
+            src="/logo.png" 
+            alt="Ehani" 
+            style={{ 
+              height: '80px', 
+              width: 'auto', 
+              marginBottom: '4px',
+              display: 'block' 
+            }} 
+          />
           <p style={{ color: '#6B5B4E', margin: 0, fontSize: 12, letterSpacing: '1px', fontWeight: 600, textTransform: 'uppercase' }}>
             Search. Settle. Study.
           </p>
