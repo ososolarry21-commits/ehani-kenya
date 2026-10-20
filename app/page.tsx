@@ -8,6 +8,8 @@ const supabase = createClient(
 )
 
 export default function Home() {
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -15,15 +17,28 @@ export default function Home() {
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // FEATURE 2: Prevent Duplicate Signups
+  // FEATURE 2: Complete Signup with Name and Phone
   async function signUp() {
     setLoading(true)
     setMsg('')
     
+    // Basic validation
+    if (!name || !phone || !email || !password) {
+      setMsg('⚠️ Please fill in all fields.')
+      setLoading(false)
+      return
+    }
+
     const { data, error } = await supabase.auth.signUp({ 
       email, 
       password,
-      options: { data: { role: role } }
+      options: { 
+        data: { 
+          role: role,
+          full_name: name,
+          phone: phone
+        } 
+      }
     })
     
     if (error) {
@@ -37,20 +52,9 @@ export default function Home() {
     }
 
     if (data.user) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({ 
-          id: data.user.id, 
-          name: email.split('@')[0], 
-          role: role
-        })
+      // ✅ The database trigger automatically creates the profile!
+      // We removed the manual upsert to prevent RLS blocking.
       
-      if (profileError) {
-        setMsg('Account created but profile failed: ' + profileError.message)
-        setLoading(false)
-        return
-      }
-
       if (role === 'student') {
         window.location.href = '/browse'
       } else {
@@ -239,6 +243,30 @@ export default function Home() {
               Search. Settle. Study.
             </p>
           </div>
+          
+          {/* 🆕 Full Name Input */}
+          <input
+            placeholder="Full Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            style={{ 
+              width: '100%', padding: '12px 14px', marginBottom: 12, boxSizing: 'border-box', 
+              border: '1px solid #DDD0C4', borderRadius: 8, fontSize: 16,
+              color: '#000000', background: '#FFFFFF', outline: 'none'
+            }}
+          />
+
+          {/* 🆕 Phone Number Input */}
+          <input
+            placeholder="Phone Number (e.g., 0712345678)"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            style={{ 
+              width: '100%', padding: '12px 14px', marginBottom: 12, boxSizing: 'border-box', 
+              border: '1px solid #DDD0C4', borderRadius: 8, fontSize: 16,
+              color: '#000000', background: '#FFFFFF', outline: 'none'
+            }}
+          />
           
           {/* Email Input */}
           <input
