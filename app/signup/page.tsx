@@ -1,6 +1,7 @@
 'use client'
 import { createClient } from '@supabase/supabase-js'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -8,21 +9,36 @@ const supabase = createClient(
 )
 
 export default function SignupPage() {
+  const searchParams = useSearchParams()
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [role, setRole] = useState<'student' | 'landlord'>('student')
+  const [selectedTier, setSelectedTier] = useState<string>('')
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Auto-select role and tier from URL parameters
+  useEffect(() => {
+    const urlRole = searchParams.get('role')
+    const urlTier = searchParams.get('tier')
+    
+    if (urlRole === 'landlord') {
+      setRole('landlord')
+    }
+    if (urlTier) {
+      setSelectedTier(urlTier)
+    }
+  }, [searchParams])
 
   async function handleSignUp() {
     setLoading(true)
     setMsg('')
     
     if (!fullName || !phone || !email || !password) {
-      setMsg('⚠️ Please fill in all fields.')
+      setMsg('️ Please fill in all fields.')
       setLoading(false)
       return
     }
@@ -34,14 +50,15 @@ export default function SignupPage() {
         data: { 
           role: role,
           full_name: fullName,
-          phone: phone
+          phone: phone,
+          tier: selectedTier || 'free' // Default to free tier
         } 
       }
     })
     
     if (error) {
       if (error.message.includes('already registered')) {
-        setMsg('⚠️ Email already exists. Please log in.')
+        setMsg('️ Email already exists. Please log in.')
       } else {
         setMsg(error.message)
       }
@@ -53,6 +70,14 @@ export default function SignupPage() {
       setMsg('✅ Account created! Please check your email to verify before logging in.')
     }
     setLoading(false)
+  }
+
+  const getTierName = () => {
+    switch(selectedTier) {
+      case 'verified': return 'Verified (KSh 500)'
+      case 'premium': return 'Premium (KSh 1,500)'
+      default: return 'Free Starter'
+    }
   }
 
   return (
@@ -73,36 +98,36 @@ export default function SignupPage() {
         maxWidth: 450,
         width: '100%'
       }}>
-        {/* LOGO - CENTERED */}
+        {/* LOGO */}
         <div style={{ 
-          textAlign: 'center', 
-          marginBottom: 30,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center'
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          marginBottom: 30 
         }}>
-          <img 
-            src="/logo.png" 
-            alt="Ehani" 
-            style={{ 
-              height: '100px', 
-              width: 'auto',
-              maxWidth: '100%',
-              objectFit: 'contain',
-              marginBottom: '8px',
-              display: 'block',
-              marginLeft: 'auto',
-              marginRight: 'auto'
-            }} 
-          />
-          <p style={{ color: '#6B5B4E', margin: 0, fontSize: 13, letterSpacing: '0.5px' }}>
-            Search. Settle. Study.
-          </p>
+          <img src="/logo.png" alt="Ehani" style={{ height: '100px', width: 'auto', marginBottom: '8px' }} />
+          <p style={{ color: '#6B5B4E', margin: 0, fontSize: 13, letterSpacing: '0.5px' }}>Search. Settle. Study.</p>
         </div>
 
-        <h2 style={{ margin: '0 0 24px 0', color: '#1C1209', textAlign: 'center' }}>Create Your Account</h2>
+        <h2 style={{ margin: '0 0 8px 0', color: '#1C1209', textAlign: 'center' }}>Create Your Account</h2>
         
-        {/* Full Name */}
+        {/* Show selected tier */}
+        {selectedTier && (
+          <div style={{ 
+            background: '#F0EAE3', 
+            padding: '12px', 
+            borderRadius: 8, 
+            textAlign: 'center', 
+            marginBottom: 24,
+            border: '1px solid #D4873A'
+          }}>
+            <p style={{ margin: 0, color: '#1C1209', fontSize: 14, fontWeight: 600 }}>
+              Selected Plan: {getTierName()}
+            </p>
+          </div>
+        )}
+        
+        {/* Form fields remain the same... */}
         <input
           placeholder="Full Name"
           value={fullName}
@@ -110,7 +135,6 @@ export default function SignupPage() {
           style={{ width: '100%', padding: '12px 14px', marginBottom: 12, border: '1px solid #DDD0C4', borderRadius: 8, fontSize: 16, boxSizing: 'border-box' }}
         />
 
-        {/* Phone Number */}
         <input
           placeholder="Phone Number (e.g., 0712345678)"
           value={phone}
@@ -118,7 +142,6 @@ export default function SignupPage() {
           style={{ width: '100%', padding: '12px 14px', marginBottom: 12, border: '1px solid #DDD0C4', borderRadius: 8, fontSize: 16, boxSizing: 'border-box' }}
         />
         
-        {/* Email */}
         <input
           placeholder="Email Address"
           value={email}
@@ -126,7 +149,6 @@ export default function SignupPage() {
           style={{ width: '100%', padding: '12px 14px', marginBottom: 12, border: '1px solid #DDD0C4', borderRadius: 8, fontSize: 16, boxSizing: 'border-box' }}
         />
         
-        {/* Password */}
         <div style={{ position: 'relative', marginBottom: 16 }}>
           <input
             type={showPassword ? 'text' : 'password'}
@@ -138,13 +160,12 @@ export default function SignupPage() {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '20px', padding: '4px' }}
+            style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer' }}
           >
-            {showPassword ? '🙈' : '️'}
+            {showPassword ? '🙈' : '👁️'}
           </button>
         </div>
 
-        {/* Role Selection */}
         <div style={{ marginBottom: 20 }}>
           <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#1C1209', fontSize: 13 }}>I am a:</label>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -173,7 +194,6 @@ export default function SignupPage() {
           </div>
         </div>
         
-        {/* Sign Up Button */}
         <button 
           onClick={handleSignUp} 
           disabled={loading}
@@ -186,7 +206,6 @@ export default function SignupPage() {
           {loading ? 'Creating Account...' : 'Sign Up'}
         </button>
 
-        {/* Success/Error Message */}
         {msg && (
           <div style={{ 
             padding: 12, 
@@ -198,7 +217,6 @@ export default function SignupPage() {
           </div>
         )}
 
-        {/* Back to Login */}
         <div style={{ textAlign: 'center' }}>
           <button 
             onClick={() => window.location.href = '/'}
