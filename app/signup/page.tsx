@@ -20,17 +20,13 @@ export default function SignupPage() {
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Auto-select role and tier from URL parameters
+  // Auto-select role and tier from URL parameters (from Pricing Page)
   useEffect(() => {
     const urlRole = searchParams.get('role')
     const urlTier = searchParams.get('tier')
     
-    if (urlRole === 'landlord') {
-      setRole('landlord')
-    }
-    if (urlTier) {
-      setSelectedTier(urlTier)
-    }
+    if (urlRole === 'landlord') setRole('landlord')
+    if (urlTier) setSelectedTier(urlTier)
   }, [searchParams])
 
   async function handleSignUp() {
@@ -38,7 +34,7 @@ export default function SignupPage() {
     setMsg('')
     
     if (!fullName || !phone || !email || !password) {
-      setMsg('️ Please fill in all fields.')
+      setMsg('⚠️ Please fill in all fields.')
       setLoading(false)
       return
     }
@@ -51,14 +47,14 @@ export default function SignupPage() {
           role: role,
           full_name: fullName,
           phone: phone,
-          tier: selectedTier || 'free' // Default to free tier
+          tier: selectedTier || 'free' 
         } 
       }
     })
     
     if (error) {
       if (error.message.includes('already registered')) {
-        setMsg('️ Email already exists. Please log in.')
+        setMsg('⚠️ Email already exists. Please log in.')
       } else {
         setMsg(error.message)
       }
@@ -80,10 +76,17 @@ export default function SignupPage() {
     }
   }
 
+  // 🎨 Shared Input Style (Matches Login Page)
+  const inputStyle: React.CSSProperties = { 
+    width: '100%', padding: '14px 16px', marginBottom: 12, boxSizing: 'border-box', 
+    border: '1px solid #E0D8D0', borderRadius: 10, fontSize: 15,
+    color: '#1C1209', background: '#FAFAFA', outline: 'none', transition: 'all 0.2s'
+  }
+
   return (
     <div style={{ 
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg, #FDF8F3 0%, #E8DFD5 100%)', //  Warm brand background
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -92,10 +95,10 @@ export default function SignupPage() {
     }}>
       <div style={{ 
         background: 'white',
-        padding: '50px 40px',
-        borderRadius: 24,
-        boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-        maxWidth: 450,
+        padding: '40px 35px',
+        borderRadius: 20,
+        boxShadow: '0 10px 40px rgba(28, 18, 9, 0.08)', 
+        maxWidth: 420,
         width: '100%'
       }}>
         {/* LOGO */}
@@ -103,109 +106,128 @@ export default function SignupPage() {
           display: 'flex', 
           flexDirection: 'column', 
           alignItems: 'center', 
-          marginBottom: 30 
+          justifyContent: 'center', 
+          textAlign: 'center', 
+          marginBottom: 24 
         }}>
-          <img src="/logo.png" alt="Ehani" style={{ height: '100px', width: 'auto', marginBottom: '8px' }} />
-          <p style={{ color: '#6B5B4E', margin: 0, fontSize: 13, letterSpacing: '0.5px' }}>Search. Settle. Study.</p>
+          <img src="/logo.png" alt="Ehani" style={{ height: '80px', width: 'auto', marginBottom: '4px', display: 'block' }} />
+          <p style={{ color: '#6B5B4E', margin: 0, fontSize: 12, letterSpacing: '1px', fontWeight: 600, textTransform: 'uppercase' }}>
+            Search. Settle. Study.
+          </p>
         </div>
 
-        <h2 style={{ margin: '0 0 8px 0', color: '#1C1209', textAlign: 'center' }}>Create Your Account</h2>
-        
-        {/* Show selected tier */}
+        {/* 🆕 MATCHING TYPOGRAPHY */}
+        <h2 style={{ margin: '0 0 8px 0', color: '#1C1209', textAlign: 'center', fontSize: 26, fontWeight: 800, letterSpacing: '-0.5px' }}>
+          Create Your Account
+        </h2>
+        <p style={{ textAlign: 'center', color: '#6B5B4E', fontSize: 14, marginBottom: 24 }}>
+          Join Ehani Homes today.
+        </p>
+
+        {/* Show selected tier from pricing page */}
         {selectedTier && (
           <div style={{ 
             background: '#F0EAE3', 
             padding: '12px', 
-            borderRadius: 8, 
+            borderRadius: 10, 
             textAlign: 'center', 
-            marginBottom: 24,
+            marginBottom: 20,
             border: '1px solid #D4873A'
           }}>
-            <p style={{ margin: 0, color: '#1C1209', fontSize: 14, fontWeight: 600 }}>
+            <p style={{ margin: 0, color: '#1C1209', fontSize: 13, fontWeight: 600 }}>
               Selected Plan: {getTierName()}
             </p>
           </div>
         )}
         
-        {/* Form fields remain the same... */}
+        {/* Full Name */}
         <input
           placeholder="Full Name"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
-          style={{ width: '100%', padding: '12px 14px', marginBottom: 12, border: '1px solid #DDD0C4', borderRadius: 8, fontSize: 16, boxSizing: 'border-box' }}
+          style={inputStyle}
         />
 
+        {/* Phone Number */}
         <input
           placeholder="Phone Number (e.g., 0712345678)"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          style={{ width: '100%', padding: '12px 14px', marginBottom: 12, border: '1px solid #DDD0C4', borderRadius: 8, fontSize: 16, boxSizing: 'border-box' }}
+          style={inputStyle}
         />
         
+        {/* Email */}
         <input
           placeholder="Email Address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          style={{ width: '100%', padding: '12px 14px', marginBottom: 12, border: '1px solid #DDD0C4', borderRadius: 8, fontSize: 16, boxSizing: 'border-box' }}
+          style={inputStyle}
         />
         
+        {/* Password */}
         <div style={{ position: 'relative', marginBottom: 16 }}>
           <input
             type={showPassword ? 'text' : 'password'}
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            style={{ width: '100%', padding: '12px 45px 12px 14px', border: '1px solid #DDD0C4', borderRadius: 8, fontSize: 16, boxSizing: 'border-box' }}
+            style={{ ...inputStyle, marginBottom: 0, paddingRight: 45 }}
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer' }}
+            style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 18, padding: 4 }}
           >
             {showPassword ? '🙈' : '👁️'}
           </button>
         </div>
 
+        {/* Role Selection */}
         <div style={{ marginBottom: 20 }}>
-          <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#1C1209', fontSize: 13 }}>I am a:</label>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#1C1209', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.5px' }}>I am a:</label>
+          <div style={{ display: 'flex', gap: 10 }}>
             <button 
+              type="button"
               onClick={() => setRole('student')}
               style={{ 
-                flex: 1, padding: '10px', 
-                background: role === 'student' ? '#D4873A' : 'white', 
+                flex: 1, padding: '12px', 
+                background: role === 'student' ? '#1C1209' : 'white', 
                 color: role === 'student' ? 'white' : '#1C1209',
-                border: '1px solid #DDD0C4', borderRadius: 8, cursor: 'pointer', fontWeight: 600 
+                border: '1px solid #E0D8D0', borderRadius: 10, cursor: 'pointer', fontWeight: 600, fontSize: 14, transition: 'all 0.2s' 
               }}
             >
               🎓 Student
             </button>
             <button 
+              type="button"
               onClick={() => setRole('landlord')}
               style={{ 
-                flex: 1, padding: '10px', 
-                background: role === 'landlord' ? '#D4873A' : 'white', 
+                flex: 1, padding: '12px', 
+                background: role === 'landlord' ? '#1C1209' : 'white', 
                 color: role === 'landlord' ? 'white' : '#1C1209',
-                border: '1px solid #DDD0C4', borderRadius: 8, cursor: 'pointer', fontWeight: 600 
+                border: '1px solid #E0D8D0', borderRadius: 10, cursor: 'pointer', fontWeight: 600, fontSize: 14, transition: 'all 0.2s' 
               }}
             >
-              🏠 Landlord
+               Landlord
             </button>
           </div>
         </div>
         
+        {/* Sign Up Button */}
         <button 
           onClick={handleSignUp} 
           disabled={loading}
           style={{ 
-            width: '100%', padding: '14px', background: '#333', color: 'white', 
-            border: 'none', borderRadius: 8, cursor: loading ? 'not-allowed' : 'pointer', 
-            fontWeight: 700, fontSize: 16, marginBottom: 16 
+            width: '100%', padding: '14px', background: '#D4873A', color: 'white', 
+            border: 'none', borderRadius: 10, cursor: loading ? 'not-allowed' : 'pointer', 
+            fontWeight: 700, fontSize: 16, marginBottom: 16, 
+            boxShadow: '0 4px 12px rgba(212, 135, 58, 0.3)', transition: 'transform 0.2s' 
           }}
         >
           {loading ? 'Creating Account...' : 'Sign Up'}
         </button>
 
+        {/* Success/Error Message */}
         {msg && (
           <div style={{ 
             padding: 12, 
@@ -217,13 +239,13 @@ export default function SignupPage() {
           </div>
         )}
 
+        {/* Back to Login */}
         <div style={{ textAlign: 'center' }}>
           <button 
             onClick={() => window.location.href = '/'}
             style={{ 
-              padding: '10px 24px', background: 'transparent', color: '#D4873A', 
-              border: '2px solid #D4873A', borderRadius: 8, cursor: 'pointer', 
-              fontWeight: 600, fontSize: 13 
+              background: 'transparent', border: 'none', color: '#6B5B4E', 
+              cursor: 'pointer', fontSize: 14, fontWeight: 600 
             }}
           >
             ← Back to Login
