@@ -122,7 +122,7 @@ export default function Home() {
   }
 
   // 🎨 Shared Input Style
-  const inputStyle = { 
+const inputStyle: React.CSSProperties = { 
     width: '100%', padding: '14px 16px', marginBottom: 12, boxSizing: 'border-box', 
     border: '1px solid #E0D8D0', borderRadius: 10, fontSize: 15,
     color: '#1C1209', background: '#FAFAFA', outline: 'none', transition: 'all 0.2s'
