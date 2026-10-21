@@ -192,5 +192,12 @@ export default function LandlordsPage() {
         </div>
       </div>
 
+      {/* Footer Link */}
+      <div style={{ marginTop: '60px', textAlign: 'center' }}>
+        <Link href="/" style={{ color: '#6B5B4E', textDecoration: 'none', fontSize: '13px', fontWeight: '500' }}>
+          © 2026 Ehani Kenya. All rights reserved.
+        </Link>
+      </div>
+    </div>
   )
 }
