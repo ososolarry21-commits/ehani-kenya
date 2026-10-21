@@ -9,74 +9,32 @@ export default function Footer() {
       textAlign: 'center', 
       marginTop: 'auto' 
     }}>
-      {/* Contact Section */}
-      <h3 style={{ margin: '0 0 20px 0', fontSize: 18, fontWeight: 700 }}>
-        Need Help? Contact Customer Support
-      </h3>
-      
+      {/* Clean, Professional Links Only */}
       <div style={{ 
         display: 'flex', 
         justifyContent: 'center', 
-        gap: 24, 
+        gap: '24px', 
         flexWrap: 'wrap', 
-        marginBottom: 30 
+        marginBottom: '24px',
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        paddingBottom: '24px'
       }}>
-        <a 
-          href="tel:0710236242" 
-          style={{ 
-            color: '#D4873A', 
-            textDecoration: 'none', 
-            fontWeight: 600, 
-            fontSize: 16,
-            background: 'rgba(255,255,255,0.1)',
-            padding: '10px 20px',
-            borderRadius: 8
-          }}
-        >
-          📞 Safaricom: 0710 236 242
-        </a>
-        <a 
-          href="tel:0107650275" 
-          style={{ 
-            color: '#D4873A', 
-            textDecoration: 'none', 
-            fontWeight: 600, 
-            fontSize: 16,
-            background: 'rgba(255,255,255,0.1)',
-            padding: '10px 20px',
-            borderRadius: 8
-          }}
-        >
-           📞 Airtel: 0107 650 275
-        </a>
-      </div>
-
-      {/* Navigation Links Section */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        gap: 20, 
-        flexWrap: 'wrap', 
-        marginBottom: 20,
-        borderTop: '1px solid rgba(255,255,255,0.1)',
-        paddingTop: 20
-      }}>
-        <Link href="/" style={{ color: '#D4873A', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
+        <Link href="/" style={{ color: '#D4873A', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>
           Home
         </Link>
-        <Link href="/about" style={{ color: '#D4873A', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
+        <Link href="/about" style={{ color: '#D4873A', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>
           About Us
         </Link>
-        <Link href="/landlords" style={{ color: '#D4873A', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
+        <Link href="/landlords" style={{ color: '#D4873A', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>
           For Landlords
         </Link>
-        <Link href="/terms" style={{ color: '#D4873A', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
+        <Link href="/terms" style={{ color: '#D4873A', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>
           Terms & Privacy
         </Link>
       </div>
-      
-      {/* Copyright Section */}
-      <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>
+
+      {/* Copyright */}
+      <p style={{ fontSize: '12px', opacity: 0.6, margin: 0 }}>
         © 2026 Ehani Kenya. All rights reserved.
       </p>
     </footer>
