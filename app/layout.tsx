@@ -1,11 +1,9 @@
 'use client'
 import { useEffect } from 'react'
-import { usePathname } from 'next/navigation' // 🆕 Import usePathname
 import './globals.css'
 import Footer from './components/footer'
 import { createClient } from '@supabase/supabase-js'
 
-// Initialize Supabase for the logout function
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
@@ -16,12 +14,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  // 🆕 Get the current URL path
-  const pathname = usePathname()
-  
-  // 🆕 Hide footer on Login (/) and Signup (/signup) pages for a clean, focused UX
-  const hideFooter = pathname === '/' || pathname === '/signup'
-
   // 90-Minute Security Timeout
   useEffect(() => {
     let logoutTimer: any;
@@ -34,23 +26,18 @@ export default function RootLayout({
       clearTimeout(logoutTimer);
       clearTimeout(warningTimer);
 
-      // Set warning (at 85 minutes)
       warningTimer = setTimeout(() => {
         alert("⚠️ Security Alert: Your session will expire in 5 minutes due to inactivity. Please click OK to stay logged in.");
       }, TIMEOUT_MS - WARNING_MS);
 
-      // Set logout (at 90 minutes)
       logoutTimer = setTimeout(async () => {
         await supabase.auth.signOut();
         window.location.href = '/';
       }, TIMEOUT_MS);
     };
 
-    // Reset timer whenever the user moves mouse, types, or scrolls
     const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
     events.forEach(evt => window.addEventListener(evt, resetTimers));
-
-    // Start the timer when page loads
     resetTimers();
 
     return () => {
@@ -64,10 +51,7 @@ export default function RootLayout({
     <html lang="en">
       <body style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', margin: 0 }}>
         {children}
-        
-        {/* 🆕 Only render the Footer if we are NOT on the login or signup page */}
-        {!hideFooter && <Footer />}
-        
+        <Footer />
       </body>
     </html>
   )
