@@ -1,9 +1,9 @@
 'use client'
 import { useEffect } from 'react'
+import { usePathname } from 'next/navigation' // 🆕 Import usePathname
 import './globals.css'
 import Footer from './components/footer'
 import { createClient } from '@supabase/supabase-js'
-import { metadata } from './metadata'
 
 // Initialize Supabase for the logout function
 const supabase = createClient(
@@ -16,7 +16,12 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  // 🆕 Get the current URL path
+  const pathname = usePathname()
   
+  // 🆕 Hide footer on Login (/) and Signup (/signup) pages for a clean, focused UX
+  const hideFooter = pathname === '/' || pathname === '/signup'
+
   // 90-Minute Security Timeout
   useEffect(() => {
     let logoutTimer: any;
@@ -31,7 +36,7 @@ export default function RootLayout({
 
       // Set warning (at 85 minutes)
       warningTimer = setTimeout(() => {
-        alert("️ Security Alert: Your session will expire in 5 minutes due to inactivity. Please click OK to stay logged in.");
+        alert("⚠️ Security Alert: Your session will expire in 5 minutes due to inactivity. Please click OK to stay logged in.");
       }, TIMEOUT_MS - WARNING_MS);
 
       // Set logout (at 90 minutes)
@@ -59,7 +64,10 @@ export default function RootLayout({
     <html lang="en">
       <body style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', margin: 0 }}>
         {children}
-        <Footer />
+        
+        {/* 🆕 Only render the Footer if we are NOT on the login or signup page */}
+        {!hideFooter && <Footer />}
+        
       </body>
     </html>
   )
