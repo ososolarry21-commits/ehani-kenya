@@ -12,8 +12,8 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { phoneNumber, amount, invoiceNumber } = body
 
-    const consumerKey = process.env.KCB_BUNI_CONSUMER_KEY
-    const consumerSecret = process.env.KCB_BUNI_CONSUMER_SECRET
+    const consumerKey = process.env.KCB_CONSUMER_KEY
+const consumerSecret = process.env.KCB_CONSUMER_SECRET
     const callbackUrl = process.env.KCB_CALLBACK_URL || 'https://ehani.co.ke/api/kcb-callback'
 
     console.log('=== KCB STK PUSH DEBUG (PRODUCTION) ===')
