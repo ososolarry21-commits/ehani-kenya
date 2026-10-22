@@ -59,15 +59,14 @@ export async function POST(request: Request) {
     const formattedInvoice = `8151420-${invoiceNumber}`
 
     // 📱 BULLETPROOF PHONE NUMBER FORMATTING
-    // Handles: "0712345678", "+254712345678", "254 712 345 678", "712345678"
-    let cleanPhone = String(phoneNumber).replace(/[\s\-\+]/g, ''); // Remove spaces, dashes, plus signs
+    let cleanPhone = String(phoneNumber).replace(/[\s\-\+]/g, '');
     if (cleanPhone.startsWith('0')) {
-      cleanPhone = cleanPhone.substring(1); // Remove leading '0'
+      cleanPhone = cleanPhone.substring(1);
     }
-    const formattedPhone = cleanPhone.startsWith('254') ? cleanPhone : `254${cleanPhone}`; // Ensure it starts with 254
+    const formattedPhone = cleanPhone.startsWith('254') ? cleanPhone : `254${cleanPhone}`;
 
     const stkPayload = {
-      phoneNumber: formattedPhone, // <-- Using the safely formatted number
+      phoneNumber: formattedPhone,
       amount: amount.toString(),
       invoiceNumber: formattedInvoice,
       sharedShortCode: true,
@@ -81,7 +80,7 @@ export async function POST(request: Request) {
     const stkUrl = 'https://buni.kcbgroup.com/mm/api/request/1.0.0'
 
     console.log('🎯 Hitting PROD STK URL:', stkUrl)
-    console.log('📱 Formatted Phone:', formattedPhone)
+    console.log(' Formatted Phone:', formattedPhone)
 
     const stkRes = await fetch(stkUrl, {
       method: 'POST',
@@ -117,10 +116,10 @@ export async function POST(request: Request) {
         verification_payment_received: false, 
         checkout_request_id: stkData.response?.CheckoutRequestID 
       })
-      .eq('id', invoiceNumber) // Assuming invoiceNumber is the listing ID passed from frontend
+      .eq('id', invoiceNumber)
 
     if (dbError) {
-      console.error('⚠️ Failed to update listing status in DB:', dbError)
+      console.error('️ Failed to update listing status in DB:', dbError)
     } else {
       console.log('✅ Database updated with checkout_request_id')
     }
@@ -135,4 +134,16 @@ export async function POST(request: Request) {
     console.error('💥 CRASH:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+}
+
+// ✅ ADD THIS CORS HANDLER
+export async function OPTIONS(request: Request) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
 }
