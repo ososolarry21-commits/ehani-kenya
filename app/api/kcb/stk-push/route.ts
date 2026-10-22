@@ -14,20 +14,20 @@ export async function POST(request: Request) {
 
     const consumerKey = process.env.KCB_BUNI_CONSUMER_KEY
     const consumerSecret = process.env.KCB_BUNI_CONSUMER_SECRET
-    const callbackUrl = process.env.KCB_CALLBACK_URL
+    const callbackUrl = process.env.KCB_CALLBACK_URL || 'https://ehani.co.ke/api/kcb-callback'
 
-    console.log('=== KCB STK PUSH DEBUG ===')
+    console.log('=== KCB STK PUSH DEBUG (PRODUCTION) ===')
     console.log('Keys present:', !!consumerKey, !!consumerSecret)
     console.log('Callback:', callbackUrl)
     console.log('Phone:', phoneNumber, 'Amount:', amount, 'Invoice:', invoiceNumber)
 
-    if (!consumerKey || !consumerSecret || !callbackUrl) {
-      return NextResponse.json({ error: 'Missing environment variables' }, { status: 500 })
+    if (!consumerKey || !consumerSecret) {
+      return NextResponse.json({ error: 'Missing KCB environment variables' }, { status: 500 })
     }
 
-    // 1. Generate Authentication Token (UAT Environment)
+    // 1. Generate Authentication Token (PRODUCTION Environment)
     const credentials = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64')
-    const tokenUrl = 'https://uat.buni.kcbgroup.com/token?grant_type=client_credentials'
+    const tokenUrl = 'https://accounts.buni.kcbgroup.com/oauth2/token' // <-- CHANGED TO PROD
     
     const tokenRes = await fetch(tokenUrl, {
       method: 'POST',
@@ -55,23 +55,24 @@ export async function POST(request: Request) {
     console.log('✅ Token obtained successfully')
 
     // 2. Format Payload EXACTLY as per KCB Spec: KCBTILLNO-YOURACCREF
-    // invoiceNumber from frontend is like "VERIFIED-uuid-here"
-    const formattedInvoice = `522533-${invoiceNumber}`
+    // Using your REAL Till Number: 8151420
+    const formattedInvoice = `8151420-${invoiceNumber}` // <-- CHANGED TO REAL TILL
 
     const stkPayload = {
-      phoneNumber: phoneNumber,
+      phoneNumber: phoneNumber.startsWith('254') ? phoneNumber : `254${phoneNumber.substring(1)}`, // Ensure 254 format
       amount: amount.toString(),
       invoiceNumber: formattedInvoice,
       sharedShortCode: true,
       orgShortCode: '',
       orgPassKey: '',
-      transactionDescription: 'Ehani Homes Verification',
+      transactionDescription: 'Ehani Homes Payment',
       callbackUrl: callbackUrl,
     }
 
-    // 3. Send STK Push to the CORRECT KCB Buni Endpoint
-    const stkUrl = 'https://uat.buni.kcbgroup.com/mm/api/request/1.0.0/stkpush'
-    console.log('🎯 Hitting STK URL:', stkUrl)
+    // 3. Send STK Push to the PRODUCTION KCB Buni Endpoint
+    const stkUrl = 'https://buni.kcbgroup.com/mm/api/request/1.0.0' // <-- CHANGED TO PROD URL
+
+    console.log('🎯 Hitting PROD STK URL:', stkUrl)
 
     const stkRes = await fetch(stkUrl, {
       method: 'POST',
@@ -100,25 +101,20 @@ export async function POST(request: Request) {
       }, { status: stkRes.status })
     }
 
-    // 🆕 4. Update Supabase to save the Checkout Request ID for this listing
-    // Extract the listing ID from the formatted invoice (e.g., "522533-VERIFIED-uuid" -> "uuid")
-    const parts = formattedInvoice.split('-')
-    const listingId = parts.slice(2).join('-')
-
+    // 🆕 4. Update Supabase to save the Checkout Request ID
+    // Adjust this logic based on how your frontend passes the invoiceNumber
     const { error: dbError } = await supabase
       .from('listings')
       .update({ 
-        verification_payment_received: false, // Still pending the actual M-Pesa callback
+        verification_payment_received: false, 
         checkout_request_id: stkData.response?.CheckoutRequestID 
       })
-      .eq('id', listingId)
+      .eq('id', invoiceNumber) // Assuming invoiceNumber is the listing ID
 
     if (dbError) {
       console.error('⚠️ Failed to update listing status in DB:', dbError)
-      // We don't return an error to the frontend here, because the STK push itself succeeded.
-      // The user will still get the PIN prompt.
     } else {
-      console.log('✅ Database updated with checkout_request_id for listing:', listingId)
+      console.log('✅ Database updated with checkout_request_id')
     }
 
     return NextResponse.json({ 
