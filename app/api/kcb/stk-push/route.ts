@@ -81,7 +81,7 @@ export async function POST(request: Request) {
     }
 
     // 4. Send STK Push
-    const stkUrl = 'https://buni.kcbgroup.com/mm/api/request/1.0.0'
+    const stkUrl = 'https://uat.buni.kcbgroup.com/mm/api/request/1.0.0'
     const stkRes = await fetch(stkUrl, {
       method: 'POST',
       headers: {
