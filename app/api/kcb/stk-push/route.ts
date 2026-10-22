@@ -59,7 +59,16 @@ const consumerSecret = process.env.KCB_CONSUMER_SECRET
     const formattedInvoice = `8151420-${invoiceNumber}` // <-- CHANGED TO REAL TILL
 
     const stkPayload = {
-      phoneNumber: phoneNumber.startsWith('254') ? phoneNumber : `254${phoneNumber.substring(1)}`, // Ensure 254 format
+           // 1. Clean up the phone number (remove spaces, dashes, plus signs)
+      let cleanPhone = phoneNumber.replace(/[\s\-\+]/g, '');
+      
+      // 2. Remove leading '0' if it exists (e.g., 0712... becomes 712...)
+      if (cleanPhone.startsWith('0')) {
+        cleanPhone = cleanPhone.substring(1);
+      }
+      
+      // 3. Ensure it starts with '254'
+      const formattedPhone = cleanPhone.startsWith('254') ? cleanPhone : `254${cleanPhone}`;
       amount: amount.toString(),
       invoiceNumber: formattedInvoice,
       sharedShortCode: true,
