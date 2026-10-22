@@ -112,7 +112,7 @@ export default function SettingsPage() {
           onClick={() => router.push('/dashboard')}
         >
           <div style={{ fontSize: 24, fontWeight: 800, color: '#1C1209' }}>
-            Vesta<span style={{ color: '#D4873A' }}>.</span>
+            Ehani<span style={{ color: '#D4873A' }}>.</span>
           </div>
         </div>
         <button
