@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     const { data, error } = await resend.emails.send({
       from: 'Ehani Homes <support@ehani.co.ke>', 
       to: [email],
-      subject: `Welcome to Ehani ${tierDisplayName}! 🌟 (We’d love your feedback)`,
+      subject: `Welcome to Ehani ${tierDisplayName}!  (We'd love your feedback)`,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1C1209; line-height: 1.6; max-width: 600px; margin: 0 auto;">
           <p style="font-size: 16px;">Hi ${name},</p>
@@ -52,4 +52,16 @@ export async function POST(request: Request) {
     console.error('API route error:', error);
     return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
   }
+}
+
+// Add CORS headers for all OPTIONS requests (preflight)
+export async function OPTIONS(request: Request) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
 }
