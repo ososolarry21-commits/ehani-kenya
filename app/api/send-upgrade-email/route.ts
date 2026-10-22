@@ -1,14 +1,12 @@
 import { Resend } from 'resend';
 import { NextResponse } from 'next/server';
 
-// Initialize Resend with your Vercel environment variable
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
   try {
     const { email, name, tier } = await request.json();
 
-    // Format the tier name for the email
     const tierDisplayName = tier === 'premium' ? 'Premium' : 'Verified';
 
     const { data, error } = await resend.emails.send({
@@ -29,7 +27,7 @@ export async function POST(request: Request) {
           </div>
 
           <p style="text-align: center; margin: 32px 0;">
-            <a href="https://forms.gle/YOUR_GOOGLE_FORM_LINK_HERE" style="background-color: #D4873A; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block;">Share Your Feedback</a>
+            <a href="https://docs.google.com/forms/d/e/1FAIpQLSc1yGf_2esZ6trmX3xQxwIPgc84enbUQ3ylmiy6BCZeO_dUPA/viewform" style="background-color: #D4873A; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block;">Share Your Feedback</a>
           </p>
           
           <p style="font-size: 16px;">If you have any immediate questions, simply reply to this email. We are always here to help.</p>
