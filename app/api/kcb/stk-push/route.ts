@@ -68,7 +68,8 @@ const consumerSecret = process.env.KCB_CONSUMER_SECRET
       }
       
       // 3. Ensure it starts with '254'
-      const formattedPhone = cleanPhone.startsWith('254') ? cleanPhone : `254${cleanPhone}`;
+    const stkPayload = {
+      phoneNumber: formattedPhone, // <-- USE THE CLEANED NUMBER HERE
       amount: amount.toString(),
       invoiceNumber: formattedInvoice,
       sharedShortCode: true,
