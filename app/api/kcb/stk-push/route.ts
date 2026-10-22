@@ -13,13 +13,13 @@ export async function POST(request: Request) {
     const { phoneNumber, amount, invoiceNumber } = body
 
     const consumerKey = process.env.KCB_CONSUMER_KEY
-const consumerSecret = process.env.KCB_CONSUMER_SECRET
+    const consumerSecret = process.env.KCB_CONSUMER_SECRET
     const callbackUrl = process.env.KCB_CALLBACK_URL || 'https://ehani.co.ke/api/kcb-callback'
 
     console.log('=== KCB STK PUSH DEBUG (PRODUCTION) ===')
     console.log('Keys present:', !!consumerKey, !!consumerSecret)
     console.log('Callback:', callbackUrl)
-    console.log('Phone:', phoneNumber, 'Amount:', amount, 'Invoice:', invoiceNumber)
+    console.log('Raw Phone:', phoneNumber, 'Amount:', amount, 'Invoice:', invoiceNumber)
 
     if (!consumerKey || !consumerSecret) {
       return NextResponse.json({ error: 'Missing KCB environment variables' }, { status: 500 })
@@ -27,7 +27,7 @@ const consumerSecret = process.env.KCB_CONSUMER_SECRET
 
     // 1. Generate Authentication Token (PRODUCTION Environment)
     const credentials = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64')
-    const tokenUrl = 'https://accounts.buni.kcbgroup.com/oauth2/token' // <-- CHANGED TO PROD
+    const tokenUrl = 'https://accounts.buni.kcbgroup.com/oauth2/token'
     
     const tokenRes = await fetch(tokenUrl, {
       method: 'POST',
@@ -56,20 +56,18 @@ const consumerSecret = process.env.KCB_CONSUMER_SECRET
 
     // 2. Format Payload EXACTLY as per KCB Spec: KCBTILLNO-YOURACCREF
     // Using your REAL Till Number: 8151420
-    const formattedInvoice = `8151420-${invoiceNumber}` // <-- CHANGED TO REAL TILL
+    const formattedInvoice = `8151420-${invoiceNumber}`
+
+    // 📱 BULLETPROOF PHONE NUMBER FORMATTING
+    // Handles: "0712345678", "+254712345678", "254 712 345 678", "712345678"
+    let cleanPhone = String(phoneNumber).replace(/[\s\-\+]/g, ''); // Remove spaces, dashes, plus signs
+    if (cleanPhone.startsWith('0')) {
+      cleanPhone = cleanPhone.substring(1); // Remove leading '0'
+    }
+    const formattedPhone = cleanPhone.startsWith('254') ? cleanPhone : `254${cleanPhone}`; // Ensure it starts with 254
 
     const stkPayload = {
-           // 1. Clean up the phone number (remove spaces, dashes, plus signs)
-      let cleanPhone = phoneNumber.replace(/[\s\-\+]/g, '');
-      
-      // 2. Remove leading '0' if it exists (e.g., 0712... becomes 712...)
-      if (cleanPhone.startsWith('0')) {
-        cleanPhone = cleanPhone.substring(1);
-      }
-      
-      // 3. Ensure it starts with '254'
-    const stkPayload = {
-      phoneNumber: formattedPhone, // <-- USE THE CLEANED NUMBER HERE
+      phoneNumber: formattedPhone, // <-- Using the safely formatted number
       amount: amount.toString(),
       invoiceNumber: formattedInvoice,
       sharedShortCode: true,
@@ -80,9 +78,10 @@ const consumerSecret = process.env.KCB_CONSUMER_SECRET
     }
 
     // 3. Send STK Push to the PRODUCTION KCB Buni Endpoint
-    const stkUrl = 'https://buni.kcbgroup.com/mm/api/request/1.0.0' // <-- CHANGED TO PROD URL
+    const stkUrl = 'https://buni.kcbgroup.com/mm/api/request/1.0.0'
 
     console.log('🎯 Hitting PROD STK URL:', stkUrl)
+    console.log('📱 Formatted Phone:', formattedPhone)
 
     const stkRes = await fetch(stkUrl, {
       method: 'POST',
@@ -112,14 +111,13 @@ const consumerSecret = process.env.KCB_CONSUMER_SECRET
     }
 
     // 🆕 4. Update Supabase to save the Checkout Request ID
-    // Adjust this logic based on how your frontend passes the invoiceNumber
     const { error: dbError } = await supabase
       .from('listings')
       .update({ 
         verification_payment_received: false, 
         checkout_request_id: stkData.response?.CheckoutRequestID 
       })
-      .eq('id', invoiceNumber) // Assuming invoiceNumber is the listing ID
+      .eq('id', invoiceNumber) // Assuming invoiceNumber is the listing ID passed from frontend
 
     if (dbError) {
       console.error('⚠️ Failed to update listing status in DB:', dbError)
