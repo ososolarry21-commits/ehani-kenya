@@ -1,11 +1,23 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { Buffer } from 'buffer'; // Added for safety
 
 // Initialize Supabase client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 )
+
+// Define CORS headers to attach to ALL responses
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
+export async function OPTIONS(request: Request) {
+  return new NextResponse(null, { status: 200, headers: corsHeaders });
+}
 
 export async function POST(request: Request) {
   try {
@@ -21,11 +33,12 @@ export async function POST(request: Request) {
     console.log('Callback:', callbackUrl)
     console.log('Raw Phone:', phoneNumber, 'Amount:', amount, 'Invoice:', invoiceNumber)
 
+    // 1. Check for keys
     if (!consumerKey || !consumerSecret) {
-      return NextResponse.json({ error: 'Missing KCB environment variables' }, { status: 500 })
+      return NextResponse.json({ error: 'Missing KCB environment variables' }, { status: 500, headers: corsHeaders })
     }
 
-    // 1. Generate Authentication Token (PRODUCTION Environment)
+    // 2. Generate Authentication Token
     const credentials = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64')
     const tokenUrl = 'https://accounts.buni.kcbgroup.com/oauth2/token'
     
@@ -43,26 +56,17 @@ export async function POST(request: Request) {
     try {
       tokenData = JSON.parse(tokenText)
     } catch (e) {
-      console.error('❌ TOKEN ENDPOINT RETURNED HTML! Snippet:', tokenText.substring(0, 300))
-      return NextResponse.json({ error: 'Token endpoint returned HTML' }, { status: 500 })
+      return NextResponse.json({ error: 'Token endpoint returned HTML', snippet: tokenText.substring(0, 100) }, { status: 500, headers: corsHeaders })
     }
 
     if (!tokenRes.ok || !tokenData.access_token) {
-      console.error('Token Error:', tokenData)
-      return NextResponse.json({ error: 'KCB Auth Failed', details: tokenData }, { status: 401 })
+      return NextResponse.json({ error: 'KCB Auth Failed', details: tokenData }, { status: 401, headers: corsHeaders })
     }
 
-    console.log('✅ Token obtained successfully')
-
-    // 2. Format Payload EXACTLY as per KCB Spec: KCBTILLNO-YOURACCREF
-    // Using your REAL Till Number: 8151420
+    // 3. Format Payload
     const formattedInvoice = `8151420-${invoiceNumber}`
-
-    // 📱 BULLETPROOF PHONE NUMBER FORMATTING
     let cleanPhone = String(phoneNumber).replace(/[\s\-\+]/g, '');
-    if (cleanPhone.startsWith('0')) {
-      cleanPhone = cleanPhone.substring(1);
-    }
+    if (cleanPhone.startsWith('0')) cleanPhone = cleanPhone.substring(1);
     const formattedPhone = cleanPhone.startsWith('254') ? cleanPhone : `254${cleanPhone}`;
 
     const stkPayload = {
@@ -76,12 +80,8 @@ export async function POST(request: Request) {
       callbackUrl: callbackUrl,
     }
 
-    // 3. Send STK Push to the PRODUCTION KCB Buni Endpoint
+    // 4. Send STK Push
     const stkUrl = 'https://buni.kcbgroup.com/mm/api/request/1.0.0'
-
-    console.log('🎯 Hitting PROD STK URL:', stkUrl)
-    console.log(' Formatted Phone:', formattedPhone)
-
     const stkRes = await fetch(stkUrl, {
       method: 'POST',
       headers: {
@@ -96,20 +96,17 @@ export async function POST(request: Request) {
     try {
       stkData = JSON.parse(stkText)
     } catch (e) {
-      console.error('❌ STK ENDPOINT RETURNED HTML! Snippet:', stkText.substring(0, 300))
-      return NextResponse.json({ error: 'STK endpoint returned HTML' }, { status: 500 })
+      return NextResponse.json({ error: 'STK endpoint returned HTML', snippet: stkText.substring(0, 100) }, { status: 500, headers: corsHeaders })
     }
-
-    console.log('✅ KCB JSON Response:', stkData)
 
     if (!stkRes.ok) {
       return NextResponse.json({ 
-        error: stkData.header?.statusDescription || stkData.fault?.message || 'STK Failed',
+        error: stkData.header?.statusDescription || 'STK Failed',
         details: stkData
-      }, { status: stkRes.status })
+      }, { status: stkRes.status, headers: corsHeaders })
     }
 
-    // 🆕 4. Update Supabase to save the Checkout Request ID
+    // 5. Update Supabase
     const { error: dbError } = await supabase
       .from('listings')
       .update({ 
@@ -118,32 +115,16 @@ export async function POST(request: Request) {
       })
       .eq('id', invoiceNumber)
 
-    if (dbError) {
-      console.error('️ Failed to update listing status in DB:', dbError)
-    } else {
-      console.log('✅ Database updated with checkout_request_id')
-    }
+    if (dbError) console.error('DB Error:', dbError)
 
     return NextResponse.json({ 
       success: true, 
-      message: stkData.header?.statusDescription || 'Success',
+      message: 'STK Push sent successfully',
       checkoutRequestId: stkData.response?.CheckoutRequestID 
-    })
+    }, { headers: corsHeaders })
 
   } catch (error: any) {
     console.error('💥 CRASH:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500, headers: corsHeaders })
   }
-}
-
-// ✅ ADD THIS CORS HANDLER
-export async function OPTIONS(request: Request) {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
 }
