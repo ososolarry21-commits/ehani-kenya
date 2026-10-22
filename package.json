@@ -25,6 +25,7 @@
     "tailwindcss": "3.3.3",
     "typescript": "5.2.2",
     "nodemailer": "^6.9.0",
-    "resend": "latest"
+    "resend": "latest",
+    "@react-email/render": "latest"
   }
 }
