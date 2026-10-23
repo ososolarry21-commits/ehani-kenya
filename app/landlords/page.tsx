@@ -83,7 +83,7 @@ export default function LandlordsPage() {
       {/* 🆕 Analytics Dashboard Feature Section */}
       <div style={{ background: '#FDF8F3', padding: '60px 40px', borderRadius: '16px', marginBottom: '80px', border: '1px solid #F0EAE3' }}>
         <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#1C1209', marginBottom: '16px', textAlign: 'center' }}>
-          📊 Track Your Success in Real-Time
+          Track Your Success in Real-Time
         </h2>
         <p style={{ fontSize: '16px', color: '#6B5B4E', maxWidth: '700px', margin: '0 auto 40px auto', lineHeight: '1.6', textAlign: 'center' }}>
           We don’t just list your property; we give you the data. Your personal Ehani dashboard shows you exactly how many views and direct contacts your listing receives. No more guessing if your marketing is working—you’ll see the proof for yourself.
