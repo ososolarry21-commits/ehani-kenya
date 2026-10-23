@@ -80,6 +80,43 @@ export default function LandlordsPage() {
         </div>
       </div>
 
+      {/* 🆕 Analytics Dashboard Feature Section */}
+      <div style={{ background: '#FDF8F3', padding: '60px 40px', borderRadius: '16px', marginBottom: '80px', border: '1px solid #F0EAE3' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#1C1209', marginBottom: '16px', textAlign: 'center' }}>
+          📊 Track Your Success in Real-Time
+        </h2>
+        <p style={{ fontSize: '16px', color: '#6B5B4E', maxWidth: '700px', margin: '0 auto 40px auto', lineHeight: '1.6', textAlign: 'center' }}>
+          We don’t just list your property; we give you the data. Your personal Ehani dashboard shows you exactly how many views and direct contacts your listing receives. No more guessing if your marketing is working—you’ll see the proof for yourself.
+        </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '40px' }}>
+          
+          <div style={{ flex: '1 1 200px', textAlign: 'center', maxWidth: '250px' }}>
+            <div style={{ width: '50px', height: '50px', background: '#FFFFFF', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D4873A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </div>
+            <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 8px 0', color: '#1C1209' }}>Live View Counts</h3>
+            <p style={{ fontSize: '14px', color: '#6B5B4E', margin: 0, lineHeight: '1.5' }}>See exactly how many students are looking at your property.</p>
+          </div>
+
+          <div style={{ flex: '1 1 200px', textAlign: 'center', maxWidth: '250px' }}>
+            <div style={{ width: '50px', height: '50px', background: '#FFFFFF', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D4873A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </div>
+            <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 8px 0', color: '#1C1209' }}>Contact Tracking</h3>
+            <p style={{ fontSize: '14px', color: '#6B5B4E', margin: 0, lineHeight: '1.5' }}>Know exactly when and how tenants are reaching out to you.</p>
+          </div>
+
+          <div style={{ flex: '1 1 200px', textAlign: 'center', maxWidth: '250px' }}>
+            <div style={{ width: '50px', height: '50px', background: '#FFFFFF', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D4873A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            </div>
+            <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 8px 0', color: '#1C1209' }}>Performance Insights</h3>
+            <p style={{ fontSize: '14px', color: '#6B5B4E', margin: 0, lineHeight: '1.5' }}>Understand your listing's ROI with clear, transparent data.</p>
+          </div>
+
+        </div>
+      </div>
+
       {/* 🆕 INTERACTIVE Pricing Cards */}
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '24px', marginBottom: '80px' }}>
         
@@ -106,7 +143,6 @@ export default function LandlordsPage() {
             <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Standard search placement</li>
             <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Contact info gated behind warning</li>
           </ul>
-          {/* Changed from <a> to <div> so the parent card handles the click */}
           <div style={{ display: 'block', textAlign: 'center', background: '#F3F4F6', color: '#1C1209', padding: '12px', borderRadius: '8px', fontWeight: '600', fontSize: '14px' }}>
             Create Account
           </div>
