@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { Buffer } from 'buffer'; // Added for safety
+import { Buffer } from 'buffer';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     const consumerSecret = process.env.KCB_CONSUMER_SECRET
     const callbackUrl = process.env.KCB_CALLBACK_URL || 'https://ehani.co.ke/api/kcb-callback'
 
-    console.log('=== KCB STK PUSH DEBUG (PRODUCTION) ===')
+    console.log('=== KCB STK PUSH DEBUG ===')
     console.log('Keys present:', !!consumerKey, !!consumerSecret)
     console.log('Callback:', callbackUrl)
     console.log('Raw Phone:', phoneNumber, 'Amount:', amount, 'Invoice:', invoiceNumber)
@@ -63,8 +63,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'KCB Auth Failed', details: tokenData }, { status: 401, headers: corsHeaders })
     }
 
-    // 3. Format Payload
+    // 3. Format Payload (UPDATED per KCB instructions)
+    // KCB requires: TillNumber-Reference (NO spaces around the hyphen)
+    // Example output: 8151420-EHANI-REF12345
     const formattedInvoice = `8151420-${invoiceNumber}`
+    
     let cleanPhone = String(phoneNumber).replace(/[\s\-\+]/g, '');
     if (cleanPhone.startsWith('0')) cleanPhone = cleanPhone.substring(1);
     const formattedPhone = cleanPhone.startsWith('254') ? cleanPhone : `254${cleanPhone}`;
@@ -72,16 +75,18 @@ export async function POST(request: Request) {
     const stkPayload = {
       phoneNumber: formattedPhone,
       amount: amount.toString(),
-      invoiceNumber: formattedInvoice,
+      invoiceNumber: formattedInvoice, // Strictly Till-Reference format
       sharedShortCode: true,
       orgShortCode: '',
       orgPassKey: '',
-      transactionDescription: 'Ehani Homes Payment',
+      transactionDescription: 'Ehani Homes Verification', // UPDATED to match KCB's exact example
       callbackUrl: callbackUrl,
     }
 
-    // 4. Send STK Push
+    // 4. Send STK Push (Currently set to UAT for final testing before Go-Live)
+    // NOTE: Once KCB provides PROD keys, change this URL to: 'https://buni.kcbgroup.com/mm/api/request/1.0.0'
     const stkUrl = 'https://uat.buni.kcbgroup.com/mm/api/request/1.0.0/stkpush'
+    
     const stkRes = await fetch(stkUrl, {
       method: 'POST',
       headers: {
