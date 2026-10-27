@@ -51,6 +51,7 @@ export default function AgentPortal() {
   }
 
   async function fetchAssignments(agentId: string) {
+    // 🆕 Removed the strict status filter so it grabs ALL assignments for this agent
     const { data } = await supabase
       .from('verification_assignments')
       .select(`
@@ -60,7 +61,6 @@ export default function AgentPortal() {
         )
       `)
       .eq('agent_id', agentId)
-      .in('status', ['pending', 'completed'])
       .order('assigned_at', { ascending: false })
 
     if (data) setAssignments(data)
@@ -86,7 +86,6 @@ export default function AgentPortal() {
         const fileExt = file.name.split('.').pop()
         const fileName = `agent-proof-${listingId}-${Date.now()}-${i}.${fileExt}`
         
-        console.log('Uploading:', fileName)
         const { error: uploadError } = await supabase.storage
           .from('verification-proofs') 
           .upload(fileName, file)
@@ -97,14 +96,12 @@ export default function AgentPortal() {
         photoUrls.push(data.publicUrl)
       }
 
-      console.log('Photo URLs:', photoUrls)
-
       // 2. Update Listing
-      const { data: updateData, error: dbError } = await supabase
+      const { error: dbError } = await supabase
         .from('listings')
         .update({
           is_verified: true,
-          verification_photos: photoUrls, // Array of URLs
+          verification_photos: photoUrls,
           verification_notes: notes,
           water_test: waterTest,
           electricity_test: electricityTest,
@@ -115,9 +112,8 @@ export default function AgentPortal() {
         .eq('id', listingId)
 
       if (dbError) throw dbError
-      console.log('DB Update Success:', updateData)
 
-      // 3. Update Assignment
+      // 3. Update Assignment Status to 'completed'
       await supabase
         .from('verification_assignments')
         .update({ status: 'completed', completed_at: new Date().toISOString() })
@@ -154,7 +150,7 @@ export default function AgentPortal() {
   return (
     <div style={{ minHeight: '100vh', background: '#F5F5F5', fontFamily: "sans-serif" }}>
       
-      {/* 🎨 PRINT STYLES & CHECKLIST */}
+      {/*  PRINT STYLES & CHECKLIST */}
       <style>{`
         @media print {
           .no-print { display: none !important; }
@@ -187,9 +183,9 @@ export default function AgentPortal() {
         <p>☐ Toilet flushed (Drainage clear)</p>
 
         <h3 style={{ color: '#1C1209', borderBottom: '2px solid #D4873A', paddingBottom: '5px', marginTop: '20px' }}>C. Safety & Security</h3>
-        <p>☐ Main gate/entrance is secure</p>
+        <p> Main gate/entrance is secure</p>
         <p>☐ Ground floor windows have grills (if applicable)</p>
-        <p>☐ Main door has a functioning lock</p>
+        <p> Main door has a functioning lock</p>
 
         <h3 style={{ color: '#1C1209', borderBottom: '2px solid #D4873A', paddingBottom: '5px', marginTop: '20px' }}>D. Final Decision</h3>
         <p>☐ <strong>APPROVED:</strong> Property meets Ehani Standards.</p>
@@ -217,7 +213,7 @@ export default function AgentPortal() {
 
         {assignments.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 60, background: 'white', borderRadius: 12 }}>
-            <p style={{ color: '#6B5B4E' }}>No pending verifications.</p>
+            <p style={{ color: '#6B5B4E' }}>No verifications assigned to you.</p>
           </div>
         ) : (
           <div style={{ display: 'grid', gap: 20 }}>
@@ -226,14 +222,15 @@ export default function AgentPortal() {
                 <h3 style={{ margin: '0 0 10px 0', color: '#1C1209' }}>{assignment.listings?.name}</h3>
                 <p style={{ margin: '0 0 15px 0', color: '#6B5B4E', fontSize: 14 }}>📍 {assignment.listings?.area}, {assignment.listings?.city}</p>
 
-                {assignment.status === 'pending' && (
+                {/* 🆕 CHANGED LOGIC: Show form if status is NOT completed */}
+                {assignment.status !== 'completed' ? (
                   <div style={{ borderTop: '1px solid #eee', paddingTop: 20 }}>
                     {activeAssignmentId === assignment.id ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
                         <select value={waterTest} onChange={(e) => setWaterTest(e.target.value)} style={{ padding: 10, borderRadius: 6, border: '1px solid #ccc' }}>
                           <option value="">Water Test...</option>
                           <option value="Pass">✅ Pass</option>
-                          <option value="Fail"> Fail</option>
+                          <option value="Fail">❌ Fail</option>
                         </select>
                         <select value={electricityTest} onChange={(e) => setElectricityTest(e.target.value)} style={{ padding: 10, borderRadius: 6, border: '1px solid #ccc' }}>
                           <option value="">Electricity Test...</option>
@@ -246,7 +243,6 @@ export default function AgentPortal() {
                           <option value="Fail">❌ Fail</option>
                         </select>
                         
-                        {/* 🆕 Multi-photo input without capture restriction */}
                         <input 
                           type="file" 
                           multiple 
@@ -271,6 +267,13 @@ export default function AgentPortal() {
                         📝 Start Inspection
                       </button>
                     )}
+                  </div>
+                ) : (
+                  // Completed View
+                  <div style={{ marginTop: 16, padding: 12, background: '#E8F5E9', borderRadius: 8 }}>
+                    <p style={{ margin: 0, fontSize: 14, color: '#2E7D32', fontWeight: 600 }}>
+                      ✓ Verification Completed
+                    </p>
                   </div>
                 )}
               </div>
