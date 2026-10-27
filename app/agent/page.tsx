@@ -92,13 +92,13 @@ export default function AgentPortal() {
         const fileExt = file.name.split('.').pop()
         const fileName = `agent-proof-${listingId}-${Date.now()}-${i}.${fileExt}`
         
-        const { error: uploadError } = await supabase.storage
-          .from('verification-photos') // Make sure this bucket exists in Supabase!
+                const { error: uploadError } = await supabase.storage
+          .from('verification-proofs') 
           .upload(fileName, file)
 
         if (uploadError) throw uploadError
 
-        const { data } = supabase.storage.from('verification-photos').getPublicUrl(fileName)
+        const { data } = supabase.storage.from('verification-proofs').getPublicUrl(fileName)
         photoUrls.push(data.publicUrl)
       }
 
