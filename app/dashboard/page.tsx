@@ -154,7 +154,7 @@ export default function Dashboard() {
   }
 
   function handleStkPushSent(checkoutRequestId: string, listingId: string, tier: string) {
-    const tierName = tier === 'verified' ? 'Verification (KSh 50)' : 'Featured (KSh 50)' 
+    const tierName = tier === 'verified' ? 'Verification (KSh 500)' : 'Featured (KSh 1500)' 
     alert(`M-Pesa prompt sent for ${tierName}! Please check your phone (${phoneNumber}) to enter your PIN.`)
   }
 
