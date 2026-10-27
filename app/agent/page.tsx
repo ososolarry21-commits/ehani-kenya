@@ -56,12 +56,7 @@ export default function AgentPortal() {
       .select(`
         *,
         listings (
-          id,
-          name,
-          area,
-          city,
-          price,
-          type
+          id, name, area, city, price, type
         )
       `)
       .eq('agent_id', agentId)
@@ -71,7 +66,6 @@ export default function AgentPortal() {
     if (data) setAssignments(data)
   }
 
-  // 🆕 Comprehensive Verification Submission
   async function handleVerificationSubmit(assignmentId: string, listingId: string) {
     if (!waterTest || !electricityTest || !securityCheck) {
       alert('⚠️ Please complete all inspection dropdowns.')
@@ -86,13 +80,14 @@ export default function AgentPortal() {
     try {
       const photoUrls: string[] = []
 
-      // 1. Upload Multiple Photos to Supabase Storage
+      // 1. Upload Multiple Photos
       for (let i = 0; i < selectedFiles.length; i++) {
         const file = selectedFiles[i]
         const fileExt = file.name.split('.').pop()
         const fileName = `agent-proof-${listingId}-${Date.now()}-${i}.${fileExt}`
         
-                const { error: uploadError } = await supabase.storage
+        console.log('Uploading:', fileName)
+        const { error: uploadError } = await supabase.storage
           .from('verification-proofs') 
           .upload(fileName, file)
 
@@ -102,12 +97,14 @@ export default function AgentPortal() {
         photoUrls.push(data.publicUrl)
       }
 
-      // 2. Update the Listing in the Database
-      const { error: dbError } = await supabase
+      console.log('Photo URLs:', photoUrls)
+
+      // 2. Update Listing
+      const { data: updateData, error: dbError } = await supabase
         .from('listings')
         .update({
           is_verified: true,
-          verification_photos: photoUrls,
+          verification_photos: photoUrls, // Array of URLs
           verification_notes: notes,
           water_test: waterTest,
           electricity_test: electricityTest,
@@ -118,23 +115,20 @@ export default function AgentPortal() {
         .eq('id', listingId)
 
       if (dbError) throw dbError
+      console.log('DB Update Success:', updateData)
 
-      // 3. Update Assignment Status
+      // 3. Update Assignment
       await supabase
         .from('verification_assignments')
-        .update({
-          status: 'completed',
-          completed_at: new Date().toISOString()
-        })
+        .update({ status: 'completed', completed_at: new Date().toISOString() })
         .eq('id', assignmentId)
 
       alert('✅ Verification successful! Listing is now LIVE.')
-      
-      // Reset form and refresh
       resetForm()
       if (user) await fetchAssignments(user.id)
       
     } catch (error: any) {
+      console.error('Submission Error:', error)
       alert('❌ Error: ' + error.message)
     } finally {
       setSubmittingId(null)
@@ -155,226 +149,128 @@ export default function AgentPortal() {
     router.push('/')
   }
 
-  if (loading) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div>Loading...</div>
-      </div>
-    )
-  }
+  if (loading) return <div style={{padding: 50}}>Loading...</div>
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F5F5F5', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
-      {/* Print Styles for Backup Checklist */}
+    <div style={{ minHeight: '100vh', background: '#F5F5F5', fontFamily: "sans-serif" }}>
+      
+      {/* 🎨 PRINT STYLES & CHECKLIST */}
       <style>{`
         @media print {
           .no-print { display: none !important; }
           .print-only { display: block !important; }
-          body { background: white; }
+          body { background: white; -webkit-print-color-adjust: exact; }
         }
         .print-only { display: none; }
       `}</style>
 
-      {/* Print Backup View (Hidden on screen, visible when printing) */}
-      <div className="print-only" style={{ padding: '20px', fontFamily: 'Arial' }}>
-        <h1>Ehani Homes - Physical Verification Checklist</h1>
-        <p><strong>Agent Name:</strong> {profile?.name || user?.email}</p>
-        <p><strong>Date:</strong> {new Date().toLocaleDateString()}</p>
-        <hr />
-        <h3>Inspection Criteria</h3>
-        <p>☐ Water Test (Tap/Shower running)</p>
-        <p>☐ Electricity Test (Lights & Sockets working)</p>
-        <p> Security Check (Gate, locks, ground floor grills)</p>
-        <p> Photos taken (Exterior, Interior, Bathroom)</p>
-        <h3>Notes / Red Flags:</h3>
-        <div style={{ border: '1px solid #ccc', height: '150px', marginTop: '10px' }}></div>
+      <div className="print-only" style={{ padding: '40px', fontFamily: 'Arial, sans-serif', color: '#333' }}>
+        <div style={{ borderBottom: '4px solid #D4873A', paddingBottom: '20px', marginBottom: '30px' }}>
+          <h1 style={{ color: '#1C1209', margin: 0, fontSize: '32px' }}>Ehani Homes</h1>
+          <h2 style={{ color: '#D4873A', margin: '10px 0 0 0', fontSize: '20px', fontWeight: 'normal' }}>Field Verification Checklist</h2>
+        </div>
+        
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px', fontSize: '14px' }}>
+          <div><strong>Agent:</strong> {profile?.name || user?.email}</div>
+          <div><strong>Date:</strong> {new Date().toLocaleDateString()}</div>
+        </div>
+
+        <h3 style={{ color: '#1C1209', borderBottom: '2px solid #D4873A', paddingBottom: '5px' }}>A. Location & Exterior</h3>
+        <p>☐ Street/Landmark photo taken</p>
+        <p>☐ Building exterior photos taken (min. 2)</p>
+        <p>☐ Location matches landlord's description</p>
+
+        <h3 style={{ color: '#1C1209', borderBottom: '2px solid #D4873A', paddingBottom: '5px', marginTop: '20px' }}>B. Interior & Functionality</h3>
+        <p>☐ Interior photos taken (Bedroom, Bathroom, Kitchen)</p>
+        <p>☐ <strong>Water Test:</strong> Tap/Shower ran for 15s (Pass/Fail)</p>
+        <p>☐ <strong>Electricity Test:</strong> Lights & Sockets working (Pass/Fail)</p>
+        <p>☐ Toilet flushed (Drainage clear)</p>
+
+        <h3 style={{ color: '#1C1209', borderBottom: '2px solid #D4873A', paddingBottom: '5px', marginTop: '20px' }}>C. Safety & Security</h3>
+        <p>☐ Main gate/entrance is secure</p>
+        <p>☐ Ground floor windows have grills (if applicable)</p>
+        <p>☐ Main door has a functioning lock</p>
+
+        <h3 style={{ color: '#1C1209', borderBottom: '2px solid #D4873A', paddingBottom: '5px', marginTop: '20px' }}>D. Final Decision</h3>
+        <p>☐ <strong>APPROVED:</strong> Property meets Ehani Standards.</p>
+        <p>☐ <strong>REJECTED:</strong> Property failed inspection.</p>
+
+        <div style={{ marginTop: '40px', border: '1px solid #ccc', padding: '20px', height: '150px' }}>
+          <strong>Agent Notes / Red Flags:</strong>
+        </div>
       </div>
 
-      <nav className="no-print" style={{ 
-        background: 'white', 
-        padding: '16px 20px', 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        boxShadow: '0 2px 20px rgba(0,0,0,0.05)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 10
-      }}>
+      {/*  APP INTERFACE */}
+      <nav className="no-print" style={{ background: 'white', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 20, color: '#1C1209' }}>Agent Portal</h1>
-          <p style={{ margin: '4px 0 0 0', fontSize: 12, color: '#6B5B4E' }}>
-            Welcome, {profile?.name || user?.email}
-          </p>
+          <p style={{ margin: '4px 0 0 0', fontSize: 12, color: '#6B5B4E' }}>Welcome, {profile?.name || user?.email}</p>
         </div>
-        <button 
-          onClick={handleSignOut}
-          style={{ padding: '8px 16px', background: '#F44336', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}
-        >
-          Sign Out
-        </button>
+        <button onClick={handleSignOut} style={{ padding: '8px 16px', background: '#F44336', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer' }}>Sign Out</button>
       </nav>
 
       <div className="no-print" style={{ padding: '20px', maxWidth: 800, margin: '0 auto' }}>
         
-        {/* Print Button */}
-        <button 
-          onClick={() => window.print()}
-          style={{ width: '100%', padding: '12px', background: '#f3f4f6', border: '1px solid #ccc', borderRadius: 8, marginBottom: 20, cursor: 'pointer', fontWeight: 600, color: '#333' }}
-        >
+        <button onClick={() => window.print()} style={{ width: '100%', padding: '12px', background: '#1C1209', color: 'white', border: 'none', borderRadius: 8, marginBottom: 20, cursor: 'pointer', fontWeight: 600 }}>
           🖨️ Print Physical Checklist (Offline Backup)
         </button>
 
-        <div style={{ marginBottom: 20 }}>
-          <h2 style={{ color: '#1C1209', marginBottom: 8, fontSize: 22 }}>Your Assigned Verifications</h2>
-          <p style={{ color: '#6B5B4E', margin: 0, fontSize: 14 }}>
-            Visit each property, complete the form, and upload photos.
-          </p>
-        </div>
-
         {assignments.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 60, background: 'white', borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>📋</div>
-            <p style={{ color: '#6B5B4E' }}>No pending verifications assigned to you.</p>
+          <div style={{ textAlign: 'center', padding: 60, background: 'white', borderRadius: 12 }}>
+            <p style={{ color: '#6B5B4E' }}>No pending verifications.</p>
           </div>
         ) : (
           <div style={{ display: 'grid', gap: 20 }}>
             {assignments.map((assignment) => (
-              <div key={assignment.id} style={{
-                background: 'white',
-                padding: 20,
-                borderRadius: 12,
-                boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-                opacity: assignment.status === 'completed' ? 0.8 : 1
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: 15, flexWrap: 'wrap' }}>
-                  <div style={{ flex: 1, minWidth: 250 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                      <h3 style={{ margin: 0, color: '#1C1209', fontSize: 18 }}>
-                        {assignment.listings?.name}
-                      </h3>
-                      {assignment.status === 'completed' && (
-                        <span style={{ background: '#4CAF50', color: 'white', padding: '4px 10px', borderRadius: 6, fontSize: 10, fontWeight: 700 }}>
-                          ✓ COMPLETED
-                        </span>
-                      )}
-                    </div>
-                    <p style={{ margin: '4px 0', color: '#6B5B4E', fontSize: 14 }}>
-                       {assignment.listings?.area}, {assignment.listings?.city}
-                    </p>
-                    <p style={{ margin: '4px 0', color: '#6B5B4E', fontSize: 14 }}>
-                      🏠 {assignment.listings?.type} • KSh {assignment.listings?.price?.toLocaleString()}/mo
-                    </p>
-                  </div>
-                </div>
+              <div key={assignment.id} style={{ background: 'white', padding: 20, borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+                <h3 style={{ margin: '0 0 10px 0', color: '#1C1209' }}>{assignment.listings?.name}</h3>
+                <p style={{ margin: '0 0 15px 0', color: '#6B5B4E', fontSize: 14 }}>📍 {assignment.listings?.area}, {assignment.listings?.city}</p>
 
-                {/* 🆕 Comprehensive Form for Pending Assignments */}
                 {assignment.status === 'pending' && (
-                  <div style={{ marginTop: 20, borderTop: '1px solid #eee', paddingTop: 20 }}>
+                  <div style={{ borderTop: '1px solid #eee', paddingTop: 20 }}>
                     {activeAssignmentId === assignment.id ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
+                        <select value={waterTest} onChange={(e) => setWaterTest(e.target.value)} style={{ padding: 10, borderRadius: 6, border: '1px solid #ccc' }}>
+                          <option value="">Water Test...</option>
+                          <option value="Pass">✅ Pass</option>
+                          <option value="Fail"> Fail</option>
+                        </select>
+                        <select value={electricityTest} onChange={(e) => setElectricityTest(e.target.value)} style={{ padding: 10, borderRadius: 6, border: '1px solid #ccc' }}>
+                          <option value="">Electricity Test...</option>
+                          <option value="Pass">✅ Pass</option>
+                          <option value="Fail">❌ Fail</option>
+                        </select>
+                        <select value={securityCheck} onChange={(e) => setSecurityCheck(e.target.value)} style={{ padding: 10, borderRadius: 6, border: '1px solid #ccc' }}>
+                          <option value="">Security Check...</option>
+                          <option value="Pass">✅ Pass</option>
+                          <option value="Fail">❌ Fail</option>
+                        </select>
                         
-                        <div>
-                          <label style={{ fontWeight: 600, fontSize: 13, color: '#333', display: 'block', marginBottom: 5 }}>Water Test (Tap/Shower)</label>
-                          <select 
-                            value={waterTest} 
-                            onChange={(e) => setWaterTest(e.target.value)} 
-                            style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #ccc', fontSize: 14 }}
-                          >
-                            <option value="">Select...</option>
-                            <option value="Pass">✅ Pass</option>
-                            <option value="Fail">❌ Fail</option>
-                          </select>
-                        </div>
+                        {/* 🆕 Multi-photo input without capture restriction */}
+                        <input 
+                          type="file" 
+                          multiple 
+                          accept="image/*"
+                          onChange={(e) => setSelectedFiles(Array.from(e.target.files || []))} 
+                          style={{ padding: 10, border: '1px solid #ccc', borderRadius: 6 }}
+                        />
+                        {selectedFiles.length > 0 && <p style={{ fontSize: 12, color: '#4CAF50' }}>{selectedFiles.length} photo(s) selected</p>}
 
-                        <div>
-                          <label style={{ fontWeight: 600, fontSize: 13, color: '#333', display: 'block', marginBottom: 5 }}>Electricity Test (Lights/Sockets)</label>
-                          <select 
-                            value={electricityTest} 
-                            onChange={(e) => setElectricityTest(e.target.value)} 
-                            style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #ccc', fontSize: 14 }}
-                          >
-                            <option value="">Select...</option>
-                            <option value="Pass">✅ Pass</option>
-                            <option value="Fail">❌ Fail</option>
-                          </select>
-                        </div>
+                        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Agent notes..." style={{ padding: 10, borderRadius: 6, border: '1px solid #ccc' }}></textarea>
 
-                        <div>
-                          <label style={{ fontWeight: 600, fontSize: 13, color: '#333', display: 'block', marginBottom: 5 }}>Security Check (Gate/Locks)</label>
-                          <select 
-                            value={securityCheck} 
-                            onChange={(e) => setSecurityCheck(e.target.value)} 
-                            style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #ccc', fontSize: 14 }}
-                          >
-                            <option value="">Select...</option>
-                            <option value="Pass">✅ Pass</option>
-                            <option value="Fail">❌ Fail</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label style={{ fontWeight: 600, fontSize: 13, color: '#333', display: 'block', marginBottom: 5 }}>Upload Photos (Min. 3)</label>
-                          <input 
-                            type="file" 
-                            multiple 
-                            accept="image/*"
-                            capture="environment" // Opens camera directly on mobile!
-                            onChange={(e) => setSelectedFiles(Array.from(e.target.files || []))} 
-                            style={{ width: '100%', padding: 10, border: '1px solid #ccc', borderRadius: 6 }}
-                          />
-                          {selectedFiles.length > 0 && <p style={{ fontSize: 12, color: '#4CAF50', marginTop: 5 }}>{selectedFiles.length} file(s) selected</p>}
-                        </div>
-
-                        <div>
-                          <label style={{ fontWeight: 600, fontSize: 13, color: '#333', display: 'block', marginBottom: 5 }}>Agent Notes / Red Flags</label>
-                          <textarea 
-                            value={notes} 
-                            onChange={(e) => setNotes(e.target.value)} 
-                            rows={3}
-                            placeholder="e.g., Water pressure is low, but everything else is fine."
-                            style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #ccc', fontSize: 14 }}
-                          ></textarea>
-                        </div>
-
-                        <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
-                          <button 
-                            onClick={() => handleVerificationSubmit(assignment.id, assignment.listings.id)}
-                            disabled={submittingId === assignment.id}
-                            style={{ flex: 1, padding: 12, background: submittingId === assignment.id ? '#999' : '#D4873A', color: 'white', border: 'none', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}
-                          >
-                            {submittingId === assignment.id ? 'Uploading...' : 'Submit Verification'}
-                          </button>
-                          <button 
-                            onClick={resetForm}
-                            style={{ padding: 12, background: '#f3f4f6', color: '#333', border: '1px solid #ccc', borderRadius: 8, cursor: 'pointer' }}
-                          >
-                            Cancel
-                          </button>
-                        </div>
+                        <button 
+                          onClick={() => handleVerificationSubmit(assignment.id, assignment.listings.id)}
+                          disabled={submittingId === assignment.id}
+                          style={{ padding: 12, background: '#D4873A', color: 'white', border: 'none', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}
+                        >
+                          {submittingId === assignment.id ? 'Submitting...' : 'Submit Verification'}
+                        </button>
                       </div>
                     ) : (
-                      <button 
-                        onClick={() => setActiveAssignmentId(assignment.id)}
-                        style={{ width: '100%', padding: 12, background: '#007BFF', color: 'white', border: 'none', borderRadius: 8, fontWeight: 600, cursor: 'pointer', marginTop: 10 }}
-                      >
-                        📝 Start Inspection Form
+                      <button onClick={() => setActiveAssignmentId(assignment.id)} style={{ width: '100%', padding: 12, background: '#007BFF', color: 'white', border: 'none', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>
+                        📝 Start Inspection
                       </button>
                     )}
-                  </div>
-                )}
-
-                {/* Completed View */}
-                {assignment.status === 'completed' && assignment.proof_url && (
-                  <div style={{ marginTop: 16, padding: 12, background: '#E8F5E9', borderRadius: 8 }}>
-                    <p style={{ margin: '0 0 8px 0', fontSize: 12, color: '#2E7D32', fontWeight: 600 }}>
-                      ✓ Proof uploaded successfully
-                    </p>
-                    <img 
-                      src={assignment.proof_url} 
-                      alt="Verification proof" 
-                      style={{ maxWidth: '150px', borderRadius: 6, border: '2px solid #4CAF50' }}
-                    />
                   </div>
                 )}
               </div>
