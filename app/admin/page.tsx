@@ -46,13 +46,21 @@ export default function AdminPanel() {
     setLoading(false)
   }
 
-  async function fetchListings() {
+   async function fetchListings() {
     try {
+      // 🚀 ONE QUERY: Fetches listings, assignments, and agent names together
       const { data: listingsData, error: listingsError } = await supabase
         .from('listings')
         .select(`
           *,
-          profiles:landlord_id(name, email)
+          profiles:landlord_id(name, email),
+          verification_assignments (
+            listing_id,
+            status,
+            agent_id,
+            proof_url,
+            profiles:agent_id (name)
+          )
         `)
         .order('is_verified', { ascending: false })
         .order('created_at', { ascending: false })
@@ -68,34 +76,34 @@ export default function AdminPanel() {
         return
       }
 
-      const { data: assignmentsData } = await supabase
-        .from('verification_assignments')
-        .select('listing_id, proof_url, status, agent_id')
-        .in('listing_id', listingsData.map((l: any) => l.id))
-
       const processed = listingsData.map((listing: any) => {
-        // 🆕 Look for ACTIVE assignment first, then completed
-        const activeAssignment = assignmentsData?.find(
-          (a: any) => a.listing_id === listing.id && a.status !== 'completed'
-        )
-        const completedAssignment = assignmentsData?.find(
-          (a: any) => a.listing_id === listing.id && a.status === 'completed'
-        )
+        const assignments = listing.verification_assignments || []
+        
+        // Find active (pending) or completed assignment
+        const activeAssignment = assignments.find((a: any) => a.status !== 'completed')
+        const completedAssignment = assignments.find((a: any) => a.status === 'completed')
         
         return {
           ...listing,
-          proof_image_url: completedAssignment?.proof_url || null,
+          proof_image_url: completedAssignment?.proof_url || activeAssignment?.proof_url || null,
           assigned_agent_id: activeAssignment?.agent_id || completedAssignment?.agent_id || null,
+          assigned_agent_name: activeAssignment?.profiles?.name || completedAssignment?.profiles?.name || null,
           assignment_status: activeAssignment?.status || completedAssignment?.status || null
         }
       })
       
       setListings(processed)
+      
+      // Fetch agents separately only for the dropdown modal (much lighter)
+      const { data } = await supabase.from('profiles').select('id, name, email').eq('role', 'agent')
+      if (data) setAgents(data)
+
     } catch (error) {
       console.error('Fatal error in fetchListings:', error)
+ “Error loading listings.”
     }
   }
-
+  
   async function fetchAgents() {
     const { data } = await supabase
       .from('profiles')
