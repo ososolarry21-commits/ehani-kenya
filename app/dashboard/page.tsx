@@ -57,36 +57,34 @@ export default function Dashboard() {
     setLoading(false)
   }
 
-  // 🆕 UPDATED: Fetches assigned agent data alongside listings
+  // 🚀 OPTIMIZED: Fetches listings and agent names in ONE request
   async function fetchListings(userId: string) {
-    const { data: listingsData } = await supabase
+    const { data: listingsData, error } = await supabase
       .from('listings')
-      .select('*')
+      .select(`
+        *,
+        verification_assignments (
+          status,
+          profiles:agent_id (name)
+        )
+      `)
       .eq('landlord_id', userId)
       .order('created_at', { ascending: false })
 
+    if (error) {
+      console.error('Error fetching listings:', error)
+      return
+    }
+
     if (listingsData) {
-      // Fetch assignments for these specific listings
-      const { data: assignmentsData } = await supabase
-        .from('verification_assignments')
-        .select('listing_id, agent_id, status')
-        .in('listing_id', listingsData.map((l: any) => l.id))
-
-      // Fetch agent names
-      const { data: agentsData } = await supabase
-        .from('profiles')
-        .select('id, name')
-        .eq('role', 'agent')
-
       const processedListings = listingsData.map((listing: any) => {
-        const activeAssignment = assignmentsData?.find(
-          (a: any) => a.listing_id === listing.id && a.status !== 'completed'
-        )
-        const agent = agentsData?.find((a: any) => a.id === activeAssignment?.agent_id)
+        const assignments = listing.verification_assignments || []
+        const activeAssignment = assignments.find((a: any) => a.status !== 'completed')
+        const agentName = activeAssignment?.profiles?.name || null
 
         return {
           ...listing,
-          assigned_agent_name: agent?.name || null,
+          assigned_agent_name: agentName,
           is_agent_assigned: !!activeAssignment
         }
       })
