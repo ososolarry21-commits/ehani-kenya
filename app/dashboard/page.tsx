@@ -46,42 +46,49 @@ export default function Dashboard() {
     setLoading(false)
   }
 
-  //  BULLETPROOF MANUAL JOIN (Fixed TypeScript Error)
+  // 🔍 FORENSIC DEBUG: Finds out exactly why assignments are missing
   async function fetchListings(userId: string) {
-    // Step 1: Get all listings for this landlord
+    console.log('🔍 1. Current Landlord User ID:', userId);
+
+    // Step 1: Get listings
     const { data: listingsData, error: listingsError } = await supabase
       .from('listings')
       .select('*')
       .eq('landlord_id', userId)
       .order('created_at', { ascending: false })
 
-    if (listingsError || !listingsData || listingsData.length === 0) {
-      setListings([])
-      return
+    if (listingsError) console.error('Listings Error:', listingsError);
+    if (!listingsData || listingsData.length === 0) {
+      console.log('❌ No listings found for this user.');
+      setListings([]);
+      return;
     }
 
-    // Step 2: Get all assignments for these specific listings
-    const listingIds = listingsData.map((l: any) => l.id)
+    const listingIds = listingsData.map((l: any) => l.id);
+    console.log('🔍 2. Listing IDs owned by this user:', listingIds);
+
+    // Step 2: The original filtered query
     const { data: assignmentsData, error: assignmentsError } = await supabase
       .from('verification_assignments')
-      .select(`
-        listing_id,
-        status,
-        agent_id,
-        profiles:agent_id (name)
-      `)
-      .in('listing_id', listingIds)
+      .select(`listing_id, status, agent_id, profiles:agent_id (name)`)
+      .in('listing_id', listingIds);
 
-    if (assignmentsError) {
-      console.error('Error fetching assignments:', assignmentsError)
-    }
+    console.log('🔍 3. Result of filtered assignment query:', assignmentsData);
+    if (assignmentsError) console.error('Assignment Query Error:', assignmentsError);
 
-    console.log('📋 Raw Assignments Data from Supabase:', assignmentsData)
+    // 🚨 STEP 3: THE FORENSIC CHECK
+    // Let's fetch ALL assignments in the database, ignoring filters, to see if RLS is blocking us
+    const { data: allAssignmentsInDB, error: allError } = await supabase
+      .from('verification_assignments')
+      .select('*');
+      
+    console.log('🚨 4. ALL assignments in the entire database (bypassing filter):', allAssignmentsInDB);
+    if (allError) console.error('All Assignments Error:', allError);
 
-    // Step 3: Manually combine the data in JavaScript
+    // Step 4: Manually combine the data in JavaScript
     const processedListings = listingsData.map((listing: any) => {
       const listingAssignments = assignmentsData?.filter(
-        (a: any) => a.listing_id === listing.id
+        (a: any) => String(a.listing_id) === String(listing.id) // String comparison to prevent type mismatch
       ) || []
 
       const hasAssignment = listingAssignments.length > 0
@@ -92,7 +99,7 @@ export default function Dashboard() {
       // ✅ FIX: Added [0] because profiles is an array
       const agentName = activeAssignment?.profiles?.[0]?.name || null
 
-      console.log(`✅ Listing: ${listing.name} | Assigned: ${hasAssignment} | Agent: ${agentName}`)
+      console.log(`✅ Listing: ${listing.name} | ID: ${listing.id} | Assigned: ${hasAssignment} | Agent: ${agentName}`)
 
       return {
         ...listing,
@@ -393,7 +400,7 @@ export default function Dashboard() {
                         </span>
                       )}
 
-                      <span style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>️ {listing.views || 0} views</span>
+                      <span style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>👁️ {listing.views || 0} views</span>
                       <span style={{ background: '#FFF3E0', color: '#E65100', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>📞 {listing.contacts || 0} contacts</span>
                     </div>
                   </div>
