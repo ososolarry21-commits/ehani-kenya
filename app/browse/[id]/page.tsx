@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { useParams, useRouter } from 'next/navigation'
+import ReviewsSection from '../../../components/ReviewsSection'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -247,7 +248,7 @@ export default function ListingDetails() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 16 }}>
                 <div style={{ flex: 1 }}>
                   <h1 style={{ margin: '0 0 8px 0', fontSize: 28, fontWeight: 800, color: '#1C1209' }}>{listing.name}</h1>
-                  <p style={{ margin: 0, fontSize: 16, color: '#6B5B4E' }}> {listing.area}, {listing.city}</p>
+                  <p style={{ margin: 0, fontSize: 16, color: '#6B5B4E' }}>📍 {listing.area}, {listing.city}</p>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: 24, fontWeight: 800, color: '#D4873A' }}>KSh {listing.price?.toLocaleString()}</div>
@@ -303,6 +304,9 @@ export default function ListingDetails() {
                   </div>
                 </div>
               )}
+
+              {/* 🆕 NEW: Reviews Section */}
+              <ReviewsSection listingId={id as string} currentUser={user} />
             </div>
 
             {/* Right Column: Contact & Info */}
@@ -394,7 +398,7 @@ export default function ListingDetails() {
                         }}
                         style={{ width: '100%', padding: '14px', background: '#25D366', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 15, marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                       >
-                        💬 Chat on WhatsApp
+                         Chat on WhatsApp
                       </button>
                       
                       <button 
@@ -408,7 +412,7 @@ export default function ListingDetails() {
                         }}
                         style={{ width: '100%', padding: '14px', background: '#007BFF', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 15, marginBottom: 10 }}
                       >
-                        📞 Call Now
+                         Call Now
                       </button>
                       
                       {landlord?.email && (
