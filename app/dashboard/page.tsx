@@ -57,7 +57,7 @@ export default function Dashboard() {
     setLoading(false)
   }
 
-  // 🚀 OPTIMIZED: Fetches listings and agent names in ONE request
+  // 🚀 OPTIMIZED: Fetches listings and assigned agent names in ONE fast request
   async function fetchListings(userId: string) {
     const { data: listingsData, error } = await supabase
       .from('listings')
@@ -65,6 +65,7 @@ export default function Dashboard() {
         *,
         verification_assignments (
           status,
+          agent_id,
           profiles:agent_id (name)
         )
       `)
@@ -79,12 +80,12 @@ export default function Dashboard() {
     if (listingsData) {
       const processedListings = listingsData.map((listing: any) => {
         const assignments = listing.verification_assignments || []
+        // Find the active assignment (status is not 'completed')
         const activeAssignment = assignments.find((a: any) => a.status !== 'completed')
-        const agentName = activeAssignment?.profiles?.name || null
-
+        
         return {
           ...listing,
-          assigned_agent_name: agentName,
+          assigned_agent_name: activeAssignment?.profiles?.name || null,
           is_agent_assigned: !!activeAssignment
         }
       })
@@ -405,7 +406,7 @@ export default function Dashboard() {
                       <span style={{ background: '#F0EAE3', padding: '4px 10px', borderRadius: 6 }}>{listing.type}</span>
                       <span style={{ fontWeight: 700, color: '#D4873A' }}>KSh {listing.price?.toLocaleString()}/mo</span>
                       
-                      {/* 🆕 NEW: Show Assigned Agent Name to Landlord */}
+                      {/* 🆕 CRITICAL FIX: Show Assigned Agent Name to Landlord */}
                       {listing.is_agent_assigned && listing.assigned_agent_name && (
                         <span style={{ background: '#E3F2FD', color: '#1976D2', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>
                           👷 Agent: {listing.assigned_agent_name}
