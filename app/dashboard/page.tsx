@@ -46,58 +46,71 @@ export default function Dashboard() {
     setLoading(false)
   }
 
-  // 🔍 DEBUGGED: Fetches listings AND agent names
+  // 🔧 BULLETPROOF MANUAL JOIN: Fetches listings and agent names reliably
   async function fetchListings(userId: string) {
-    const { data: listingsData, error } = await supabase
+    // Step 1: Get all listings for this landlord
+    const { data: listingsData, error: listingsError } = await supabase
       .from('listings')
-      .select(`
-        *,
-        verification_assignments (
-          status,
-          agent_id,
-          profiles:agent_id (name)
-        )
-      `)
+      .select('*')
       .eq('landlord_id', userId)
       .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('Error fetching listings:', error)
+    if (listingsError || !listingsData || listingsData.length === 0) {
+      setListings([])
       return
     }
 
-    if (listingsData) {
-      console.log('🔍 RAW DATA FROM SUPABASE:', listingsData) // Check your browser console!
+    // Step 2: Get all assignments for these specific listings
+    const listingIds = listingsData.map((l: any) => l.id)
+    const { data: assignmentsData, error: assignmentsError } = await supabase
+      .from('verification_assignments')
+      .select(`
+        listing_id,
+        status,
+        agent_id,
+        profiles:agent_id (name)
+      `)
+      .in('listing_id', listingIds)
 
-      const processedListings = listingsData.map((listing: any) => {
-        const assignments = listing.verification_assignments || []
-        const hasAssignment = assignments.length > 0
-        
-        // Get the agent name from the first available assignment
-        const assignment = assignments.find((a: any) => a.status !== 'completed') || assignments[0]
-        const agentName = assignment?.profiles?.name || null
-
-        console.log(`✅ Listing: ${listing.name} | Assigned: ${hasAssignment} | Agent: ${agentName}`)
-
-        return {
-          ...listing,
-          assigned_agent_name: agentName,
-          is_agent_assigned: hasAssignment
-        }
-      })
-
-      setListings(processedListings)
-      setStats({
-        total: processedListings.length,
-        active: processedListings.filter((l: any) => l.status === 'approved' || l.status === 'Verified').length,
-        pending: processedListings.filter((l: any) => l.status === 'pending' || l.status === 'Pending Admin Approval').length,
-        views: processedListings.reduce((sum: number, l: any) => sum + (l.views || 0), 0),
-        contacts: processedListings.reduce((sum: number, l: any) => sum + (l.contacts || 0), 0)
-      })
+    if (assignmentsError) {
+      console.error('Error fetching assignments:', assignmentsError)
     }
+
+    console.log('📋 Raw Assignments Data from Supabase:', assignmentsData)
+
+    // Step 3: Manually combine the data in JavaScript
+    const processedListings = listingsData.map((listing: any) => {
+      const listingAssignments = assignmentsData?.filter(
+        (a: any) => a.listing_id === listing.id
+      ) || []
+
+      const hasAssignment = listingAssignments.length > 0
+      const activeAssignment = listingAssignments.find(
+        (a: any) => a.status !== 'completed'
+      ) || listingAssignments[0]
+      
+      const agentName = activeAssignment?.profiles?.name || null
+
+      console.log(`✅ Listing: ${listing.name} | Assigned: ${hasAssignment} | Agent: ${agentName}`)
+
+      return {
+        ...listing,
+        assigned_agent_name: agentName,
+        is_agent_assigned: hasAssignment
+      }
+    })
+
+    setListings(processedListings)
+    setStats({
+      total: processedListings.length,
+      active: processedListings.filter((l: any) => l.status === 'approved' || l.status === 'Verified').length,
+      pending: processedListings.filter((l: any) => l.status === 'pending' || l.status === 'Pending Admin Approval').length,
+      views: processedListings.reduce((sum: number, l: any) => sum + (l.views || 0), 0),
+      contacts: processedListings.reduce((sum: number, l: any) => sum + (l.contacts || 0), 0)
+    })
   }
 
-  // 🚀 NATIVE IMAGE COMPRESSOR (No npm install needed)
+  // 🚀 NATIVE IMAGE COMPRESSOR (No npm install needed!)
   const compressImage = async (file: File): Promise<Blob> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -333,12 +346,17 @@ export default function Dashboard() {
             <div style={{ marginBottom: 24 }}>
               <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#1C1209' }}>Description & House Rules</label>
               <textarea 
-                placeholder={formData.type === 'Other' ? "⚠️ Please specify the exact property type here..." : "Describe the property, amenities, location, and any house rules..."} 
+                placeholder={formData.type === 'Other' ? "⚠️ Please specify the exact property type here (e.g., '2 Bedroom Apartment') and describe amenities, location, and house rules..." : "Describe the property, amenities, location, and any house rules..."} 
                 value={formData.description} 
                 onChange={(e) => setFormData({...formData, description: e.target.value})} 
                 rows={4} 
-                style={{ width: '100%', padding: '12px 16px', border: `2px solid ${formData.type === 'Other' ? '#D4873A' : '#DDD0C4'}`, borderRadius: 8, boxSizing: 'border-box' }} 
+                style={{ width: '100%', padding: '12px 16px', border: `2px solid ${formData.type === 'Other' ? '#D4873A' : '#DDD0C4'}`, borderRadius: 8, boxSizing: 'border-box', transition: 'border-color 0.2s' }} 
               />
+              {formData.type === 'Other' && (
+                <p style={{ fontSize: 13, color: '#D4873A', marginTop: 8, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span>💡</span> Since you selected "Other", please clearly state the exact property type at the beginning of your description.
+                </p>
+              )}
             </div>
 
             <button type="submit" disabled={uploadingImages} style={{ marginTop: 20, padding: '14px 32px', background: uploadingImages ? '#999' : '#2A7A5A', color: 'white', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 700, width: '100%' }}>
