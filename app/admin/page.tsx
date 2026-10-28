@@ -48,7 +48,6 @@ export default function AdminPanel() {
 
   async function fetchListings() {
     try {
-      // The '*' automatically fetches the new columns: verification_photos, verification_notes, water_test, etc.
       const { data: listingsData, error: listingsError } = await supabase
         .from('listings')
         .select(`
@@ -75,6 +74,10 @@ export default function AdminPanel() {
         .in('listing_id', listingsData.map((l: any) => l.id))
 
       const processed = listingsData.map((listing: any) => {
+        // 🆕 Look for ACTIVE assignment first, then completed
+        const activeAssignment = assignmentsData?.find(
+          (a: any) => a.listing_id === listing.id && a.status !== 'completed'
+        )
         const completedAssignment = assignmentsData?.find(
           (a: any) => a.listing_id === listing.id && a.status === 'completed'
         )
@@ -82,7 +85,8 @@ export default function AdminPanel() {
         return {
           ...listing,
           proof_image_url: completedAssignment?.proof_url || null,
-          assigned_agent: completedAssignment?.agent_id || null
+          assigned_agent_id: activeAssignment?.agent_id || completedAssignment?.agent_id || null,
+          assignment_status: activeAssignment?.status || completedAssignment?.status || null
         }
       })
       
@@ -324,13 +328,17 @@ export default function AdminPanel() {
                     <p style={{ margin: '4px 0', color: '#6B5B4E', fontSize: 14 }}>👤 {listing.profiles?.name || 'Unknown'} ({listing.profiles?.email || 'No email'})</p>
                     <p style={{ margin: '4px 0', color: '#D4873A', fontSize: 14, fontWeight: 600 }}>KSh {listing.price?.toLocaleString()}/month</p>
                     
-                    {listing.assigned_agent && (
-                      <p style={{ margin: '4px 0', fontSize: 12, color: '#2196F3' }}>
-                        👷 Agent: {agents.find((a: any) => a.id === listing.assigned_agent)?.name || 'Unknown'}
+                    {/* 🆕 NEW: Show Assigned Agent Name Clearly */}
+                    {listing.assigned_agent_id && (
+                      <p style={{ margin: '4px 0', fontSize: 13, color: '#2196F3', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        👷 Agent Assigned: {agents.find((a: any) => a.id === listing.assigned_agent_id)?.name || 'Unknown'}
+                        {listing.assignment_status !== 'completed' && (
+                          <span style={{ fontSize: 11, color: '#FF9800', fontWeight: 500 }}>(Pending Verification)</span>
+                        )}
                       </p>
                     )}
 
-                    {/* 🆕 NEW: Agent Verification Data Display */}
+                    {/* Agent Verification Data Display */}
                     {listing.status === 'Pending Admin Approval' && (
                       <div style={{ marginTop: 20, borderTop: '1px solid #eee', paddingTop: 20 }}>
                         <h4 style={{ margin: '0 0 15px 0', fontSize: 14, color: '#1C1209' }}>🕵️ Agent Inspection Report</h4>
@@ -420,13 +428,20 @@ export default function AdminPanel() {
                       </>
                     )}
                     
+                    {/* 🆕 NEW: Prevent Double Assignment Logic */}
                     {listing.verification_payment_received && !listing.is_verified && listing.status !== 'Pending Admin Approval' && (
-                      <button 
-                        onClick={() => { setAssignListingId(listing.id); setShowAssignModal(true); }}
-                        style={{ padding: '8px 16px', background: 'linear-gradient(135deg, #FF9800, #F57C00)', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700 }}
-                      >
-                        👷 Assign Agent
-                      </button>
+                      (!listing.assigned_agent_id || listing.assignment_status === 'completed') ? (
+                        <button 
+                          onClick={() => { setAssignListingId(listing.id); setShowAssignModal(true); }}
+                          style={{ padding: '8px 16px', background: 'linear-gradient(135deg, #FF9800, #F57C00)', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700 }}
+                        >
+                          👷 Assign Agent
+                        </button>
+                      ) : (
+                        <span style={{ padding: '8px 16px', background: '#E3F2FD', color: '#1976D2', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>
+                          ⏳ Agent Assigned
+                        </span>
+                      )
                     )}
                     
                     <button onClick={() => deleteListing(listing.id)} style={{ padding: '8px 16px', background: '#F8D7DA', color: '#721C24', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600, marginTop: 8 }}>
@@ -469,7 +484,7 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* 🆕 Reject Modal */}
+      {/* Reject Modal */}
       {showRejectModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div style={{ background: 'white', padding: 30, borderRadius: 16, maxWidth: 450, width: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
