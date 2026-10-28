@@ -112,7 +112,7 @@ export default function Dashboard() {
       ) || listingAssignments[0]
       
       // Use the manually fetched name
-      const agentName = activeAssignment?.agent_name || null;
+     const agentName = (activeAssignment as any)?.agent_name || null;
 
       console.log(`✅ Listing: ${listing.name} | Assigned: ${hasAssignment} | Agent: ${agentName}`)
 
