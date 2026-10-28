@@ -46,9 +46,9 @@ export default function Dashboard() {
     setLoading(false)
   }
 
-  // 🔍 FORENSIC DEBUG: Finds out exactly why assignments are missing
+  // 🔧 FINAL FIX: Fetches assignments, then fetches agent names separately to avoid join issues
   async function fetchListings(userId: string) {
-    console.log('🔍 1. Current Landlord User ID:', userId);
+    console.log(' 1. Current Landlord User ID:', userId);
 
     // Step 1: Get listings
     const { data: listingsData, error: listingsError } = await supabase
@@ -67,28 +67,42 @@ export default function Dashboard() {
     const listingIds = listingsData.map((l: any) => l.id);
     console.log('🔍 2. Listing IDs owned by this user:', listingIds);
 
-    // Step 2: The original filtered query
+    // Step 2: Fetch Assignments (Without the tricky join)
     const { data: assignmentsData, error: assignmentsError } = await supabase
       .from('verification_assignments')
-      .select(`listing_id, status, agent_id, profiles:agent_id (name)`)
+      .select(`listing_id, status, agent_id`) 
       .in('listing_id', listingIds);
 
-    console.log('🔍 3. Result of filtered assignment query:', assignmentsData);
-    if (assignmentsError) console.error('Assignment Query Error:', assignmentsError);
+    console.log(' 3. Result of assignment query:', assignmentsData);
 
-    // 🚨 STEP 3: THE FORENSIC CHECK
-    // Let's fetch ALL assignments in the database, ignoring filters, to see if RLS is blocking us
-    const { data: allAssignmentsInDB, error: allError } = await supabase
-      .from('verification_assignments')
-      .select('*');
+    // Step 3: If we have assignments, fetch the Agent Names separately
+    if (assignmentsData && assignmentsData.length > 0) {
+      // Extract unique Agent IDs
+      const agentIds = [...new Set(assignmentsData.map((a: any) => a.agent_id).filter(Boolean))];
       
-    console.log('🚨 4. ALL assignments in the entire database (bypassing filter):', allAssignmentsInDB);
-    if (allError) console.error('All Assignments Error:', allError);
+      if (agentIds.length > 0) {
+        console.log('🔍 Fetching names for Agent IDs:', agentIds);
+        
+        // Fetch Agent Profiles
+        const { data: agentsData } = await supabase
+          .from('profiles')
+          .select('id, name')
+          .in('id', agentIds);
 
-    // Step 4: Manually combine the data in JavaScript
+        console.log('🔍 4. Fetched Agent Profiles:', agentsData);
+
+        // Map Agent Names to Assignments
+        assignmentsData.forEach((assignment: any) => {
+          const agent = agentsData?.find((a: any) => a.id === assignment.agent_id);
+          assignment.agent_name = agent?.name || 'Unknown Agent';
+        });
+      }
+    }
+
+    // Step 4: Combine Data
     const processedListings = listingsData.map((listing: any) => {
       const listingAssignments = assignmentsData?.filter(
-        (a: any) => String(a.listing_id) === String(listing.id) // String comparison to prevent type mismatch
+        (a: any) => String(a.listing_id) === String(listing.id)
       ) || []
 
       const hasAssignment = listingAssignments.length > 0
@@ -96,10 +110,10 @@ export default function Dashboard() {
         (a: any) => a.status !== 'completed'
       ) || listingAssignments[0]
       
-      // ✅ FIX: Added [0] because profiles is an array
-      const agentName = activeAssignment?.profiles?.[0]?.name || null
+      // Use the manually fetched name
+      const agentName = activeAssignment?.agent_name || null;
 
-      console.log(`✅ Listing: ${listing.name} | ID: ${listing.id} | Assigned: ${hasAssignment} | Agent: ${agentName}`)
+      console.log(`✅ Listing: ${listing.name} | Assigned: ${hasAssignment} | Agent: ${agentName}`)
 
       return {
         ...listing,
@@ -118,7 +132,7 @@ export default function Dashboard() {
     })
   }
 
-  // 🚀 NATIVE IMAGE COMPRESSOR (No npm install needed!)
+  //  NATIVE IMAGE COMPRESSOR (No npm install needed!)
   const compressImage = async (file: File): Promise<Blob> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -401,7 +415,7 @@ export default function Dashboard() {
                       )}
 
                       <span style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>👁️ {listing.views || 0} views</span>
-                      <span style={{ background: '#FFF3E0', color: '#E65100', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>📞 {listing.contacts || 0} contacts</span>
+                      <span style={{ background: '#FFF3E0', color: '#E65100', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}> {listing.contacts || 0} contacts</span>
                     </div>
                   </div>
                 </div>
