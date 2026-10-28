@@ -57,7 +57,7 @@ export default function Dashboard() {
     setLoading(false)
   }
 
-  // 🚀 OPTIMIZED: Fetches listings and assigned agent names in ONE fast request
+  // 🚀 OPTIMIZED: Fetches listings AND the assigned agent's name in ONE request
   async function fetchListings(userId: string) {
     const { data: listingsData, error } = await supabase
       .from('listings')
@@ -80,11 +80,12 @@ export default function Dashboard() {
     if (listingsData) {
       const processedListings = listingsData.map((listing: any) => {
         const assignments = listing.verification_assignments || []
-        // Find the active assignment (status is not 'completed')
+        // Find the active assignment (where status is NOT 'completed')
         const activeAssignment = assignments.find((a: any) => a.status !== 'completed')
         
         return {
           ...listing,
+          // Extract the agent's name from the nested data
           assigned_agent_name: activeAssignment?.profiles?.name || null,
           is_agent_assigned: !!activeAssignment
         }
@@ -101,18 +102,80 @@ export default function Dashboard() {
     }
   }
 
-  // 🆕 UPDATED: Appends new images instead of replacing them
+  // 🆕 NATIVE IMAGE COMPRESSOR (No npm install needed!)
+  const compressImage = async (file: File): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 1200; // Resize large images to max 1200px wide
+          let width = img.width;
+          let height = img.height;
+
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          // Compress to JPEG at 70% quality
+          canvas.toBlob((blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error('Compression failed'));
+          }, 'image/jpeg', 0.7); 
+        };
+      };
+    });
+  };
+
+  // 🆕 UPDATED: Compresses images natively before uploading
+  const uploadImages = async (listingId: string): Promise<string[]> => {
+    setUploadingImages(true);
+    
+    const uploadPromises = images.map(async (file, index) => {
+      try {
+        // 1. Compress the image natively
+        const compressedBlob = await compressImage(file);
+        
+        // 2. Upload the compressed Blob to Supabase
+        const fileName = `${listingId}-${Date.now()}-${index}.jpg`;
+        const { error: uploadError } = await supabase.storage
+          .from('property-images')
+          .upload(fileName, compressedBlob, { contentType: 'image/jpeg' }); // Force JPEG
+
+        if (uploadError) throw uploadError;
+        
+        const { data } = supabase.storage.from('property-images').getPublicUrl(fileName);
+        return data.publicUrl;
+      } catch (error) {
+        console.error('Upload error:', error);
+        throw error;
+      }
+    });
+
+    const urls = await Promise.all(uploadPromises);
+    setUploadingImages(false);
+    return urls;
+  };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const selectedFiles = Array.from(e.target.files)
       setImages(prev => [...prev, ...selectedFiles])
       const previews = selectedFiles.map(file => URL.createObjectURL(file))
       setImagePreviews(prev => [...prev, ...previews])
-      e.target.value = '' // Reset input so selecting the same file again works
+      e.target.value = '' 
     }
   }
 
-  // 🆕 NEW: Function to remove a specific image by its index
   const removeImage = (indexToRemove: number) => {
     setImages(prev => prev.filter((_, index) => index !== indexToRemove))
     setImagePreviews(prev => prev.filter((_, index) => index !== indexToRemove))
@@ -126,21 +189,15 @@ export default function Dashboard() {
     })
   }
 
-  const uploadImages = async (listingId: string): Promise<string[]> => {
-    const uploadPromises = images.map(async (file, index) => {
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${listingId}-${Date.now()}-${index}.${fileExt}`
-      const { error: uploadError } = await supabase.storage.from('property-images').upload(fileName, file)
-      if (uploadError) throw uploadError
-      const { data } = supabase.storage.from('property-images').getPublicUrl(fileName)
-      return data.publicUrl
-    })
-    return await Promise.all(uploadPromises)
-  }
-
   async function handleAddListing(e: React.FormEvent) {
     e.preventDefault()
     if (!user) return
+    
+    if (images.length === 0) {
+      alert('Please add at least one photo of the property.')
+      return
+    }
+
     try {
       const { data: listingData, error: insertError } = await supabase.from('listings').insert({
         ...formData,
@@ -153,12 +210,11 @@ export default function Dashboard() {
 
       if (insertError) throw insertError
 
-      if (images.length > 0) {
-        setUploadingImages(true)
-        const imageUrls = await uploadImages(listingData.id)
-        await supabase.from('listings').update({ images: imageUrls }).eq('id', listingData.id)
-        setUploadingImages(false)
-      }
+      setUploadingImages(true)
+      const imageUrls = await uploadImages(listingData.id)
+      
+      await supabase.from('listings').update({ images: imageUrls }).eq('id', listingData.id)
+      setUploadingImages(false)
 
       alert('Listing created successfully! Wait for admin approval.')
       setShowAddForm(false)
@@ -167,6 +223,7 @@ export default function Dashboard() {
       setFormData({ name: '', type: 'Bedsitter', price: '', deposit: '', area: '', city: '', institution: '', distance: '', gender: 'Mixed', description: '', amenities: [] })
       await fetchListings(user.id)
     } catch (error: any) {
+      setUploadingImages(false)
       alert('Error creating listing: ' + error.message)
     }
   }
@@ -244,7 +301,6 @@ export default function Dashboard() {
           <form onSubmit={handleAddListing} style={{ background: 'white', padding: 30, borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.06)', marginBottom: 40 }}>
             <h2 style={{ margin: '0 0 24px 0', color: '#1C1209' }}>Create New Listing</h2>
             
-            {/* Image Upload UI with Remove Button */}
             <div style={{ marginBottom: 24 }}>
               <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#1C1209' }}>Property Images</label>
               <p style={{ fontSize: 13, color: '#6B5B4E', marginBottom: 12, marginTop: 0 }}>
@@ -285,8 +341,6 @@ export default function Dashboard() {
                   {imagePreviews.map((preview, index) => (
                     <div key={index} style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', aspectRatio: '1' }}>
                       <img src={preview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      
-                      {/* Remove Button */}
                       <button
                         type="button"
                         onClick={() => removeImage(index)}
@@ -319,8 +373,6 @@ export default function Dashboard() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16 }}>
               <input placeholder="Property Name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8, width: '100%', boxSizing: 'border-box' }} />
-              
-              {/* 🆕 UPDATED: Expanded Room Type Dropdown */}
               <select value={formData.type} onChange={(e) => setFormData({...formData, type: e.target.value})} style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8, width: '100%', boxSizing: 'border-box', background: 'white' }}>
                 <option value="Bedsitter">Bedsitter</option>
                 <option value="Single Room">Single Room</option>
@@ -331,7 +383,6 @@ export default function Dashboard() {
                 <option value="Studio">Studio</option>
                 <option value="Other">Other (Specify in description)</option>
               </select>
-
               <input type="number" placeholder="Price (KSh/month)" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} required style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8, width: '100%', boxSizing: 'border-box' }} />
               <input type="number" placeholder="Deposit (KSh)" value={formData.deposit} onChange={(e) => setFormData({...formData, deposit: e.target.value})} style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8, width: '100%', boxSizing: 'border-box' }} />
               <input placeholder="Area/Location" value={formData.area} onChange={(e) => setFormData({...formData, area: e.target.value})} required style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8, width: '100%', boxSizing: 'border-box' }} />
@@ -356,7 +407,6 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* 🆕 UPDATED: Dynamic Description Field */}
             <div style={{ marginBottom: 24 }}>
               <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#1C1209' }}>Description & House Rules</label>
               <textarea 
@@ -381,7 +431,7 @@ export default function Dashboard() {
             </div>
 
             <button type="submit" disabled={uploadingImages} style={{ marginTop: 20, padding: '14px 32px', background: uploadingImages ? '#999' : '#2A7A5A', color: 'white', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 700, width: '100%' }}>
-              {uploadingImages ? 'Uploading...' : 'Submit for Approval'}
+              {uploadingImages ? 'Uploading & Compressing...' : 'Submit for Approval'}
             </button>
           </form>
         )}
