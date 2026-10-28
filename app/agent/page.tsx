@@ -51,7 +51,6 @@ export default function AgentPortal() {
   }
 
   async function fetchAssignments(agentId: string) {
-    // 🆕 Removed the strict status filter so it grabs ALL assignments for this agent
     const { data } = await supabase
       .from('verification_assignments')
       .select(`
@@ -96,30 +95,34 @@ export default function AgentPortal() {
         photoUrls.push(data.publicUrl)
       }
 
-      // 2. Update Listing
+      // 2. Update Listing (MAKER-CHECKER: Set to Pending Admin Approval)
       const { error: dbError } = await supabase
         .from('listings')
         .update({
-          is_verified: true,
+          is_verified: false, // 👈 REMAINS FALSE until Admin approves
           verification_photos: photoUrls,
           verification_notes: notes,
           water_test: waterTest,
           electricity_test: electricityTest,
           security_check: securityCheck,
-          status: 'Verified',
-          verification_payment_received: true
+          status: 'Pending Admin Approval', // 👈 NEW STATUS
+          verification_payment_received: true,
+          is_rejected: false, // Clear any old rejection flags
+          rejected: false
         })
         .eq('id', listingId)
 
       if (dbError) throw dbError
 
-      // 3. Update Assignment Status to 'completed'
+      // 3. Update Assignment Status
       await supabase
         .from('verification_assignments')
         .update({ status: 'completed', completed_at: new Date().toISOString() })
         .eq('id', assignmentId)
 
-      alert('✅ Verification successful! Listing is now LIVE.')
+      // 🆕 Updated success message
+      alert('✅ Verification submitted successfully! Awaiting Admin approval.')
+      
       resetForm()
       if (user) await fetchAssignments(user.id)
       
@@ -150,7 +153,7 @@ export default function AgentPortal() {
   return (
     <div style={{ minHeight: '100vh', background: '#F5F5F5', fontFamily: "sans-serif" }}>
       
-      {/*  PRINT STYLES & CHECKLIST */}
+      {/* PRINT STYLES & CHECKLIST */}
       <style>{`
         @media print {
           .no-print { display: none !important; }
@@ -183,9 +186,9 @@ export default function AgentPortal() {
         <p>☐ Toilet flushed (Drainage clear)</p>
 
         <h3 style={{ color: '#1C1209', borderBottom: '2px solid #D4873A', paddingBottom: '5px', marginTop: '20px' }}>C. Safety & Security</h3>
-        <p> Main gate/entrance is secure</p>
+        <p>☐ Main gate/entrance is secure</p>
         <p>☐ Ground floor windows have grills (if applicable)</p>
-        <p> Main door has a functioning lock</p>
+        <p>☐ Main door has a functioning lock</p>
 
         <h3 style={{ color: '#1C1209', borderBottom: '2px solid #D4873A', paddingBottom: '5px', marginTop: '20px' }}>D. Final Decision</h3>
         <p>☐ <strong>APPROVED:</strong> Property meets Ehani Standards.</p>
@@ -196,7 +199,7 @@ export default function AgentPortal() {
         </div>
       </div>
 
-      {/*  APP INTERFACE */}
+      {/* APP INTERFACE */}
       <nav className="no-print" style={{ background: 'white', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 20, color: '#1C1209' }}>Agent Portal</h1>
@@ -222,44 +225,60 @@ export default function AgentPortal() {
                 <h3 style={{ margin: '0 0 10px 0', color: '#1C1209' }}>{assignment.listings?.name}</h3>
                 <p style={{ margin: '0 0 15px 0', color: '#6B5B4E', fontSize: 14 }}>📍 {assignment.listings?.area}, {assignment.listings?.city}</p>
 
-                {/* 🆕 CHANGED LOGIC: Show form if status is NOT completed */}
                 {assignment.status !== 'completed' ? (
                   <div style={{ borderTop: '1px solid #eee', paddingTop: 20 }}>
                     {activeAssignmentId === assignment.id ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
-                        <select value={waterTest} onChange={(e) => setWaterTest(e.target.value)} style={{ padding: 10, borderRadius: 6, border: '1px solid #ccc' }}>
+                        <select value={waterTest} onChange={(e) => setWaterTest(e.target.value)} style={{ padding: 10, borderRadius: 6, border: '1px solid #ccc', width: '100%' }}>
                           <option value="">Water Test...</option>
                           <option value="Pass">✅ Pass</option>
                           <option value="Fail">❌ Fail</option>
                         </select>
-                        <select value={electricityTest} onChange={(e) => setElectricityTest(e.target.value)} style={{ padding: 10, borderRadius: 6, border: '1px solid #ccc' }}>
+                        <select value={electricityTest} onChange={(e) => setElectricityTest(e.target.value)} style={{ padding: 10, borderRadius: 6, border: '1px solid #ccc', width: '100%' }}>
                           <option value="">Electricity Test...</option>
                           <option value="Pass">✅ Pass</option>
                           <option value="Fail">❌ Fail</option>
                         </select>
-                        <select value={securityCheck} onChange={(e) => setSecurityCheck(e.target.value)} style={{ padding: 10, borderRadius: 6, border: '1px solid #ccc' }}>
+                        <select value={securityCheck} onChange={(e) => setSecurityCheck(e.target.value)} style={{ padding: 10, borderRadius: 6, border: '1px solid #ccc', width: '100%' }}>
                           <option value="">Security Check...</option>
                           <option value="Pass">✅ Pass</option>
                           <option value="Fail">❌ Fail</option>
                         </select>
                         
-                        <input 
-                          type="file" 
-                          multiple 
-                          accept="image/*"
-                          onChange={(e) => setSelectedFiles(Array.from(e.target.files || []))} 
-                          style={{ padding: 10, border: '1px solid #ccc', borderRadius: 6 }}
-                        />
-                        {selectedFiles.length > 0 && <p style={{ fontSize: 12, color: '#4CAF50' }}>{selectedFiles.length} photo(s) selected</p>}
+                        {/* 🆕 Enhanced Multi-Photo Upload UI */}
+                        <div>
+                          <label style={{ fontWeight: 600, fontSize: 13, color: '#333', display: 'block', marginBottom: 5 }}>
+                            Upload Photos (Min. 3)
+                          </label>
+                          <input 
+                            type="file" 
+                            multiple 
+                            accept="image/*"
+                            onChange={(e) => setSelectedFiles(Array.from(e.target.files || []))} 
+                            style={{ padding: 10, border: '1px solid #ccc', borderRadius: 6, width: '100%' }}
+                          />
+                          <p style={{ fontSize: 11, color: '#666', marginTop: 5, fontStyle: 'italic' }}>
+                            💡 Tip: In your phone's gallery, tap and hold a photo to select multiple images at once.
+                          </p>
+                          {selectedFiles.length > 0 && (
+                            <div style={{ marginTop: 10, display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                              {selectedFiles.map((file, idx) => (
+                                <div key={idx} style={{ fontSize: 12, background: '#E8F5E9', padding: '4px 8px', borderRadius: 4, color: '#2E7D32' }}>
+                                  📸 {file.name.substring(0, 15)}...
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
 
-                        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Agent notes..." style={{ padding: 10, borderRadius: 6, border: '1px solid #ccc' }}></textarea>
+                        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Agent notes / Red flags..." style={{ padding: 10, borderRadius: 6, border: '1px solid #ccc', width: '100%' }}></textarea>
 
                         <button 
                           onClick={() => handleVerificationSubmit(assignment.id, assignment.listings.id)}
                           disabled={submittingId === assignment.id}
-                          style={{ padding: 12, background: '#D4873A', color: 'white', border: 'none', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}
+                          style={{ padding: 12, background: '#D4873A', color: 'white', border: 'none', borderRadius: 8, fontWeight: 600, cursor: 'pointer', width: '100%' }}
                         >
-                          {submittingId === assignment.id ? 'Submitting...' : 'Submit Verification'}
+                          {submittingId === assignment.id ? 'Submitting...' : 'Submit for Admin Approval'}
                         </button>
                       </div>
                     ) : (
@@ -269,10 +288,9 @@ export default function AgentPortal() {
                     )}
                   </div>
                 ) : (
-                  // Completed View
                   <div style={{ marginTop: 16, padding: 12, background: '#E8F5E9', borderRadius: 8 }}>
                     <p style={{ margin: 0, fontSize: 14, color: '#2E7D32', fontWeight: 600 }}>
-                      ✓ Verification Completed
+                      ✓ Submitted. Awaiting Admin Approval.
                     </p>
                   </div>
                 )}
