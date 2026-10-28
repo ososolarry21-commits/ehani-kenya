@@ -42,13 +42,12 @@ export default function AdminPanel() {
 
     setUser(user)
     await fetchListings()
-    await fetchAgents()
     setLoading(false)
   }
 
-   async function fetchListings() {
+  // 🚀 OPTIMIZED: Fetches listings, assignments, and agent names in ONE single query
+  async function fetchListings() {
     try {
-      // 🚀 ONE QUERY: Fetches listings, assignments, and agent names together
       const { data: listingsData, error: listingsError } = await supabase
         .from('listings')
         .select(`
@@ -59,7 +58,7 @@ export default function AdminPanel() {
             status,
             agent_id,
             proof_url,
-            profiles:agent_id (name)
+            profiles:agent_id(name)
           )
         `)
         .order('is_verified', { ascending: false })
@@ -98,18 +97,10 @@ export default function AdminPanel() {
       const { data } = await supabase.from('profiles').select('id, name, email').eq('role', 'agent')
       if (data) setAgents(data)
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Fatal error in fetchListings:', error)
- “Error loading listings.”
+      alert('Error loading listings.')
     }
-  }
-  
-  async function fetchAgents() {
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, name, email')
-      .eq('role', 'agent')
-    if (data) setAgents(data)
   }
 
   // ✅ NEW: Approve and make live
@@ -339,7 +330,7 @@ export default function AdminPanel() {
                     {/* 🆕 NEW: Show Assigned Agent Name Clearly */}
                     {listing.assigned_agent_id && (
                       <p style={{ margin: '4px 0', fontSize: 13, color: '#2196F3', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                        👷 Agent Assigned: {agents.find((a: any) => a.id === listing.assigned_agent_id)?.name || 'Unknown'}
+                        👷 Agent Assigned: {listing.assigned_agent_name || 'Unknown'}
                         {listing.assignment_status !== 'completed' && (
                           <span style={{ fontSize: 11, color: '#FF9800', fontWeight: 500 }}>(Pending Verification)</span>
                         )}
