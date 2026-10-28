@@ -408,13 +408,18 @@ export default function Dashboard() {
                       <span style={{ background: '#F0EAE3', padding: '4px 10px', borderRadius: 6 }}>{listing.type}</span>
                       <span style={{ fontWeight: 700, color: '#D4873A' }}>KSh {listing.price?.toLocaleString()}/mo</span>
                       
-                      {/* 🔍 CRITICAL FIX: Show Assigned Agent Name to Landlord */}
+                                        {/* 🆕 UPDATED: Show "Verified by" if approved, otherwise show "Agent:" */}
                       {listing.is_agent_assigned && listing.assigned_agent_name && (
-                        <span style={{ background: '#E3F2FD', color: '#1976D2', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>
-                          👷 Agent: {listing.assigned_agent_name}
-                        </span>
+                        listing.is_verified ? (
+                          <span style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>
+                            ✅ Verified by: {listing.assigned_agent_name}
+                          </span>
+                        ) : (
+                          <span style={{ background: '#E3F2FD', color: '#1976D2', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>
+                            👷 Agent: {listing.assigned_agent_name}
+                          </span>
+                        )
                       )}
-
                       <span style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>👁️ {listing.views || 0} views</span>
                       <span style={{ background: '#FFF3E0', color: '#E65100', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}> {listing.contacts || 0} contacts</span>
                     </div>
