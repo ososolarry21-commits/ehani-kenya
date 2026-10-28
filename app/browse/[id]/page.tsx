@@ -416,13 +416,17 @@ export default function ListingDetails() {
                       </button>
                       
                       {landlord?.email && (
-                        <button 
-                          onClick={() => window.location.href = `mailto:${landlord.email}?subject=Inquiry about ${listing.name}`}
-                          style={{ width: '100%', padding: '12px', background: 'white', color: '#007BFF', border: '2px solid #007BFF', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}
-                        >
-                          ✉️ Send Email
-                        </button>
-                      )}
+  <button 
+    onClick={() => {
+      const emailSubject = encodeURIComponent(`Inquiry about ${listing.name}`)
+      const emailBody = encodeURIComponent(`Hi, I'm interested in ${listing.name} located in ${listing.area}, ${listing.city}.\n\nPrice: KSh ${listing.price?.toLocaleString()}/month\n\nPlease provide more information.\n\nThank you!`)
+      window.open(`mailto:${landlord.email}?subject=${emailSubject}&body=${emailBody}`, '_blank')
+    }}
+    style={{ width: '100%', padding: '12px', background: 'white', color: '#007BFF', border: '2px solid #007BFF', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}
+  >
+    ✉️ Send Email
+  </button>
+)}
                     </div>
                   )
                 )}
