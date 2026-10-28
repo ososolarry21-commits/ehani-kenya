@@ -57,16 +57,47 @@ export default function Dashboard() {
     setLoading(false)
   }
 
+  // 🆕 UPDATED: Fetches assigned agent data alongside listings
   async function fetchListings(userId: string) {
-    const { data } = await supabase.from('listings').select('*').eq('landlord_id', userId).order('created_at', { ascending: false })
-    if (data) {
-      setListings(data)
+    const { data: listingsData } = await supabase
+      .from('listings')
+      .select('*')
+      .eq('landlord_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (listingsData) {
+      // Fetch assignments for these specific listings
+      const { data: assignmentsData } = await supabase
+        .from('verification_assignments')
+        .select('listing_id, agent_id, status')
+        .in('listing_id', listingsData.map((l: any) => l.id))
+
+      // Fetch agent names
+      const { data: agentsData } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .eq('role', 'agent')
+
+      const processedListings = listingsData.map((listing: any) => {
+        const activeAssignment = assignmentsData?.find(
+          (a: any) => a.listing_id === listing.id && a.status !== 'completed'
+        )
+        const agent = agentsData?.find((a: any) => a.id === activeAssignment?.agent_id)
+
+        return {
+          ...listing,
+          assigned_agent_name: agent?.name || null,
+          is_agent_assigned: !!activeAssignment
+        }
+      })
+
+      setListings(processedListings)
       setStats({
-        total: data.length,
-        active: data.filter((l: any) => l.status === 'approved' || l.status === 'Verified').length,
-        pending: data.filter((l: any) => l.status === 'pending' || l.status === 'Pending Admin Approval').length,
-        views: data.reduce((sum: number, l: any) => sum + (l.views || 0), 0),
-        contacts: data.reduce((sum: number, l: any) => sum + (l.contacts || 0), 0)
+        total: processedListings.length,
+        active: processedListings.filter((l: any) => l.status === 'approved' || l.status === 'Verified').length,
+        pending: processedListings.filter((l: any) => l.status === 'pending' || l.status === 'Pending Admin Approval').length,
+        views: processedListings.reduce((sum: number, l: any) => sum + (l.views || 0), 0),
+        contacts: processedListings.reduce((sum: number, l: any) => sum + (l.contacts || 0), 0)
       })
     }
   }
@@ -375,6 +406,14 @@ export default function Dashboard() {
                     <div style={{ display: 'flex', gap: 12, fontSize: 14, flexWrap: 'wrap', alignItems: 'center' }}>
                       <span style={{ background: '#F0EAE3', padding: '4px 10px', borderRadius: 6 }}>{listing.type}</span>
                       <span style={{ fontWeight: 700, color: '#D4873A' }}>KSh {listing.price?.toLocaleString()}/mo</span>
+                      
+                      {/* 🆕 NEW: Show Assigned Agent Name to Landlord */}
+                      {listing.is_agent_assigned && listing.assigned_agent_name && (
+                        <span style={{ background: '#E3F2FD', color: '#1976D2', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>
+                          👷 Agent: {listing.assigned_agent_name}
+                        </span>
+                      )}
+
                       <span style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>👁️ {listing.views || 0} views</span>
                       <span style={{ background: '#FFF3E0', color: '#E65100', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>📞 {listing.contacts || 0} contacts</span>
                     </div>
