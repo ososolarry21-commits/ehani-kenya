@@ -46,7 +46,7 @@ export default function Dashboard() {
     setLoading(false)
   }
 
-  // 🔧 BULLETPROOF MANUAL JOIN: Fetches listings and agent names reliably
+  //  BULLETPROOF MANUAL JOIN (Fixed TypeScript Error)
   async function fetchListings(userId: string) {
     // Step 1: Get all listings for this landlord
     const { data: listingsData, error: listingsError } = await supabase
@@ -89,7 +89,8 @@ export default function Dashboard() {
         (a: any) => a.status !== 'completed'
       ) || listingAssignments[0]
       
-      const agentName = activeAssignment?.profiles?.name || null
+      // ✅ FIX: Added [0] because profiles is an array
+      const agentName = activeAssignment?.profiles?.[0]?.name || null
 
       console.log(`✅ Listing: ${listing.name} | Assigned: ${hasAssignment} | Agent: ${agentName}`)
 
@@ -392,7 +393,7 @@ export default function Dashboard() {
                         </span>
                       )}
 
-                      <span style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>👁️ {listing.views || 0} views</span>
+                      <span style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>️ {listing.views || 0} views</span>
                       <span style={{ background: '#FFF3E0', color: '#E65100', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>📞 {listing.contacts || 0} contacts</span>
                     </div>
                   </div>
