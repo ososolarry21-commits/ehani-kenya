@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { useParams, useRouter } from 'next/navigation'
-import ReviewsSection from '../../../components/ReviewsSection'
+import ReviewsSection from '../../components/ReviewsSection'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
