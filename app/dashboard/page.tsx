@@ -19,24 +19,13 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
   const [uploadingImages, setUploadingImages] = useState(false)
-  
-  // KCB Payment State
   const [phoneNumber, setPhoneNumber] = useState('')
 
   const router = useRouter()
 
   const [formData, setFormData] = useState({
-    name: '',
-    type: 'Bedsitter',
-    price: '',
-    deposit: '',
-    area: '',
-    city: '',
-    institution: '',
-    distance: '',
-    gender: 'Mixed',
-    description: '',
-    amenities: [] as string[]
+    name: '', type: 'Bedsitter', price: '', deposit: '', area: '', city: '',
+    institution: '', distance: '', gender: 'Mixed', description: '', amenities: [] as string[]
   })
   
   const [images, setImages] = useState<File[]>([])
@@ -57,7 +46,7 @@ export default function Dashboard() {
     setLoading(false)
   }
 
-  // 🚀 OPTIMIZED: Fetches listings AND the assigned agent's name in ONE request
+  // 🔍 DEBUGGED: Fetches listings AND agent names
   async function fetchListings(userId: string) {
     const { data: listingsData, error } = await supabase
       .from('listings')
@@ -78,16 +67,22 @@ export default function Dashboard() {
     }
 
     if (listingsData) {
+      console.log('🔍 RAW DATA FROM SUPABASE:', listingsData) // Check your browser console!
+
       const processedListings = listingsData.map((listing: any) => {
         const assignments = listing.verification_assignments || []
-        // Find the active assignment (where status is NOT 'completed')
-        const activeAssignment = assignments.find((a: any) => a.status !== 'completed')
+        const hasAssignment = assignments.length > 0
         
+        // Get the agent name from the first available assignment
+        const assignment = assignments.find((a: any) => a.status !== 'completed') || assignments[0]
+        const agentName = assignment?.profiles?.name || null
+
+        console.log(`✅ Listing: ${listing.name} | Assigned: ${hasAssignment} | Agent: ${agentName}`)
+
         return {
           ...listing,
-          // Extract the agent's name from the nested data
-          assigned_agent_name: activeAssignment?.profiles?.name || null,
-          is_agent_assigned: !!activeAssignment
+          assigned_agent_name: agentName,
+          is_agent_assigned: hasAssignment
         }
       })
 
@@ -102,7 +97,7 @@ export default function Dashboard() {
     }
   }
 
-  // 🆕 NATIVE IMAGE COMPRESSOR (No npm install needed!)
+  // 🚀 NATIVE IMAGE COMPRESSOR (No npm install needed)
   const compressImage = async (file: File): Promise<Blob> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -112,21 +107,17 @@ export default function Dashboard() {
         img.src = event.target?.result as string;
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          const MAX_WIDTH = 1200; // Resize large images to max 1200px wide
+          const MAX_WIDTH = 1200;
           let width = img.width;
           let height = img.height;
-
           if (width > MAX_WIDTH) {
             height *= MAX_WIDTH / width;
             width = MAX_WIDTH;
           }
-
           canvas.width = width;
           canvas.height = height;
           const ctx = canvas.getContext('2d');
           ctx?.drawImage(img, 0, 0, width, height);
-          
-          // Compress to JPEG at 70% quality
           canvas.toBlob((blob) => {
             if (blob) resolve(blob);
             else reject(new Error('Compression failed'));
@@ -136,23 +127,16 @@ export default function Dashboard() {
     });
   };
 
-  // 🆕 UPDATED: Compresses images natively before uploading
   const uploadImages = async (listingId: string): Promise<string[]> => {
     setUploadingImages(true);
-    
     const uploadPromises = images.map(async (file, index) => {
       try {
-        // 1. Compress the image natively
         const compressedBlob = await compressImage(file);
-        
-        // 2. Upload the compressed Blob to Supabase
         const fileName = `${listingId}-${Date.now()}-${index}.jpg`;
         const { error: uploadError } = await supabase.storage
           .from('property-images')
-          .upload(fileName, compressedBlob, { contentType: 'image/jpeg' }); // Force JPEG
-
+          .upload(fileName, compressedBlob, { contentType: 'image/jpeg' });
         if (uploadError) throw uploadError;
-        
         const { data } = supabase.storage.from('property-images').getPublicUrl(fileName);
         return data.publicUrl;
       } catch (error) {
@@ -160,7 +144,6 @@ export default function Dashboard() {
         throw error;
       }
     });
-
     const urls = await Promise.all(uploadPromises);
     setUploadingImages(false);
     return urls;
@@ -192,27 +175,20 @@ export default function Dashboard() {
   async function handleAddListing(e: React.FormEvent) {
     e.preventDefault()
     if (!user) return
-    
     if (images.length === 0) {
       alert('Please add at least one photo of the property.')
       return
     }
-
     try {
       const { data: listingData, error: insertError } = await supabase.from('listings').insert({
-        ...formData,
-        landlord_id: user.id,
-        price: Number(formData.price),
-        deposit: formData.deposit ? Number(formData.deposit) : null,
-        status: 'pending',
-        images: []
+        ...formData, landlord_id: user.id, price: Number(formData.price),
+        deposit: formData.deposit ? Number(formData.deposit) : null, status: 'pending', images: []
       }).select().single()
 
       if (insertError) throw insertError
 
       setUploadingImages(true)
       const imageUrls = await uploadImages(listingData.id)
-      
       await supabase.from('listings').update({ images: imageUrls }).eq('id', listingData.id)
       setUploadingImages(false)
 
@@ -300,71 +276,18 @@ export default function Dashboard() {
         {showAddForm && (
           <form onSubmit={handleAddListing} style={{ background: 'white', padding: 30, borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.06)', marginBottom: 40 }}>
             <h2 style={{ margin: '0 0 24px 0', color: '#1C1209' }}>Create New Listing</h2>
-            
             <div style={{ marginBottom: 24 }}>
               <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#1C1209' }}>Property Images</label>
-              <p style={{ fontSize: 13, color: '#6B5B4E', marginBottom: 12, marginTop: 0 }}>
-                Tap the button below to add photos. You can add more photos anytime!
-              </p>
-              
-              <input 
-                type="file" 
-                accept="image/*" 
-                multiple 
-                onChange={handleImageChange} 
-                style={{ display: 'none' }} 
-                id="image-upload-btn" 
-              />
-              
-              <label 
-                htmlFor="image-upload-btn" 
-                style={{ 
-                  display: 'inline-block', 
-                  padding: '12px 24px', 
-                  background: '#F0EAE3', 
-                  color: '#1C1209', 
-                  borderRadius: 8, 
-                  cursor: 'pointer', 
-                  fontWeight: 600, 
-                  border: '2px dashed #DDD0C4', 
-                  marginBottom: 16,
-                  transition: 'all 0.2s'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = '#E8DFD5'}
-                onMouseLeave={(e) => e.currentTarget.style.background = '#F0EAE3'}
-              >
+              <input type="file" accept="image/*" multiple onChange={handleImageChange} style={{ display: 'none' }} id="image-upload-btn" />
+              <label htmlFor="image-upload-btn" style={{ display: 'inline-block', padding: '12px 24px', background: '#F0EAE3', color: '#1C1209', borderRadius: 8, cursor: 'pointer', fontWeight: 600, border: '2px dashed #DDD0C4', marginBottom: 16 }}>
                 📸 {images.length > 0 ? 'Add More Photos' : 'Choose Photos'}
               </label>
-
               {imagePreviews.length > 0 && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 10, marginTop: 16 }}>
                   {imagePreviews.map((preview, index) => (
                     <div key={index} style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', aspectRatio: '1' }}>
                       <img src={preview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        style={{
-                          position: 'absolute',
-                          top: 4,
-                          right: 4,
-                          background: 'rgba(220, 53, 69, 0.9)',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '50%',
-                          width: 24,
-                          height: 24,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 14,
-                          fontWeight: 'bold',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                        }}
-                      >
-                        ✕
-                      </button>
+                      <button type="button" onClick={() => removeImage(index)} style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(220, 53, 69, 0.9)', color: 'white', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 'bold' }}>✕</button>
                     </div>
                   ))}
                 </div>
@@ -410,24 +333,12 @@ export default function Dashboard() {
             <div style={{ marginBottom: 24 }}>
               <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#1C1209' }}>Description & House Rules</label>
               <textarea 
-                placeholder={formData.type === 'Other' ? "⚠️ Please specify the exact property type here (e.g., '2 Bedroom Apartment') and describe amenities, location, and house rules..." : "Describe the property, amenities, location, and any house rules..."} 
+                placeholder={formData.type === 'Other' ? "⚠️ Please specify the exact property type here..." : "Describe the property, amenities, location, and any house rules..."} 
                 value={formData.description} 
                 onChange={(e) => setFormData({...formData, description: e.target.value})} 
                 rows={4} 
-                style={{ 
-                  width: '100%', 
-                  padding: '12px 16px', 
-                  border: `2px solid ${formData.type === 'Other' ? '#D4873A' : '#DDD0C4'}`, 
-                  borderRadius: 8, 
-                  boxSizing: 'border-box',
-                  transition: 'border-color 0.2s'
-                }} 
+                style={{ width: '100%', padding: '12px 16px', border: `2px solid ${formData.type === 'Other' ? '#D4873A' : '#DDD0C4'}`, borderRadius: 8, boxSizing: 'border-box' }} 
               />
-              {formData.type === 'Other' && (
-                <p style={{ fontSize: 13, color: '#D4873A', marginTop: 8, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span>💡</span> Since you selected "Other", please clearly state the exact property type (e.g., "2 Bedroom Apartment") at the beginning of your description.
-                </p>
-              )}
             </div>
 
             <button type="submit" disabled={uploadingImages} style={{ marginTop: 20, padding: '14px 32px', background: uploadingImages ? '#999' : '#2A7A5A', color: 'white', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 700, width: '100%' }}>
@@ -456,7 +367,7 @@ export default function Dashboard() {
                       <span style={{ background: '#F0EAE3', padding: '4px 10px', borderRadius: 6 }}>{listing.type}</span>
                       <span style={{ fontWeight: 700, color: '#D4873A' }}>KSh {listing.price?.toLocaleString()}/mo</span>
                       
-                      {/* 🆕 CRITICAL FIX: Show Assigned Agent Name to Landlord */}
+                      {/* 🔍 CRITICAL FIX: Show Assigned Agent Name to Landlord */}
                       {listing.is_agent_assigned && listing.assigned_agent_name && (
                         <span style={{ background: '#E3F2FD', color: '#1976D2', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>
                           👷 Agent: {listing.assigned_agent_name}
@@ -488,32 +399,12 @@ export default function Dashboard() {
                   
                   { (listing.status === 'approved' || listing.status === 'Verified') && (!listing.is_verified || !listing.is_featured) && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 220 }}>
-                      <input
-                        type="tel"
-                        placeholder="M-Pesa Phone (e.g. 0712...)"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #DDD0C4', fontSize: 14, outline: 'none' }}
-                      />
-                      
+                      <input type="tel" placeholder="M-Pesa Phone (e.g. 0712...)" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #DDD0C4', fontSize: 14, outline: 'none' }} />
                       {!listing.is_verified && !listing.verification_payment_received && (
-                        <KcbPaymentButton 
-                          phoneNumber={phoneNumber} 
-                          amount={500} 
-                          tier="verified" 
-                          listingId={listing.id} 
-                          onSuccess={(ref: any) => handleStkPushSent(ref, listing.id, 'verified')} 
-                        />
+                        <KcbPaymentButton phoneNumber={phoneNumber} amount={500} tier="verified" listingId={listing.id} onSuccess={(ref: any) => handleStkPushSent(ref, listing.id, 'verified')} />
                       )}
-
                       {!listing.is_featured && (
-                        <KcbPaymentButton 
-                          phoneNumber={phoneNumber} 
-                          amount={1500} 
-                          tier="featured" 
-                          listingId={listing.id} 
-                          onSuccess={(ref: any) => handleStkPushSent(ref, listing.id, 'featured')} 
-                        />
+                        <KcbPaymentButton phoneNumber={phoneNumber} amount={1500} tier="featured" listingId={listing.id} onSuccess={(ref: any) => handleStkPushSent(ref, listing.id, 'featured')} />
                       )}
                     </div>
                   )}
