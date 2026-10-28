@@ -78,7 +78,7 @@ export default function Dashboard() {
     // Step 3: If we have assignments, fetch the Agent Names separately
     if (assignmentsData && assignmentsData.length > 0) {
       // Extract unique Agent IDs
-      const agentIds = [...new Set(assignmentsData.map((a: any) => a.agent_id).filter(Boolean))];
+      const agentIds = Array.from(new Set(assignmentsData.map((a: any) => a.agent_id).filter(Boolean)));
       
       if (agentIds.length > 0) {
         console.log('🔍 Fetching names for Agent IDs:', agentIds);
