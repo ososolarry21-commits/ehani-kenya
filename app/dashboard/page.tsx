@@ -63,8 +63,8 @@ export default function Dashboard() {
       setListings(data)
       setStats({
         total: data.length,
-        active: data.filter((l: any) => l.status === 'approved').length,
-        pending: data.filter((l: any) => l.status === 'pending').length,
+        active: data.filter((l: any) => l.status === 'approved' || l.status === 'Verified').length,
+        pending: data.filter((l: any) => l.status === 'pending' || l.status === 'Pending Admin Approval').length,
         views: data.reduce((sum: number, l: any) => sum + (l.views || 0), 0),
         contacts: data.reduce((sum: number, l: any) => sum + (l.contacts || 0), 0)
       })
@@ -214,7 +214,7 @@ export default function Dashboard() {
           <form onSubmit={handleAddListing} style={{ background: 'white', padding: 30, borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.06)', marginBottom: 40 }}>
             <h2 style={{ margin: '0 0 24px 0', color: '#1C1209' }}>Create New Listing</h2>
             
-            {/* 🆕 UPDATED: Friendly Image Upload UI with Remove Button */}
+            {/* Image Upload UI with Remove Button */}
             <div style={{ marginBottom: 24 }}>
               <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#1C1209' }}>Property Images</label>
               <p style={{ fontSize: 13, color: '#6B5B4E', marginBottom: 12, marginTop: 0 }}>
@@ -256,7 +256,7 @@ export default function Dashboard() {
                     <div key={index} style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', aspectRatio: '1' }}>
                       <img src={preview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       
-                      {/* 🆕 NEW: Remove Button */}
+                      {/* Remove Button */}
                       <button
                         type="button"
                         onClick={() => removeImage(index)}
@@ -288,20 +288,33 @@ export default function Dashboard() {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16 }}>
-              <input placeholder="Property Name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8 }} />
-              <select value={formData.type} onChange={(e) => setFormData({...formData, type: e.target.value})} style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8 }}>
-                <option>Bedsitter</option><option>Single Room</option><option>1-Bedroom</option><option>Shared Room</option><option>Hostel</option><option>Studio</option>
+              <input placeholder="Property Name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8, width: '100%', boxSizing: 'border-box' }} />
+              
+              {/* 🆕 UPDATED: Expanded Room Type Dropdown */}
+              <select value={formData.type} onChange={(e) => setFormData({...formData, type: e.target.value})} style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8, width: '100%', boxSizing: 'border-box', background: 'white' }}>
+                <option value="Bedsitter">Bedsitter</option>
+                <option value="Single Room">Single Room</option>
+                <option value="1 Bedroom">1 Bedroom</option>
+                <option value="2 Bedrooms">2 Bedrooms</option>
+                <option value="3+ Bedrooms">3+ Bedrooms</option>
+                <option value="Shared Room">Shared Room</option>
+                <option value="Studio">Studio</option>
+                <option value="Other">Other (Specify in description)</option>
               </select>
-              <input type="number" placeholder="Price (KSh/month)" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} required style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8 }} />
-              <input type="number" placeholder="Deposit (KSh)" value={formData.deposit} onChange={(e) => setFormData({...formData, deposit: e.target.value})} style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8 }} />
-              <input placeholder="Area/Location" value={formData.area} onChange={(e) => setFormData({...formData, area: e.target.value})} required style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8 }} />
-              <input placeholder="City" value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} required style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8 }} />
-              <input placeholder="Nearest Institution" value={formData.institution} onChange={(e) => setFormData({...formData, institution: e.target.value})} required style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8 }} />
-              <input placeholder="Distance" value={formData.distance} onChange={(e) => setFormData({...formData, distance: e.target.value})} style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8 }} />
-              <select value={formData.gender} onChange={(e) => setFormData({...formData, gender: e.target.value})} style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8 }}>
-                <option>Mixed</option><option>Ladies Only</option><option>Gents Only</option>
+
+              <input type="number" placeholder="Price (KSh/month)" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} required style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8, width: '100%', boxSizing: 'border-box' }} />
+              <input type="number" placeholder="Deposit (KSh)" value={formData.deposit} onChange={(e) => setFormData({...formData, deposit: e.target.value})} style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8, width: '100%', boxSizing: 'border-box' }} />
+              <input placeholder="Area/Location" value={formData.area} onChange={(e) => setFormData({...formData, area: e.target.value})} required style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8, width: '100%', boxSizing: 'border-box' }} />
+              <input placeholder="City" value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} required style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8, width: '100%', boxSizing: 'border-box' }} />
+              <input placeholder="Nearest Institution" value={formData.institution} onChange={(e) => setFormData({...formData, institution: e.target.value})} required style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8, width: '100%', boxSizing: 'border-box' }} />
+              <input placeholder="Distance" value={formData.distance} onChange={(e) => setFormData({...formData, distance: e.target.value})} style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8, width: '100%', boxSizing: 'border-box' }} />
+              <select value={formData.gender} onChange={(e) => setFormData({...formData, gender: e.target.value})} style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8, width: '100%', boxSizing: 'border-box', background: 'white' }}>
+                <option value="Mixed">Mixed</option>
+                <option value="Ladies Only">Ladies Only</option>
+                <option value="Gents Only">Gents Only</option>
               </select>
             </div>
+
             <div style={{ marginTop: 24, marginBottom: 24 }}>
               <label style={{ display: 'block', marginBottom: 12, fontWeight: 600, color: '#1C1209' }}>Amenities & Features</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
@@ -312,8 +325,32 @@ export default function Dashboard() {
                 ))}
               </div>
             </div>
-            <textarea placeholder="Description" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} rows={4} style={{ width: '100%', padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8, boxSizing: 'border-box' }} />
-            <button type="submit" disabled={uploadingImages} style={{ marginTop: 20, padding: '14px 32px', background: uploadingImages ? '#999' : '#2A7A5A', color: 'white', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 700 }}>
+
+            {/* 🆕 UPDATED: Dynamic Description Field */}
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#1C1209' }}>Description & House Rules</label>
+              <textarea 
+                placeholder={formData.type === 'Other' ? "⚠️ Please specify the exact property type here (e.g., '2 Bedroom Apartment') and describe amenities, location, and house rules..." : "Describe the property, amenities, location, and any house rules..."} 
+                value={formData.description} 
+                onChange={(e) => setFormData({...formData, description: e.target.value})} 
+                rows={4} 
+                style={{ 
+                  width: '100%', 
+                  padding: '12px 16px', 
+                  border: `2px solid ${formData.type === 'Other' ? '#D4873A' : '#DDD0C4'}`, 
+                  borderRadius: 8, 
+                  boxSizing: 'border-box',
+                  transition: 'border-color 0.2s'
+                }} 
+              />
+              {formData.type === 'Other' && (
+                <p style={{ fontSize: 13, color: '#D4873A', marginTop: 8, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span>💡</span> Since you selected "Other", please clearly state the exact property type (e.g., "2 Bedroom Apartment") at the beginning of your description.
+                </p>
+              )}
+            </div>
+
+            <button type="submit" disabled={uploadingImages} style={{ marginTop: 20, padding: '14px 32px', background: uploadingImages ? '#999' : '#2A7A5A', color: 'white', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 700, width: '100%' }}>
               {uploadingImages ? 'Uploading...' : 'Submit for Approval'}
             </button>
           </form>
@@ -345,8 +382,8 @@ export default function Dashboard() {
                 </div>
                 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                  <span style={{ padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 600, background: listing.status === 'approved' ? '#D4EDDA' : listing.status === 'pending' ? '#FFF3CD' : '#F8D7DA', color: listing.status === 'approved' ? '#155724' : listing.status === 'pending' ? '#856404' : '#721C24' }}>
-                    {listing.status === 'approved' ? 'Approved' : listing.status === 'pending' ? 'Pending' : 'Rejected'}
+                  <span style={{ padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 600, background: listing.status === 'approved' || listing.status === 'Verified' ? '#D4EDDA' : listing.status === 'pending' || listing.status === 'Pending Admin Approval' ? '#FFF3CD' : '#F8D7DA', color: listing.status === 'approved' || listing.status === 'Verified' ? '#155724' : listing.status === 'pending' || listing.status === 'Pending Admin Approval' ? '#856404' : '#721C24' }}>
+                    {listing.status === 'approved' || listing.status === 'Verified' ? 'Approved' : listing.status === 'pending' || listing.status === 'Pending Admin Approval' ? 'Pending' : 'Rejected'}
                   </span>
                   
                   {listing.is_verified && (
@@ -361,7 +398,7 @@ export default function Dashboard() {
                     <span style={{ background: '#E3F2FD', color: '#1976D2', padding: '6px 14px', borderRadius: 6, fontSize: 11, fontWeight: 600 }}>💰 Verification Payment Received - Awaiting Agent</span>
                   )}
                   
-                  {listing.status === 'approved' && (!listing.is_verified || !listing.is_featured) && (
+                  { (listing.status === 'approved' || listing.status === 'Verified') && (!listing.is_verified || !listing.is_featured) && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 220 }}>
                       <input
                         type="tel"
