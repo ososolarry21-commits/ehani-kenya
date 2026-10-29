@@ -33,6 +33,7 @@ export default function ReviewsSection({ listingId, currentUser }: { listingId: 
         profiles:user_id (name)
       `)
       .eq('listing_id', listingId)
+      .eq('is_approved', true) // 🚨 MANDATORY: Only fetch reviews that the admin has approved
       .order('created_at', { ascending: false })
 
     if (data) {
@@ -67,7 +68,8 @@ export default function ReviewsSection({ listingId, currentUser }: { listingId: 
       alert('✅ Review submitted! It is pending admin approval and will appear shortly.')
       setNewComment('')
       setNewRating(5)
-      await fetchReviews() // Refresh the list
+      // We do NOT call fetchReviews() here because the new review is not approved yet, 
+      // so it shouldn't appear in the list immediately.
     }
     setSubmitting(false)
   }
