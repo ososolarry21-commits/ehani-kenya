@@ -121,23 +121,34 @@ export default function AdminPanel() {
     if (data) setPendingReviews(data)
   }
 
-  // 🆕 NEW: Handle Approve/Reject actions with INSTANT UI feedback (Optimistic Update)
+  // 🆕 FIXED: Handle Approve/Reject actions. Reject now PERMANENTLY DELETES the review.
   async function handleReviewAction(reviewId: string, action: 'approve' | 'reject', responseText: string = '') {
     try {
-      const { error } = await supabase
-        .from('reviews')
-        .update({ 
-          is_approved: action === 'approve',
-          admin_response: responseText.trim() || null
-        })
-        .eq('id', reviewId)
-
-      if (error) throw error
+      if (action === 'reject') {
+        // 🗑️ Permanently delete the review from the database
+        const { error } = await supabase
+          .from('reviews')
+          .delete()
+          .eq('id', reviewId)
+          
+        if (error) throw error
+      } else {
+        // ✅ Approve the review
+        const { error } = await supabase
+          .from('reviews')
+          .update({ 
+            is_approved: true,
+            admin_response: responseText.trim() || null
+          })
+          .eq('id', reviewId)
+          
+        if (error) throw error
+      }
 
       // 🚀 INSTANT FEEDBACK: Remove the review from the UI immediately
       setPendingReviews(prev => prev.filter(r => r.id !== reviewId))
       
-      alert(action === 'approve' ? '✅ Review Approved!' : '❌ Review Rejected!')
+      alert(action === 'approve' ? '✅ Review Approved!' : '❌ Review Rejected & Deleted!')
       
     } catch (error: any) {
       alert('Error: ' + error.message)
