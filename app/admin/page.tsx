@@ -46,7 +46,7 @@ export default function AdminPanel() {
 
     setUser(user)
     await fetchListings()
-    await fetchPendingReviews() // 🆕 Fetch reviews on load
+    await fetchPendingReviews()
     setLoading(false)
   }
 
@@ -121,10 +121,10 @@ export default function AdminPanel() {
     if (data) setPendingReviews(data)
   }
 
-  // 🆕 NEW: Handle Approve/Reject actions for reviews
+  // 🆕 NEW: Handle Approve/Reject actions with INSTANT UI feedback (Optimistic Update)
   async function handleReviewAction(reviewId: string, action: 'approve' | 'reject', responseText: string = '') {
     try {
-      await supabase
+      const { error } = await supabase
         .from('reviews')
         .update({ 
           is_approved: action === 'approve',
@@ -132,8 +132,13 @@ export default function AdminPanel() {
         })
         .eq('id', reviewId)
 
+      if (error) throw error
+
+      // 🚀 INSTANT FEEDBACK: Remove the review from the UI immediately
+      setPendingReviews(prev => prev.filter(r => r.id !== reviewId))
+      
       alert(action === 'approve' ? '✅ Review Approved!' : '❌ Review Rejected!')
-      await fetchPendingReviews() // Refresh the list
+      
     } catch (error: any) {
       alert('Error: ' + error.message)
     }
