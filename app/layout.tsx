@@ -1,56 +1,34 @@
-'use client'
-import { useEffect } from 'react'
-import Script from 'next/script' // <-- ADDED FOR GOOGLE ANALYTICS
+import Script from 'next/script'
+import type { Metadata } from 'next'
 import './globals.css'
 import Footer from './components/footer'
-import { createClient } from '@supabase/supabase-js'
+import SessionTimeout from './components/SessionTimeout' // Import the security component
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-)
+// 🆕 NEW: SEO Metadata for Search Engines (Only works in Server Components)
+export const metadata: Metadata = {
+  title: 'Ehani - Verified Student Accommodation & Housing in Kenya',
+  description: 'Find safe, verified, and affordable student accommodation near top universities in Kenya. Browse trusted bedsitters, hostels, and rooms with Ehani Homes.',
+  keywords: ['student accommodation', 'student housing Kenya', 'verified hostels', 'bedsitters Nairobi', 'Ehani Homes', 'university housing'],
+  openGraph: {
+    title: 'Ehani - Verified Student Accommodation',
+    description: 'Find safe, verified, and affordable student accommodation near top universities in Kenya.',
+    type: 'website',
+    locale: 'en_KE',
+    siteName: 'Ehani Homes',
+  },
+}
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  // 90-Minute Security Timeout
-  useEffect(() => {
-    let logoutTimer: any;
-    let warningTimer: any;
-
-    const TIMEOUT_MS = 90 * 60 * 1000; // 90 minutes
-    const WARNING_MS = 5 * 60 * 1000;  // Warn 5 minutes before
-
-    const resetTimers = () => {
-      clearTimeout(logoutTimer);
-      clearTimeout(warningTimer);
-
-      warningTimer = setTimeout(() => {
-        alert("⚠️ Security Alert: Your session will expire in 5 minutes due to inactivity. Please click OK to stay logged in.");
-      }, TIMEOUT_MS - WARNING_MS);
-
-      logoutTimer = setTimeout(async () => {
-        await supabase.auth.signOut();
-        window.location.href = '/';
-      }, TIMEOUT_MS);
-    };
-
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-    events.forEach(evt => window.addEventListener(evt, resetTimers));
-    resetTimers();
-
-    return () => {
-      clearTimeout(logoutTimer);
-      clearTimeout(warningTimer);
-      events.forEach(evt => window.removeEventListener(evt, resetTimers));
-    };
-  }, []);
-
   return (
     <html lang="en">
       <body style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', margin: 0 }}>
+        {/* Keeps your 90-min security timeout active */}
+        <SessionTimeout />
+        
         {children}
         <Footer />
         
