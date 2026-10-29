@@ -15,6 +15,10 @@ export default function AdminPanel() {
   const [filter, setFilter] = useState<'all' | 'pending_approval' | 'pending_verification' | 'verified' | 'rejected'>('all')
   const [loading, setLoading] = useState(true)
   
+  // 🆕 NEW: Tab and Review States
+  const [activeAdminTab, setActiveAdminTab] = useState<'listings' | 'reviews'>('listings')
+  const [pendingReviews, setPendingReviews] = useState<any[]>([])
+  
   // Modal States
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [assignListingId, setAssignListingId] = useState('')
@@ -42,6 +46,7 @@ export default function AdminPanel() {
 
     setUser(user)
     await fetchListings()
+    await fetchPendingReviews() // 🆕 Fetch reviews on load
     setLoading(false)
   }
 
@@ -78,7 +83,6 @@ export default function AdminPanel() {
       const processed = listingsData.map((listing: any) => {
         const assignments = listing.verification_assignments || []
         
-        // Find active (pending) or completed assignment
         const activeAssignment = assignments.find((a: any) => a.status !== 'completed')
         const completedAssignment = assignments.find((a: any) => a.status === 'completed')
         
@@ -93,13 +97,45 @@ export default function AdminPanel() {
       
       setListings(processed)
       
-      // Fetch agents separately only for the dropdown modal (much lighter)
       const { data } = await supabase.from('profiles').select('id, name, email').eq('role', 'agent')
       if (data) setAgents(data)
 
     } catch (error: any) {
       console.error('Fatal error in fetchListings:', error)
       alert('Error loading listings.')
+    }
+  }
+
+  // 🆕 NEW: Fetch pending reviews
+  async function fetchPendingReviews() {
+    const { data } = await supabase
+      .from('reviews')
+      .select(`
+        *,
+        listings (name, area),
+        profiles:user_id (name)
+      `)
+      .eq('is_approved', false)
+      .order('created_at', { ascending: false })
+
+    if (data) setPendingReviews(data)
+  }
+
+  // 🆕 NEW: Handle Approve/Reject actions for reviews
+  async function handleReviewAction(reviewId: string, action: 'approve' | 'reject', responseText: string = '') {
+    try {
+      await supabase
+        .from('reviews')
+        .update({ 
+          is_approved: action === 'approve',
+          admin_response: responseText.trim() || null
+        })
+        .eq('id', reviewId)
+
+      alert(action === 'approve' ? '✅ Review Approved!' : '❌ Review Rejected!')
+      await fetchPendingReviews() // Refresh the list
+    } catch (error: any) {
+      alert('Error: ' + error.message)
     }
   }
 
@@ -258,201 +294,279 @@ export default function AdminPanel() {
         </button>
       </nav>
 
-      <div style={{ padding: '40px 60px', maxWidth: 1400, margin: '0 auto' }}>
-        {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20, marginBottom: 30 }}>
-          <div style={{ background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-            <div style={{ fontSize: 32, fontWeight: 800, color: '#1C1209' }}>{stats.total}</div>
-            <div style={{ color: '#6B5B4E', fontSize: 13 }}>Total Listings</div>
-          </div>
-          <div style={{ background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-            <div style={{ fontSize: 32, fontWeight: 800, color: '#FF9800' }}>{stats.pending}</div>
-            <div style={{ color: '#6B5B4E', fontSize: 13 }}>Pending Approval</div>
-          </div>
-          <div style={{ background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-            <div style={{ fontSize: 32, fontWeight: 800, color: '#2196F3' }}>{stats.awaitingVerification}</div>
-            <div style={{ color: '#6B5B4E', fontSize: 13 }}>Awaiting Verification</div>
-          </div>
-          <div style={{ background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-            <div style={{ fontSize: 32, fontWeight: 800, color: '#4CAF50' }}>{stats.verified}</div>
-            <div style={{ color: '#6B5B4E', fontSize: 13 }}>Verified Properties</div>
-          </div>
-        </div>
+      {/* 🆕 NEW: Admin Tab Switcher */}
+      <div style={{ padding: '20px 60px 0', maxWidth: 1400, margin: '0 auto', display: 'flex', gap: 12 }}>
+        <button 
+          onClick={() => setActiveAdminTab('listings')}
+          style={{ 
+            padding: '10px 20px', background: activeAdminTab === 'listings' ? '#1C1209' : 'white', 
+            color: activeAdminTab === 'listings' ? 'white' : '#1C1209', border: 'none', borderRadius: '8px 8px 0 0', 
+            cursor: 'pointer', fontWeight: 600, fontSize: 14 
+          }}
+        >
+          🏠 Manage Listings
+        </button>
+        <button 
+          onClick={() => { setActiveAdminTab('reviews'); fetchPendingReviews(); }}
+          style={{ 
+            padding: '10px 20px', background: activeAdminTab === 'reviews' ? '#1C1209' : 'white', 
+            color: activeAdminTab === 'reviews' ? 'white' : '#1C1209', border: 'none', borderRadius: '8px 8px 0 0', 
+            cursor: 'pointer', fontWeight: 600, fontSize: 14 
+          }}
+        >
+          ⭐ Moderate Reviews {pendingReviews.length > 0 && `(${pendingReviews.length})`}
+        </button>
+      </div>
 
-        {/* Filter Tabs */}
-        <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-          {['all', 'pending_approval', 'pending_verification', 'verified', 'rejected'].map((f) => (
-            <button 
-              key={f}
-              onClick={() => setFilter(f as any)}
-              style={{ 
-                padding: '10px 20px', 
-                background: filter === f ? (f === 'pending_approval' ? '#FF9800' : f === 'verified' ? '#4CAF50' : f === 'rejected' ? '#F44336' : '#1C1209') : 'white', 
-                color: filter === f ? 'white' : '#1C1209',
-                border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600,
-                textTransform: 'capitalize'
-              }}
-            >
-              {f.replace('_', ' ')} {f === 'pending_approval' ? `(${stats.pending})` : f === 'pending_verification' ? `(${stats.awaitingVerification})` : f === 'verified' ? `(${stats.verified})` : ''}
-            </button>
-          ))}
-        </div>
-
-        {/* Listings */}
-        {filteredListings.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 60, background: 'white', borderRadius: 12 }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>📭</div>
-            <p style={{ color: '#6B5B4E' }}>No listings found</p>
+      {/* 🏠 LISTINGS TAB CONTENT */}
+      {activeAdminTab === 'listings' && (
+        <div style={{ padding: '40px 60px', maxWidth: 1400, margin: '0 auto' }}>
+          {/* Stats */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20, marginBottom: 30 }}>
+            <div style={{ background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+              <div style={{ fontSize: 32, fontWeight: 800, color: '#1C1209' }}>{stats.total}</div>
+              <div style={{ color: '#6B5B4E', fontSize: 13 }}>Total Listings</div>
+            </div>
+            <div style={{ background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+              <div style={{ fontSize: 32, fontWeight: 800, color: '#FF9800' }}>{stats.pending}</div>
+              <div style={{ color: '#6B5B4E', fontSize: 13 }}>Pending Approval</div>
+            </div>
+            <div style={{ background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+              <div style={{ fontSize: 32, fontWeight: 800, color: '#2196F3' }}>{stats.awaitingVerification}</div>
+              <div style={{ color: '#6B5B4E', fontSize: 13 }}>Awaiting Verification</div>
+            </div>
+            <div style={{ background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+              <div style={{ fontSize: 32, fontWeight: 800, color: '#4CAF50' }}>{stats.verified}</div>
+              <div style={{ color: '#6B5B4E', fontSize: 13 }}>Verified Properties</div>
+            </div>
           </div>
-        ) : (
-          <div style={{ display: 'grid', gap: 16 }}>
-            {filteredListings.map((listing) => (
-              <div key={listing.id} style={{ background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: 20, flexWrap: 'wrap' }}>
-                  <div style={{ flex: 1, minWidth: 300 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                      <h3 style={{ margin: 0, color: '#1C1209' }}>{listing.name}</h3>
-                      {listing.is_verified && (
-                        <span style={{ background: 'linear-gradient(135deg, #007BFF, #0056b3)', color: 'white', padding: '4px 12px', borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
-                          ✓ VERIFIED
-                        </span>
-                      )}
-                      {(listing.is_rejected || listing.rejected || listing.status === 'Rejected') && (
-                        <span style={{ background: '#F44336', color: 'white', padding: '4px 12px', borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
-                          ✗ REJECTED
-                        </span>
-                      )}
-                    </div>
-                    <p style={{ margin: '4px 0', color: '#6B5B4E', fontSize: 14 }}>📍 {listing.area}, {listing.city}</p>
-                    <p style={{ margin: '4px 0', color: '#6B5B4E', fontSize: 14 }}>👤 {listing.profiles?.name || 'Unknown'} ({listing.profiles?.email || 'No email'})</p>
-                    <p style={{ margin: '4px 0', color: '#D4873A', fontSize: 14, fontWeight: 600 }}>KSh {listing.price?.toLocaleString()}/month</p>
-                    
-                    {/* 🆕 NEW: Show Assigned Agent Name Clearly */}
-                    {listing.assigned_agent_id && (
-                      <p style={{ margin: '4px 0', fontSize: 13, color: '#2196F3', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                        👷 Agent Assigned: {listing.assigned_agent_name || 'Unknown'}
-                        {listing.assignment_status !== 'completed' && (
-                          <span style={{ fontSize: 11, color: '#FF9800', fontWeight: 500 }}>(Pending Verification)</span>
+
+          {/* Filter Tabs */}
+          <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+            {['all', 'pending_approval', 'pending_verification', 'verified', 'rejected'].map((f) => (
+              <button 
+                key={f}
+                onClick={() => setFilter(f as any)}
+                style={{ 
+                  padding: '10px 20px', 
+                  background: filter === f ? (f === 'pending_approval' ? '#FF9800' : f === 'verified' ? '#4CAF50' : f === 'rejected' ? '#F44336' : '#1C1209') : 'white', 
+                  color: filter === f ? 'white' : '#1C1209',
+                  border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600,
+                  textTransform: 'capitalize'
+                }}
+              >
+                {f.replace('_', ' ')} {f === 'pending_approval' ? `(${stats.pending})` : f === 'pending_verification' ? `(${stats.awaitingVerification})` : f === 'verified' ? `(${stats.verified})` : ''}
+              </button>
+            ))}
+          </div>
+
+          {/* Listings */}
+          {filteredListings.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 60, background: 'white', borderRadius: 12 }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>📭</div>
+              <p style={{ color: '#6B5B4E' }}>No listings found</p>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gap: 16 }}>
+              {filteredListings.map((listing) => (
+                <div key={listing.id} style={{ background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: 20, flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: 300 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                        <h3 style={{ margin: 0, color: '#1C1209' }}>{listing.name}</h3>
+                        {listing.is_verified && (
+                          <span style={{ background: 'linear-gradient(135deg, #007BFF, #0056b3)', color: 'white', padding: '4px 12px', borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
+                            ✓ VERIFIED
+                          </span>
                         )}
-                      </p>
-                    )}
+                        {(listing.is_rejected || listing.rejected || listing.status === 'Rejected') && (
+                          <span style={{ background: '#F44336', color: 'white', padding: '4px 12px', borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
+                            ✗ REJECTED
+                          </span>
+                        )}
+                      </div>
+                      <p style={{ margin: '4px 0', color: '#6B5B4E', fontSize: 14 }}>📍 {listing.area}, {listing.city}</p>
+                      <p style={{ margin: '4px 0', color: '#6B5B4E', fontSize: 14 }}>👤 {listing.profiles?.name || 'Unknown'} ({listing.profiles?.email || 'No email'})</p>
+                      <p style={{ margin: '4px 0', color: '#D4873A', fontSize: 14, fontWeight: 600 }}>KSh {listing.price?.toLocaleString()}/month</p>
+                      
+                      {listing.assigned_agent_id && (
+                        <p style={{ margin: '4px 0', fontSize: 13, color: '#2196F3', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          👷 Agent Assigned: {listing.assigned_agent_name || 'Unknown'}
+                          {listing.assignment_status !== 'completed' && (
+                            <span style={{ fontSize: 11, color: '#FF9800', fontWeight: 500 }}>(Pending Verification)</span>
+                          )}
+                        </p>
+                      )}
 
-                    {/* Agent Verification Data Display */}
-                    {listing.status === 'Pending Admin Approval' && (
-                      <div style={{ marginTop: 20, borderTop: '1px solid #eee', paddingTop: 20 }}>
-                        <h4 style={{ margin: '0 0 15px 0', fontSize: 14, color: '#1C1209' }}>🕵️ Agent Inspection Report</h4>
-                        
-                        {/* Test Results */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10, marginBottom: 15 }}>
-                          <div style={{ background: '#F9FAFB', padding: 10, borderRadius: 6 }}>
-                            <p style={{ margin: '0 0 4px 0', fontSize: 11, color: '#666', fontWeight: 600 }}>💧 Water</p>
-                            <p style={{ margin: 0, fontSize: 14, color: listing.water_test === 'Pass' ? '#2E7D32' : '#C62828', fontWeight: 700 }}>
-                              {listing.water_test === 'Pass' ? '✅ Pass' : listing.water_test === 'Fail' ? '❌ Fail' : 'N/A'}
-                            </p>
-                          </div>
-                          <div style={{ background: '#F9FAFB', padding: 10, borderRadius: 6 }}>
-                            <p style={{ margin: '0 0 4px 0', fontSize: 11, color: '#666', fontWeight: 600 }}>⚡ Electricity</p>
-                            <p style={{ margin: 0, fontSize: 14, color: listing.electricity_test === 'Pass' ? '#2E7D32' : '#C62828', fontWeight: 700 }}>
-                              {listing.electricity_test === 'Pass' ? '✅ Pass' : listing.electricity_test === 'Fail' ? '❌ Fail' : 'N/A'}
-                            </p>
-                          </div>
-                          <div style={{ background: '#F9FAFB', padding: 10, borderRadius: 6 }}>
-                            <p style={{ margin: '0 0 4px 0', fontSize: 11, color: '#666', fontWeight: 600 }}>🔒 Security</p>
-                            <p style={{ margin: 0, fontSize: 14, color: listing.security_check === 'Pass' ? '#2E7D32' : '#C62828', fontWeight: 700 }}>
-                              {listing.security_check === 'Pass' ? '✅ Pass' : listing.security_check === 'Fail' ? '❌ Fail' : 'N/A'}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Photos Array */}
-                        {listing.verification_photos && listing.verification_photos.length > 0 && (
-                          <div style={{ marginBottom: 15 }}>
-                            <p style={{ margin: '0 0 8px 0', fontSize: 12, color: '#333', fontWeight: 600 }}>📸 Agent Photos ({listing.verification_photos.length})</p>
-                            <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8 }}>
-                              {listing.verification_photos.map((url: string, idx: number) => (
-                                <img 
-                                  key={idx} 
-                                  src={url} 
-                                  alt={`Proof ${idx}`} 
-                                  style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 6, border: '1px solid #ddd', cursor: 'pointer' }} 
-                                  onClick={() => window.open(url, '_blank')}
-                                />
-                              ))}
+                      {listing.status === 'Pending Admin Approval' && (
+                        <div style={{ marginTop: 20, borderTop: '1px solid #eee', paddingTop: 20 }}>
+                          <h4 style={{ margin: '0 0 15px 0', fontSize: 14, color: '#1C1209' }}>🕵️ Agent Inspection Report</h4>
+                          
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10, marginBottom: 15 }}>
+                            <div style={{ background: '#F9FAFB', padding: 10, borderRadius: 6 }}>
+                              <p style={{ margin: '0 0 4px 0', fontSize: 11, color: '#666', fontWeight: 600 }}>💧 Water</p>
+                              <p style={{ margin: 0, fontSize: 14, color: listing.water_test === 'Pass' ? '#2E7D32' : '#C62828', fontWeight: 700 }}>
+                                {listing.water_test === 'Pass' ? '✅ Pass' : listing.water_test === 'Fail' ? '❌ Fail' : 'N/A'}
+                              </p>
+                            </div>
+                            <div style={{ background: '#F9FAFB', padding: 10, borderRadius: 6 }}>
+                              <p style={{ margin: '0 0 4px 0', fontSize: 11, color: '#666', fontWeight: 600 }}>⚡ Electricity</p>
+                              <p style={{ margin: 0, fontSize: 14, color: listing.electricity_test === 'Pass' ? '#2E7D32' : '#C62828', fontWeight: 700 }}>
+                                {listing.electricity_test === 'Pass' ? '✅ Pass' : listing.electricity_test === 'Fail' ? '❌ Fail' : 'N/A'}
+                              </p>
+                            </div>
+                            <div style={{ background: '#F9FAFB', padding: 10, borderRadius: 6 }}>
+                              <p style={{ margin: '0 0 4px 0', fontSize: 11, color: '#666', fontWeight: 600 }}>🔒 Security</p>
+                              <p style={{ margin: 0, fontSize: 14, color: listing.security_check === 'Pass' ? '#2E7D32' : '#C62828', fontWeight: 700 }}>
+                                {listing.security_check === 'Pass' ? '✅ Pass' : listing.security_check === 'Fail' ? '❌ Fail' : 'N/A'}
+                              </p>
                             </div>
                           </div>
-                        )}
 
-                        {/* Agent Notes */}
-                        {listing.verification_notes && (
-                          <div style={{ background: '#FFF8E1', padding: 12, borderRadius: 6, marginBottom: 15, borderLeft: '4px solid #D4873A' }}>
-                            <p style={{ margin: '0 0 4px 0', fontSize: 11, color: '#666', fontWeight: 600 }}>📝 Agent Notes:</p>
-                            <p style={{ margin: 0, fontSize: 13, color: '#333' }}>{listing.verification_notes}</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                          {listing.verification_photos && listing.verification_photos.length > 0 && (
+                            <div style={{ marginBottom: 15 }}>
+                              <p style={{ margin: '0 0 8px 0', fontSize: 12, color: '#333', fontWeight: 600 }}>📸 Agent Photos ({listing.verification_photos.length})</p>
+                              <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8 }}>
+                                {listing.verification_photos.map((url: string, idx: number) => (
+                                  <img 
+                                    key={idx} 
+                                    src={url} 
+                                    alt={`Proof ${idx}`} 
+                                    style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 6, border: '1px solid #ddd', cursor: 'pointer' }} 
+                                    onClick={() => window.open(url, '_blank')}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          )}
 
-                    {/* Legacy Proof Image (for older records) */}
-                    {!listing.verification_photos?.length && listing.proof_image_url && (
-                      <div style={{ marginTop: 16, padding: 16, background: '#E8F5E9', borderRadius: 8 }}>
-                        <p style={{ margin: '0 0 12px 0', fontSize: 13, color: '#2E7D32', fontWeight: 600 }}>✓ Agent Proof Uploaded</p>
-                        <img src={listing.proof_image_url} alt="Verification proof" style={{ maxWidth: '300px', borderRadius: 6, border: '2px solid #4CAF50' }} />
-                      </div>
-                    )}
+                          {listing.verification_notes && (
+                            <div style={{ background: '#FFF8E1', padding: 12, borderRadius: 6, marginBottom: 15, borderLeft: '4px solid #D4873A' }}>
+                              <p style={{ margin: '0 0 4px 0', fontSize: 11, color: '#666', fontWeight: 600 }}>📝 Agent Notes:</p>
+                              <p style={{ margin: 0, fontSize: 13, color: '#333' }}>{listing.verification_notes}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {!listing.verification_photos?.length && listing.proof_image_url && (
+                        <div style={{ marginTop: 16, padding: 16, background: '#E8F5E9', borderRadius: 8 }}>
+                          <p style={{ margin: '0 0 12px 0', fontSize: 13, color: '#2E7D32', fontWeight: 600 }}>✓ Agent Proof Uploaded</p>
+                          <img src={listing.proof_image_url} alt="Verification proof" style={{ maxWidth: '300px', borderRadius: 6, border: '2px solid #4CAF50' }} />
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 140 }}>
+                      {listing.status === 'Pending Admin Approval' && (
+                        <>
+                          <button 
+                            onClick={() => handleApprove(listing.id)}
+                            style={{ padding: '10px 16px', background: '#2E7D32', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700 }}
+                          >
+                            ✅ Approve & Go Live
+                          </button>
+                          <button 
+                            onClick={() => setShowRejectModal(listing.id)}
+                            style={{ padding: '10px 16px', background: 'white', color: '#C62828', border: '1px solid #C62828', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}
+                          >
+                            ❌ Reject
+                          </button>
+                        </>
+                      )}
+
+                      {listing.status === 'pending' && (
+                        <>
+                          <button onClick={() => approveListing(listing.id)} style={{ padding: '8px 16px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>✓ Approve</button>
+                          <button onClick={() => { setShowRejectModal(listing.id); }} style={{ padding: '8px 16px', background: '#F44336', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>✗ Reject</button>
+                        </>
+                      )}
+                      
+                      {listing.verification_payment_received && !listing.is_verified && listing.status !== 'Pending Admin Approval' && (
+                        (!listing.assigned_agent_id || listing.assignment_status === 'completed') ? (
+                          <button 
+                            onClick={() => { setAssignListingId(listing.id); setShowAssignModal(true); }}
+                            style={{ padding: '8px 16px', background: 'linear-gradient(135deg, #FF9800, #F57C00)', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700 }}
+                          >
+                            👷 Assign Agent
+                          </button>
+                        ) : (
+                          <span style={{ padding: '8px 16px', background: '#E3F2FD', color: '#1976D2', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>
+                            ⏳ Agent Assigned
+                          </span>
+                        )
+                      )}
+                      
+                      <button onClick={() => deleteListing(listing.id)} style={{ padding: '8px 16px', background: '#F8D7DA', color: '#721C24', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600, marginTop: 8 }}>
+                        🗑️ Delete
+                      </button>
+                    </div>
                   </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
-                  {/* Action Buttons */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 140 }}>
-                    {listing.status === 'Pending Admin Approval' && (
-                      <>
-                        <button 
-                          onClick={() => handleApprove(listing.id)}
-                          style={{ padding: '10px 16px', background: '#2E7D32', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700 }}
-                        >
-                          ✅ Approve & Go Live
-                        </button>
-                        <button 
-                          onClick={() => setShowRejectModal(listing.id)}
-                          style={{ padding: '10px 16px', background: 'white', color: '#C62828', border: '1px solid #C62828', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}
-                        >
-                          ❌ Reject
-                        </button>
-                      </>
-                    )}
+      {/* ⭐ REVIEWS TAB CONTENT */}
+      {activeAdminTab === 'reviews' && (
+        <div style={{ padding: '40px 60px', maxWidth: 1400, margin: '0 auto' }}>
+          <h2 style={{ margin: '0 0 24px 0', color: '#1C1209' }}>Pending Reviews ({pendingReviews.length})</h2>
+          
+          {pendingReviews.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 60, background: 'white', borderRadius: 12 }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
+              <p style={{ color: '#6B5B4E' }}>All caught up! No pending reviews.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gap: 16 }}>
+              {pendingReviews.map((review) => (
+                <div key={review.id} style={{ background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <div>
+                      <h3 style={{ margin: 0, color: '#1C1209' }}>{review.listings?.name}</h3>
+                      <p style={{ margin: '4px 0 0 0', color: '#6B5B4E', fontSize: 14 }}>📍 {review.listings?.area}</p>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: 20, color: '#D4873A' }}>{'⭐'.repeat(review.rating)}</div>
+                      <p style={{ margin: '4px 0 0 0', fontSize: 12, color: '#999' }}>By: {review.profiles?.name || 'Anonymous'}</p>
+                    </div>
+                  </div>
+                  
+                  <p style={{ background: '#F9FAFB', padding: 16, borderRadius: 8, color: '#333', margin: '16px 0', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+                    "{review.comment}"
+                  </p>
 
-                    {listing.status === 'pending' && (
-                      <>
-                        <button onClick={() => approveListing(listing.id)} style={{ padding: '8px 16px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>✓ Approve</button>
-                        <button onClick={() => { setShowRejectModal(listing.id); }} style={{ padding: '8px 16px', background: '#F44336', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>✗ Reject</button>
-                      </>
-                    )}
-                    
-                    {/* 🆕 NEW: Prevent Double Assignment Logic */}
-                    {listing.verification_payment_received && !listing.is_verified && listing.status !== 'Pending Admin Approval' && (
-                      (!listing.assigned_agent_id || listing.assignment_status === 'completed') ? (
-                        <button 
-                          onClick={() => { setAssignListingId(listing.id); setShowAssignModal(true); }}
-                          style={{ padding: '8px 16px', background: 'linear-gradient(135deg, #FF9800, #F57C00)', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700 }}
-                        >
-                          👷 Assign Agent
-                        </button>
-                      ) : (
-                        <span style={{ padding: '8px 16px', background: '#E3F2FD', color: '#1976D2', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>
-                          ⏳ Agent Assigned
-                        </span>
-                      )
-                    )}
-                    
-                    <button onClick={() => deleteListing(listing.id)} style={{ padding: '8px 16px', background: '#F8D7DA', color: '#721C24', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600, marginTop: 8 }}>
-                      🗑️ Delete
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <input 
+                      type="text" 
+                      placeholder="Add an official admin response (optional)..."
+                      id={`response-${review.id}`}
+                      style={{ flex: 1, minWidth: '200px', padding: '10px 14px', borderRadius: 8, border: '1px solid #DDD0C4', fontSize: 14 }}
+                    />
+                    <button 
+                      onClick={() => {
+                        const responseText = (document.getElementById(`response-${review.id}`) as HTMLInputElement).value;
+                        handleReviewAction(review.id, 'approve', responseText);
+                      }}
+                      style={{ padding: '10px 20px', background: '#2E7D32', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}
+                    >
+                      ✅ Approve
+                    </button>
+                    <button 
+                      onClick={() => handleReviewAction(review.id, 'reject')}
+                      style={{ padding: '10px 20px', background: '#F44336', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}
+                    >
+                      ❌ Reject
                     </button>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Assign Agent Modal */}
       {showAssignModal && (
