@@ -64,7 +64,7 @@ export default function ReviewsSection({ listingId, currentUser }: { listingId: 
     if (error) {
       alert('Error: ' + error.message)
     } else {
-      alert('✅ Review submitted successfully!')
+      alert('✅ Review submitted! It is pending admin approval and will appear shortly.')
       setNewComment('')
       setNewRating(5)
       await fetchReviews() // Refresh the list
