@@ -1,142 +1,88 @@
-import Link from 'next/link'
+'use client'
+import { useRouter } from 'next/navigation'
 
-export default function TermsPage() {
+export default function PrivacyPolicy() {
+  const router = useRouter()
+
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '60px 20px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif', color: '#1C1209', background: '#FFFFFF' }}>
-      
+    <div style={{ minHeight: '100vh', background: '#FDF8F3', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", color: '#1C1209' }}>
       {/* Navigation */}
-      <div style={{ marginBottom: '60px' }}>
-        <Link href="/" style={{ color: '#6B5B4E', textDecoration: 'none', fontSize: '14px', fontWeight: '500', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-          Back to Home
-        </Link>
-      </div>
-
-      {/* Header */}
-      <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-        <h1 style={{ fontSize: '40px', fontWeight: '800', color: '#1C1209', marginBottom: '16px', letterSpacing: '-1px' }}>
-          Terms of Service & Privacy Policy
-        </h1>
-        <p style={{ fontSize: '16px', color: '#6B5B4E', maxWidth: '600px', margin: '0 auto', lineHeight: '1.6' }}>
-          Last updated: October 2026. By accessing or using the Ehani Kenya platform, you agree to be bound by the following comprehensive terms and policies.
-        </p>
-      </div>
-
-      {/* Terms of Service Section */}
-      <div style={{ marginBottom: '80px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
-          <div style={{ width: '40px', height: '40px', background: '#FDF8F3', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D4873A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-          </div>
-          <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#1C1209', margin: 0 }}>Terms of Service</h2>
+      <nav style={{ background: 'white', padding: '16px 60px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 20px rgba(0,0,0,0.05)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => router.push('/')}>
+          <img src="/logo.png" alt="Ehani" style={{ height: '50px', width: 'auto', objectFit: 'contain' }} />
         </div>
+        <button onClick={() => router.push('/')} style={{ padding: '10px 20px', background: '#1C1209', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
+          ← Back to Home
+        </button>
+      </nav>
 
-        <div style={{ paddingLeft: '52px' }}>
-          <div style={{ marginBottom: '32px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1C1209', marginBottom: '12px' }}>1. Acceptance of Terms & Eligibility</h3>
-            <p style={{ fontSize: '15px', color: '#4B5563', lineHeight: '1.7', margin: 0 }}>
-              By accessing, browsing, or using the Ehani Kenya platform ("Platform"), you acknowledge that you have read, understood, and agree to be legally bound by these Terms of Service. If you are entering into these terms on behalf of a company or other legal entity, you represent that you have the authority to bind such entity. You must be at least 18 years of age to use this Platform.
-            </p>
-          </div>
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: '60px 20px' }}>
+        <h1 style={{ fontSize: 36, fontWeight: 800, marginBottom: 8, color: '#1C1209' }}>Privacy Policy</h1>
+        <p style={{ color: '#6B5B4E', marginBottom: 40, fontSize: 16 }}>Effective Date: {new Date().toLocaleDateString()}</p>
 
-          <div style={{ marginBottom: '32px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1C1209', marginBottom: '12px' }}>2. User Obligations & Conduct</h3>
-            <p style={{ fontSize: '15px', color: '#4B5563', lineHeight: '1.7', margin: 0 }}>
-              <strong>Landlords and Agents:</strong> You warrant that all property listings, photographs, pricing, and amenity descriptions provided are accurate, current, and not misleading. You represent that you have the legal right or authorization to lease or sublet the property. You agree to comply with all applicable Kenyan housing laws and fair housing regulations, ensuring no discrimination based on gender, tribe, or religion.
-              <br /><br />
-              <strong>Students and Tenants:</strong> You agree to use the Platform solely for the lawful purpose of seeking accommodation. You agree to interact with landlords and agents respectfully and honestly. You acknowledge that Ehani Kenya is not a party to any rental agreement and is not responsible for the terms of any lease you enter into.
-            </p>
-          </div>
+        <div style={{ background: 'white', padding: 40, borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
+          <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 24, color: '#D4873A', borderBottom: '2px solid #F0EAE3', paddingBottom: 12 }}>PART B — PRIVACY POLICY</h2>
 
-          <div style={{ marginBottom: '32px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1C1209', marginBottom: '12px' }}>3. Prohibited Conduct</h3>
-            <p style={{ fontSize: '15px', color: '#4B5563', lineHeight: '1.7', margin: 0 }}>
-              Users are strictly prohibited from: (a) posting fraudulent, fake, or misleading listings; (b) engaging in rental scams or advance-fee fraud; (c) misrepresenting property conditions or amenities; (d) using automated scripts, bots, or scrapers to extract data from the Platform; (e) attempting to reverse-engineer the Platform's code; or (f) using the Platform for any unlawful activities. Ehani Kenya reserves the right to immediately terminate accounts and withhold payouts for users who violate these policies.
-            </p>
-          </div>
+          <Section title="9. Controller and Contact">
+            <p>Ehani determines purposes and means for account, listing, verification, disclosure and platform-operation data. <strong>Controller:</strong> Eugene Larry Ososo, operating EHANI HOMES. <br/><strong>Privacy contact:</strong> +254 710 236 242 | <a href="mailto:support@ehani.co.ke" style={{ color: '#D4873A' }}>support@ehani.co.ke</a> | 1098-60200, Meru, Kenya.</p>
+          </Section>
 
-          <div style={{ marginBottom: '32px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1C1209', marginBottom: '12px' }}>4. Verification Process & Disclaimers</h3>
-            <p style={{ fontSize: '15px', color: '#4B5563', lineHeight: '1.7', margin: 0 }}>
-              Ehani Kenya offers a "Verified" badge for listings that have undergone a physical inspection by our field agents. While we strive for accuracy, our verification is limited to a visual inspection at a specific point in time. We do not guarantee the structural integrity, legal compliance, or future condition of the property. The "Verified" badge is a trust indicator, not a warranty or insurance policy. Users must still conduct their own due diligence before signing any lease or making any payments.
-            </p>
-          </div>
+          <Section title="10. Data Collected">
+            <ul style={{ paddingLeft: 20, lineHeight: 1.8 }}>
+              <li><strong>Student:</strong> email, verification status and necessary account/security records.</li>
+              <li><strong>Landlord:</strong> display name, email, phone, account and verification status.</li>
+              <li><strong>Listing:</strong> property details, location, rent/deposit, amenities, photos, availability and listing history.</li>
+              <li><strong>Inspection:</strong> date, assigned agent, findings, notes/photos, review decision, badge period and renewal history.</li>
+              <li><strong>Disclosure:</strong> authorisation, exact fields, relevant disclosure event/recipient, time and notice version.</li>
+              <li><strong>Payments:</strong> transaction reference, amount, status and reconciliation data; payment credentials handled by provider as applicable.</li>
+              <li><strong>Technical/support:</strong> verification events, access/security logs, generated device/network data, errors and communications.</li>
+            </ul>
+          </Section>
 
-          <div style={{ marginBottom: '32px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1C1209', marginBottom: '12px' }}>5. Fees, Payments & Refunds</h3>
-            <p style={{ fontSize: '15px', color: '#4B5563', lineHeight: '1.7', margin: 0 }}>
-              Certain features, such as the Verification Badge and Premium Listings, require payment of non-refundable fees via our integrated payment gateways (e.g., M-Pesa via KCB Buni). By initiating a payment, you authorize us to charge the specified amount. Verification fees (e.g., KSh 500) cover the operational cost of dispatching an agent and are non-refundable once the inspection has been scheduled or completed, regardless of the inspection outcome.
-            </p>
-          </div>
+          <Section title="11. Purposes and Lawful Bases">
+            <p>We use data to create/secure accounts, verify email, review/publish listings, inspect properties, administer verification/renewals and gated contact disclosure, process platform fees, respond to requests, prevent abuse, secure systems, maintain records and meet legal obligations. Each processing activity must have an applicable lawful basis under Kenya’s Data Protection Act, 2019 (for example consent where required, contract necessity, legal obligation or properly assessed legitimate interests).</p>
+          </Section>
 
-          <div style={{ marginBottom: '32px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1C1209', marginBottom: '12px' }}>6. Platform Role & Limitation of Liability</h3>
-            <p style={{ fontSize: '15px', color: '#4B5563', lineHeight: '1.7', margin: 0 }}>
-              Ehani Kenya acts strictly as a technology intermediary connecting property owners with prospective tenants. We do not own, manage, or control the properties listed. To the maximum extent permitted by Kenyan law, Ehani Kenya shall not be liable for any indirect, incidental, or consequential damages, including but not limited to loss of deposits, property damage, or personal injury arising from rental agreements entered into between users. You agree to indemnify and hold Ehani Kenya harmless from any claims arising from your use of the Platform.
-            </p>
-          </div>
+          <Section title="12. Recipients, Providers and Transfers">
+            <p>Authorised administrators and assigned agents access data on a need-to-know basis. Relevant data may be shared with hosting/database/email/payment/security providers, with a student when landlord contact disclosure is authorised, or with authorities where law requires. Ehani does not sell personal data.</p>
+            <p style={{ marginTop: 12, fontWeight: 600 }}>Current providers:</p>
+            <ul style={{ paddingLeft: 20, lineHeight: 1.8 }}>
+              <li>Hosting.com (hosting)</li>
+              <li>Supabase (database/email verification)</li>
+              <li>KCB Buni APIs (M-Pesa processing)</li>
+              <li>KCB business bank (settlement)</li>
+            </ul>
+          </Section>
+
+          <Section title="13. Security and Retention">
+            <p>Ehani uses appropriate safeguards such as access controls, secure authentication, role limitation, credential protection, backups, updates, monitoring and incident response. No system is completely secure. Data is retained only as reasonably necessary for purpose, law, security, accounting or claims, then securely deleted/anonymised/pseudonymised where appropriate under the retention schedule. Legal holds may delay disposal.</p>
+          </Section>
+
+          <Section title="14. Rights, Cookies and Children">
+            <p>Subject to law and identity verification, users may request access, correction, deletion, restriction, objection, portability where applicable, or withdraw consent where processing relies on it. Contact <a href="mailto:support@ehani.co.ke" style={{ color: '#D4873A' }}>support@ehani.co.ke</a> or complain to ODPC. We respond within applicable Kenyan timelines. Essential cookies may support sessions/security; non-essential analytics/advertising must be disclosed and consented to where required. Platform is for adults 18+; we do not knowingly design registration for children.</p>
+          </Section>
+
+          <Section title="15. Updates and Website">
+            <p>Policy changes will be communicated appropriately and the current version/effective date displayed.</p>
+            <div style={{ marginTop: 20, padding: 20, background: '#FDF8F3', borderRadius: 8, borderLeft: '4px solid #D4873A' }}>
+              <p style={{ margin: '0 0 8px 0', fontWeight: 700 }}>Website: <a href="https://ehani.co.ke" style={{ color: '#D4873A', textDecoration: 'none' }}>ehani.co.ke</a></p>
+              <p style={{ margin: '0 0 8px 0', fontWeight: 700 }}>Contact number: +254 710 236 242</p>
+              <p style={{ margin: 0, fontWeight: 700 }}>Privacy contact: <a href="mailto:support@ehani.co.ke" style={{ color: '#D4873A' }}>support@ehani.co.ke</a> | 1098-60200 Meru, Kenya</p>
+            </div>
+          </Section>
         </div>
       </div>
+    </div>
+  )
+}
 
-      {/* Privacy Policy Section */}
-      <div style={{ marginBottom: '80px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
-          <div style={{ width: '40px', height: '40px', background: '#FDF8F3', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D4873A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-          </div>
-          <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#1C1209', margin: 0 }}>Privacy Policy</h2>
-        </div>
-
-        <div style={{ paddingLeft: '52px' }}>
-          <div style={{ marginBottom: '32px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1C1209', marginBottom: '12px' }}>1. Information We Collect</h3>
-            <p style={{ fontSize: '15px', color: '#4B5563', lineHeight: '1.7', margin: 0 }}>
-              We collect information you provide directly, including your full name, email address, phone number, and property details. For landlords, we collect business registration details and M-Pesa Paybill/Till numbers for payouts. We also automatically collect technical data such as IP addresses, browser types, and device information to ensure platform security and optimize performance.
-            </p>
-          </div>
-
-          <div style={{ marginBottom: '32px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1C1209', marginBottom: '12px' }}>2. How We Use Your Information</h3>
-            <p style={{ fontSize: '15px', color: '#4B5563', lineHeight: '1.7', margin: 0 }}>
-              Your data is used to: (a) facilitate connections between landlords and students; (b) process verification fees and payouts via our banking partners; (c) assign field agents for physical property inspections; (d) send critical platform updates and security alerts; and (e) improve our search algorithms and verification processes. We do not sell, trade, or rent your personal identification information to third parties for marketing purposes.
-            </p>
-          </div>
-
-          <div style={{ marginBottom: '32px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1C1209', marginBottom: '12px' }}>3. Data Sharing & Legal Compliance</h3>
-            <p style={{ fontSize: '15px', color: '#4B5563', lineHeight: '1.7', margin: 0 }}>
-              We may share necessary data with trusted third-party service providers (such as KCB Bank for payment processing) strictly to operate the Platform. We may also disclose information if required by law, court order, or governmental authority. We are committed to complying with the Data Protection Act of Kenya (2019) and ensure your rights to access, correct, or delete your personal data are respected.
-            </p>
-          </div>
-
-          <div style={{ marginBottom: '32px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1C1209', marginBottom: '12px' }}>4. Data Security & Retention</h3>
-            <p style={{ fontSize: '15px', color: '#4B5563', lineHeight: '1.7', margin: 0 }}>
-              We implement industry-standard administrative, technical, and physical security measures to protect your data against unauthorized access, alteration, or destruction. However, no method of transmission over the internet is 100% secure. We retain your personal data only for as long as necessary to fulfill the purposes outlined in this policy, or as required by Kenyan tax and financial regulations.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Contact Section */}
-      <div style={{ background: '#F9FAFB', padding: '40px', borderRadius: '16px', border: '1px solid #F0EAE3', textAlign: 'center' }}>
-        <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#1C1209', marginBottom: '12px' }}>Questions or Legal Concerns?</h3>
-        <p style={{ fontSize: '15px', color: '#6B5B4E', marginBottom: '24px', lineHeight: '1.6' }}>
-          If you have any questions regarding these terms, our privacy practices, or wish to exercise your data rights, please contact our legal and support team.
-        </p>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-          <a href="mailto:support@ehani.co.ke" style={{ color: '#1C1209', fontWeight: '600', fontSize: '14px', textDecoration: 'none', background: 'white', padding: '10px 20px', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
-            support@ehani.co.ke
-
-          </a>
-        </div>
-      </div>
-
-      {/* Footer Link */}
-      <div style={{ marginTop: '60px', textAlign: 'center' }}>
-        <Link href="/" style={{ color: '#6B5B4E', textDecoration: 'none', fontSize: '13px', fontWeight: '500' }}>
-          © 2026 Ehani Kenya. All rights reserved.
-        </Link>
+// Helper component for clean sections
+function Section({ title, children }: { title: string, children: React.ReactNode }) {
+  return (
+    <div style={{ marginBottom: 32 }}>
+      <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12, color: '#1C1209' }}>{title}</h3>
+      <div style={{ fontSize: 15, lineHeight: 1.7, color: '#4a4a4a' }}>
+        {children}
       </div>
     </div>
   )
