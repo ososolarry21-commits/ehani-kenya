@@ -20,6 +20,10 @@ export default function Dashboard() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [uploadingImages, setUploadingImages] = useState(false)
   const [phoneNumber, setPhoneNumber] = useState('')
+  
+  // 🆕 NEW: Modal State for Safe Deletion
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [listingToDelete, setListingToDelete] = useState<any>(null)
 
   const router = useRouter()
 
@@ -46,11 +50,9 @@ export default function Dashboard() {
     setLoading(false)
   }
 
-  // 🔧 FINAL FIX: Fetches assignments, then fetches agent names separately to avoid join issues
   async function fetchListings(userId: string) {
     console.log(' 1. Current Landlord User ID:', userId);
 
-    // Step 1: Get listings
     const { data: listingsData, error: listingsError } = await supabase
       .from('listings')
       .select('*')
@@ -67,7 +69,6 @@ export default function Dashboard() {
     const listingIds = listingsData.map((l: any) => l.id);
     console.log('🔍 2. Listing IDs owned by this user:', listingIds);
 
-    // Step 2: Fetch Assignments (Without the tricky join)
     const { data: assignmentsData, error: assignmentsError } = await supabase
       .from('verification_assignments')
       .select(`listing_id, status, agent_id`) 
@@ -75,16 +76,13 @@ export default function Dashboard() {
 
     console.log(' 3. Result of assignment query:', assignmentsData);
 
-    // Step 3: If we have assignments, fetch the Agent Names separately
     if (assignmentsData && assignmentsData.length > 0) {
-           // Extract unique Agent IDs (Safe for all TS versions)
       const allAgentIds = assignmentsData.map((a: any) => a.agent_id).filter(Boolean);
       const agentIds = allAgentIds.filter((id, index) => allAgentIds.indexOf(id) === index);
       
       if (agentIds.length > 0) {
         console.log('🔍 Fetching names for Agent IDs:', agentIds);
         
-        // Fetch Agent Profiles
         const { data: agentsData } = await supabase
           .from('profiles')
           .select('id, name')
@@ -92,7 +90,6 @@ export default function Dashboard() {
 
         console.log('🔍 4. Fetched Agent Profiles:', agentsData);
 
-        // Map Agent Names to Assignments
         assignmentsData.forEach((assignment: any) => {
           const agent = agentsData?.find((a: any) => a.id === assignment.agent_id);
           assignment.agent_name = agent?.name || 'Unknown Agent';
@@ -100,7 +97,6 @@ export default function Dashboard() {
       }
     }
 
-    // Step 4: Combine Data
     const processedListings = listingsData.map((listing: any) => {
       const listingAssignments = assignmentsData?.filter(
         (a: any) => String(a.listing_id) === String(listing.id)
@@ -111,8 +107,7 @@ export default function Dashboard() {
         (a: any) => a.status !== 'completed'
       ) || listingAssignments[0]
       
-      // Use the manually fetched name
-     const agentName = (activeAssignment as any)?.agent_name || null;
+      const agentName = (activeAssignment as any)?.agent_name || null;
 
       console.log(`✅ Listing: ${listing.name} | Assigned: ${hasAssignment} | Agent: ${agentName}`)
 
@@ -133,7 +128,6 @@ export default function Dashboard() {
     })
   }
 
-  //  NATIVE IMAGE COMPRESSOR (No npm install needed!)
   const compressImage = async (file: File): Promise<Blob> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -240,11 +234,22 @@ export default function Dashboard() {
     }
   }
 
-  async function deleteListing(id: string) {
-    if (!confirm('Delete this listing?')) return
-    const { error } = await supabase.from('listings').delete().eq('id', id)
-    if (error) alert('Error deleting: ' + error.message)
-    else await fetchListings(user!.id)
+  // 🆕 NEW: Safe Deletion Flow
+  const handleDeleteClick = (listing: any) => {
+    setListingToDelete(listing)
+    setShowDeleteModal(true)
+  }
+
+  async function confirmDeletion() {
+    if (!listingToDelete) return
+    const { error } = await supabase.from('listings').delete().eq('id', listingToDelete.id)
+    if (error) {
+      alert('Error deleting: ' + error.message)
+    } else {
+      setShowDeleteModal(false)
+      setListingToDelete(null)
+      await fetchListings(user!.id)
+    }
   }
 
   async function signOut() {
@@ -263,7 +268,7 @@ export default function Dashboard() {
     <div style={{ minHeight: '100vh', background: '#FDF8F3', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
       <nav style={{ background: 'white', padding: '16px 60px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 20px rgba(0,0,0,0.05)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => router.push('/')}>
-          <img src="/logo.png" alt="Ehani" style={{ height: '50px', width: 'auto', objectFit: 'contain' }} />
+          <img src="/logo.png" alt="Ehani Homes Logo" style={{ height: '50px', width: 'auto', objectFit: 'contain' }} />
         </div>
         <div style={{ display: 'flex', gap: 12 }}>
           {profile?.role === 'admin' && <button onClick={() => router.push('/admin')} style={{ padding: '10px 20px', background: '#1C1209', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>Admin Panel</button>}
@@ -322,7 +327,7 @@ export default function Dashboard() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 10, marginTop: 16 }}>
                   {imagePreviews.map((preview, index) => (
                     <div key={index} style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', aspectRatio: '1' }}>
-                      <img src={preview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={preview} alt={`Preview ${index + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       <button type="button" onClick={() => removeImage(index)} style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(220, 53, 69, 0.9)', color: 'white', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 'bold' }}>✕</button>
                     </div>
                   ))}
@@ -408,7 +413,6 @@ export default function Dashboard() {
                       <span style={{ background: '#F0EAE3', padding: '4px 10px', borderRadius: 6 }}>{listing.type}</span>
                       <span style={{ fontWeight: 700, color: '#D4873A' }}>KSh {listing.price?.toLocaleString()}/mo</span>
                       
-                                        {/* 🆕 UPDATED: Show "Verified by" if approved, otherwise show "Agent:" */}
                       {listing.is_agent_assigned && listing.assigned_agent_name && (
                         listing.is_verified ? (
                           <span style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>
@@ -455,13 +459,60 @@ export default function Dashboard() {
                     </div>
                   )}
 
-                  <button onClick={() => deleteListing(listing.id)} style={{ padding: '8px 16px', background: '#F8D7DA', color: '#721C24', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Delete</button>
+                  {/* 🆕 UPDATED: Triggers the custom modal instead of native confirm */}
+                  <button onClick={() => handleDeleteClick(listing)} style={{ padding: '8px 16px', background: '#F8D7DA', color: '#721C24', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Delete</button>
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* 🆕 NEW: Custom Confirmation Modal */}
+      {showDeleteModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(28, 18, 9, 0.6)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 1000, padding: '20px'
+        }}>
+          <div style={{
+            background: 'white', borderRadius: '16px', padding: '32px',
+            maxWidth: '400px', width: '100%', boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+            <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#1C1209', marginBottom: '12px', margin: '0 0 12px 0' }}>
+              Delete Listing?
+            </h3>
+            <p style={{ fontSize: '14px', color: '#6B5B4E', marginBottom: '24px', lineHeight: '1.5', margin: '0 0 24px 0' }}>
+              Are you sure you want to permanently delete <strong>"{listingToDelete?.name}"</strong>? This action cannot be undone and will remove it from the platform immediately.
+            </p>
+            
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button 
+                onClick={() => { setShowDeleteModal(false); setListingToDelete(null); }}
+                style={{
+                  padding: '10px 20px', borderRadius: '8px', border: '1px solid #DDD0C4',
+                  background: 'white', color: '#1C1209', fontWeight: '600', cursor: 'pointer', fontSize: '14px'
+                }}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmDeletion}
+                style={{
+                  padding: '10px 20px', borderRadius: '8px', border: 'none',
+                  background: '#F44336', color: 'white', fontWeight: '600', cursor: 'pointer', fontSize: '14px'
+                }}
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
