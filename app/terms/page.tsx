@@ -174,13 +174,13 @@ export default function LegalPage() {
           "14.3 Users should document agreements and seek legal/institutional guidance as needed. Platform moderation is not a court, tribunal, police or regulator."
         ]} />
 
-        <Clause number="15" title="FEES, PAYMENT PROCESSING AND REFUNDS" content={[
+               <Clause number="15" title="FEES, PAYMENT PROCESSING AND REFUNDS" content={[
           "15.1 Platform fees relate to Ehani services such as verification/renewal and are separate from rent, deposits and utility charges.",
           "15.2 Ehani currently uses KCB Buni APIs for M-Pesa payment processing and a KCB business bank account for settlement, subject to configuration changes.",
           "15.3 Ehani may receive transaction reference, amount, status, timestamp and reconciliation information. Payment credentials should be handled by providers; Ehani should not store full authentication credentials.",
-          "15.4 Successful payment does not approve a listing or verification; payment reconciliation and inspection/review are separate.",
-          "15.5 For failed, duplicate, reversed, disputed or incorrectly credited payments, users should contact support with the transaction reference.",
-          "15.6 Refund eligibility depends on service status, displayed terms, applicable law and circumstances. No blanket no-refund rule applies where law requires a refund or Ehani determines one is appropriate. Completed services may be non-refundable subject to law and disclosed conditions.",
+          "15.4 Successful payment does not approve a listing or verification; payment reconciliation and inspection/review are separate processes.",
+          "15.5 For failed, duplicate, reversed, disputed or incorrectly credited payments, users should contact support with the transaction reference for a full refund.",
+          "15.6 Refund Eligibility for Verification Fees: The verification fee covers the operational cost of the physical inspection and administrative review. Therefore: (a) Full refunds are granted if Ehani cancels the inspection or if the payment fails. (b) The fee is non-refundable if the landlord cancels after an agent has been dispatched, refuses access, or if the property fails the verification checklist. (c) Ehani may, at its sole discretion, issue a refund for cancellations made prior to agent dispatch.",
           "15.7 Ehani does not guarantee provider processing or settlement time and does not control outages, bank delays or mobile-network failures."
         ]} />
 
