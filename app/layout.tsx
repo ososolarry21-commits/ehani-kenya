@@ -2,8 +2,8 @@ import Script from 'next/script'
 import type { Metadata } from 'next'
 import './globals.css'
 import Footer from './components/footer'
-import SessionTimeout from './components/SessionTimeout' // Import the security component
-import CookieBanner from '@/components/CookieBanner' // Adjust path if needed
+import SessionTimeout from './components/SessionTimeout'
+import CookieBanner from './components/CookieBanner' // 🆕 Updated path to match your folder structure
 
 // 🆕 NEW: SEO Metadata for Search Engines (Only works in Server Components)
 export const metadata: Metadata = {
@@ -32,6 +32,9 @@ export default function RootLayout({
         
         {children}
         <Footer />
+        
+        {/* 🆕 NEW: Cookie Consent Banner */}
+        <CookieBanner />
         
         {/* Google Analytics Tracking Scripts */}
         <Script
