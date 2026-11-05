@@ -26,9 +26,8 @@ export default function LegalPage() {
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
         </div>
         <h1 style={{ fontSize: '42px', fontWeight: '800', color: '#1C1209', marginBottom: '16px', letterSpacing: '-1px' }}>
-          Terms of Service & Privacy Policy
+          Terms of Service, Privacy & Cookie Policy
         </h1>
-        {/* 🆕 FIXED: Static date instead of dynamic daily date */}
         <p style={{ fontSize: '16px', color: '#6B5B4E', maxWidth: '600px', margin: '0 auto', lineHeight: '1.6' }}>
           Last updated: November 2026 | SEARCH. SETTLE. STUDY.
         </p>
@@ -45,8 +44,8 @@ export default function LegalPage() {
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
           <TOCItem number="PART A" title="Terms of Service" range="Clauses 1–24" color="#D4873A" />
-          {/* 🆕 UPDATED: Reflects the new Clause 49 */}
-          <TOCItem number="PART B" title="Privacy Policy" range="Clauses 25–49" color="#007BFF" />
+          <TOCItem number="PART B" title="Privacy Policy" range="Clauses 25–48" color="#007BFF" />
+          <TOCItem number="PART C" title="Cookie Policy" range="Clauses 49–59" color="#9C27B0" />
           <TOCItem number="ANNEX 1" title="Verification Lifecycle" range="" color="#4CAF50" />
           <TOCItem number="ANNEX 2" title="Contact Disclosure Principles" range="" color="#FF9800" />
           <TOCItem number="ANNEX 3" title="Privacy Request Route" range="" color="#9C27B0" />
@@ -251,7 +250,7 @@ export default function LegalPage() {
       <PartSection 
         id="part-b"
         title="PART B — PRIVACY POLICY"
-        subtitle="Clauses 25–49"
+        subtitle="Clauses 25–48"
         icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#007BFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>}
         color="#007BFF"
       >
@@ -430,13 +429,81 @@ export default function LegalPage() {
           "48.2 Published version should show effective date and maintain prior versions where useful for accountability.",
           "48.3 EHANI HOMES | support@ehani.co.ke | 1098-60200, Meru, Kenya | Website: ehani.co.ke."
         ]} />
+      </PartSection>
 
-        {/* 🆕 NEW: Clause 49 - Cookie Policy */}
-        <Clause number="49" title="COOKIE POLICY" content={[
-          "49.1 What are Cookies: Cookies are small text files stored on your device when you visit our Platform. We use them to keep you logged in, secure the site, and understand how you use our services.",
-          "49.2 Types of Cookies We Use: (a) Essential Cookies: Required for the Platform to function (e.g., session security, login status). (b) Analytics Cookies: We use tools like Google Analytics to understand traffic and improve the Platform. (c) Security Cookies: Used by Cloudflare to protect against bots and malicious attacks.",
-          "49.3 Your Consent: By using the Platform, you consent to the use of cookies as described. You can manage or withdraw consent via the cookie banner on our site or by adjusting your browser settings.",
-          "49.4 Impact of Declining: If you choose to decline non-essential cookies, some features of the Platform may not function optimally."
+      {/* 🆕 PART C - Cookie Policy */}
+      <PartSection 
+        id="part-c"
+        title="PART C — COOKIE POLICY"
+        subtitle="Clauses 49–59"
+        icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9C27B0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>}
+        color="#9C27B0"
+      >
+        <Clause number="49" title="INTRODUCTION" content={[
+          "49.1 This Cookie Policy explains how EHANI HOMES (“Ehani Homes”, “we”, “us” or “our”) uses cookies and similar technologies when you visit https://ehani.co.ke, use our accommodation marketplace, or interact with related website features.",
+          "49.2 It explains what these technologies are, why they may be used, and how you can manage your choices.",
+          "49.3 This Policy should be read together with the EHANI HOMES Privacy Policy and Terms of Service. If a cookie or similar technology processes information relating to an identified or identifiable person, the processing is also governed by applicable data-protection requirements."
+        ]} />
+
+        <Clause number="50" title="WHO OPERATES EHANI HOMES?" content={[
+          "50.1 EHANI HOMES is a registered business name operated by Eugene Larry Ososo, of 1098-60200, Meru, Kenya. The registered business name is not, by itself, a separate legal person.",
+          "50.2 Privacy and cookie enquiries: support@ehani.co.ke"
+        ]} />
+
+        <Clause number="51" title="WHAT ARE COOKIES AND SIMILAR TECHNOLOGIES?" content={[
+          "51.1 Cookies are small text files that a website may place on your browser or device. They can help a website remember a session, maintain security, recognise preferences or understand how its pages are used.",
+          "51.2 A cookie may be set by the website you visit (a first-party cookie) or by another service whose technology is embedded in the website (a third-party cookie).",
+          "51.3 “Similar technologies” may include browser local storage or session storage, pixels, tags, scripts, software development kits (SDKs), and other technologies that store information on, or access information from, your device. This Policy uses “cookies” as a convenient umbrella term unless a distinction is necessary."
+        ]} />
+
+        <Clause number="52" title="WHY WE MAY USE COOKIES" content={[
+          "52.1 Strictly necessary / essential technologies: These support functions needed for the website or a service you request—for example, maintaining a secure login session, protecting account access, routing requests, preventing abuse, or remembering a security-related state. They are not intended to be used for unrelated advertising.",
+          "52.2 Preferences and functionality: These may remember choices that improve usability, such as a display preference or a setting you have selected. We will use them only where they are deployed and appropriately disclosed.",
+          "52.3 Analytics and performance: If enabled, analytics technologies may help us understand aggregate or individual interaction patterns, such as pages visited, navigation errors, performance and the effectiveness of improvements. They must not be activated before the applicable consent or other lawful requirements are satisfied.",
+          "52.4 Advertising, targeting or social-media technologies: EHANI HOMES does not describe advertising or cross-site tracking cookies as active merely because such technologies are common online. If we introduce them, this Policy and the consent interface will be updated before deployment, and appropriate choices will be provided."
+        ]} />
+
+        <Clause number="53" title="COOKIE CATEGORIES AND USER CHOICES" content={[
+          "53.1 The live website presents a clear cookie preference mechanism where optional technologies are used. The categories below describe the intended choice structure.",
+          "53.2 Essential: Security, authentication, session continuity and core site operation. (Always active where strictly necessary; explained to users).",
+          "53.3 Preferences: Remember user-selected settings. (Optional where not strictly necessary; user choice).",
+          "53.4 Analytics: Measure use and improve performance. (Off by default until valid consent where required).",
+          "53.5 Marketing / targeting: Advertising, profiling or cross-site tracking, if ever deployed. (Off by default until valid consent; not currently asserted as active)."
+        ]} />
+
+        <Clause number="54" title="CONSENT AND PREFERENCE MANAGEMENT" content={[
+          "54.1 Where consent is required, EHANI HOMES will seek it before placing or using non-essential cookies or similar technologies. A consent request should be clear, specific, informed and freely given.",
+          "54.2 Users should be able to accept or reject optional categories with comparable ease, and change or withdraw their choices later through a clearly labelled “Cookie settings” or equivalent control.",
+          "54.3 Withdrawal should take effect for future use and should not affect the lawfulness of processing before withdrawal.",
+          "54.4 We will retain a proportionate record of consent choices where needed to demonstrate compliance.",
+          "54.5 Browser settings can also be used to block or delete cookies. Blocking essential cookies may prevent login, security functions or other parts of the platform from working correctly."
+        ]} />
+
+        <Clause number="55" title="COOKIES AND EHANI HOMES ACCOUNT FEATURES" content={[
+          "55.1 EHANI HOMES provides account registration, email verification and login features. The website and its authentication services may use session or security-related storage to maintain authentication state, protect sessions and support requested account functions.",
+          "55.2 A cookie or storage item does not itself verify a property, approve a listing, or determine whether a landlord is entitled to contact visibility. Those processes are governed by platform rules and administrative review."
+        ]} />
+
+        <Clause number="56" title="THIRD-PARTY SERVICES" content={[
+          "56.1 Some website functions may rely on third-party service providers. EHANI HOMES currently uses Supabase for database and email-verification functionality and Hosting.com for hosting; payment functionality is being integrated through KCB BUNI APIs.",
+          "56.2 These providers may process technical information necessary to deliver their services. We will identify third-party technologies that actually set or access cookies or similar identifiers, explain their purposes, and provide links to relevant provider information where appropriate."
+        ]} />
+
+        <Clause number="57" title="PERSONAL DATA, SECURITY AND RETENTION" content={[
+          "57.1 Cookie identifiers, device information, IP addresses, online activity or other technical information may constitute personal data when they relate to an identifiable person.",
+          "57.2 Where applicable, EHANI HOMES processes such information consistently with the Kenya Data Protection Act, 2019, applicable regulations, our Privacy Policy and relevant ODPC guidance.",
+          "57.3 We use appropriate technical and organisational safeguards for information processed through the website. Cookie and related data are retained only for the period reasonably necessary for their stated purpose."
+        ]} />
+
+        <Clause number="58" title="YOUR RIGHTS AND HOW TO CONTACT US" content={[
+          "58.1 Depending on the circumstances and applicable law, you may have rights concerning personal data processed through cookies or similar technologies, including rights to be informed, access, correction, deletion, objection, restriction or withdrawal of consent.",
+          "58.2 To ask a question, make a request or raise a concern about cookies, contact: EHANI HOMES | Email: support@ehani.co.ke | Address: 1098-60200, Meru, Kenya.",
+          "58.3 You may also raise a data-protection concern with the Office of the Data Protection Commissioner of Kenya. Contacting EHANI HOMES first is not a condition for exercising a right or making a complaint to the ODPC."
+        ]} />
+
+        <Clause number="59" title="CHANGES TO THIS COOKIE POLICY" content={[
+          "59.1 We may update this Policy when our website, technologies, legal obligations or processing practices change.",
+          "59.2 The “Last updated” date at the beginning will show when the latest version was issued. Material changes will be communicated through the website or another appropriate channel."
         ]} />
       </PartSection>
 
