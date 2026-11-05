@@ -28,8 +28,9 @@ export default function LegalPage() {
         <h1 style={{ fontSize: '42px', fontWeight: '800', color: '#1C1209', marginBottom: '16px', letterSpacing: '-1px' }}>
           Terms of Service & Privacy Policy
         </h1>
+        {/* 🆕 FIXED: Static date instead of dynamic daily date */}
         <p style={{ fontSize: '16px', color: '#6B5B4E', maxWidth: '600px', margin: '0 auto', lineHeight: '1.6' }}>
-          Last updated: {new Date().toLocaleDateString()} | SEARCH. SETTLE. STUDY.
+          Last updated: November 2026 | SEARCH. SETTLE. STUDY.
         </p>
         <p style={{ fontSize: '14px', color: '#999', marginTop: '12px' }}>
           EHANI HOMES | 1098-60200, Meru, Kenya
@@ -44,7 +45,8 @@ export default function LegalPage() {
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
           <TOCItem number="PART A" title="Terms of Service" range="Clauses 1–24" color="#D4873A" />
-          <TOCItem number="PART B" title="Privacy Policy" range="Clauses 25–48" color="#007BFF" />
+          {/* 🆕 UPDATED: Reflects the new Clause 49 */}
+          <TOCItem number="PART B" title="Privacy Policy" range="Clauses 25–49" color="#007BFF" />
           <TOCItem number="ANNEX 1" title="Verification Lifecycle" range="" color="#4CAF50" />
           <TOCItem number="ANNEX 2" title="Contact Disclosure Principles" range="" color="#FF9800" />
           <TOCItem number="ANNEX 3" title="Privacy Request Route" range="" color="#9C27B0" />
@@ -249,7 +251,7 @@ export default function LegalPage() {
       <PartSection 
         id="part-b"
         title="PART B — PRIVACY POLICY"
-        subtitle="Clauses 25–48"
+        subtitle="Clauses 25–49"
         icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#007BFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>}
         color="#007BFF"
       >
@@ -427,6 +429,14 @@ export default function LegalPage() {
           "48.1 Revise this Policy when practices, features, providers or law change. Communicate material changes reasonably and obtain new notice/consent where required.",
           "48.2 Published version should show effective date and maintain prior versions where useful for accountability.",
           "48.3 EHANI HOMES | support@ehani.co.ke | 1098-60200, Meru, Kenya | Website: ehani.co.ke."
+        ]} />
+
+        {/* 🆕 NEW: Clause 49 - Cookie Policy */}
+        <Clause number="49" title="COOKIE POLICY" content={[
+          "49.1 What are Cookies: Cookies are small text files stored on your device when you visit our Platform. We use them to keep you logged in, secure the site, and understand how you use our services.",
+          "49.2 Types of Cookies We Use: (a) Essential Cookies: Required for the Platform to function (e.g., session security, login status). (b) Analytics Cookies: We use tools like Google Analytics to understand traffic and improve the Platform. (c) Security Cookies: Used by Cloudflare to protect against bots and malicious attacks.",
+          "49.3 Your Consent: By using the Platform, you consent to the use of cookies as described. You can manage or withdraw consent via the cookie banner on our site or by adjusting your browser settings.",
+          "49.4 Impact of Declining: If you choose to decline non-essential cookies, some features of the Platform may not function optimally."
         ]} />
       </PartSection>
 
