@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import Footer from './components/footer'
 import SessionTimeout from './components/SessionTimeout' // Import the security component
+import CookieBanner from '@/components/CookieBanner' // Adjust path if needed
 
 // 🆕 NEW: SEO Metadata for Search Engines (Only works in Server Components)
 export const metadata: Metadata = {
