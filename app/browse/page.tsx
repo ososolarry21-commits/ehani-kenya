@@ -98,14 +98,14 @@ export default function BrowseListings() {
           zIndex: 100,
         }}
       >
-        {/* AESTHETIC LOGO */}
+        {/* 🆕 UPDATED: More descriptive alt text for SEO */}
         <div
           style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
           onClick={() => router.push('/')}
         >
           <img
             src="/logo.png"
-            alt="Ehani"
+            alt="Ehani Homes Logo - Verified Student Accommodation in Kenya"
             style={{
               height: '45px',
               width: 'auto',
@@ -125,6 +125,7 @@ export default function BrowseListings() {
               cursor: 'pointer',
               fontSize: 18,
             }}
+            aria-label="View saved listings"
           >
             ❤️
           </button>
@@ -209,6 +210,7 @@ export default function BrowseListings() {
               boxSizing: 'border-box',
               color: '#1C1209',
             }}
+            aria-label="Search listings by university, area, or name"
           />
 
           <button
@@ -226,6 +228,7 @@ export default function BrowseListings() {
               marginBottom: 12,
               transition: 'all 0.2s ease',
             }}
+            aria-expanded={showFilters}
           >
             {showFilters ? '✕ Hide Filters' : '⚙️ Show Filters'}
           </button>
@@ -252,6 +255,7 @@ export default function BrowseListings() {
                   color: '#1C1209',
                   boxSizing: 'border-box',
                 }}
+                aria-label="Filter by property type"
               >
                 <option value="">All Property Types</option>
                 <option>Bedsitter</option>
@@ -274,6 +278,7 @@ export default function BrowseListings() {
                   color: '#1C1209',
                   boxSizing: 'border-box',
                 }}
+                aria-label="Filter by gender preference"
               >
                 <option value="">All Genders</option>
                 <option>Mixed</option>
@@ -294,6 +299,7 @@ export default function BrowseListings() {
                   boxSizing: 'border-box',
                   color: '#1C1209',
                 }}
+                aria-label="Maximum price in Kenyan Shillings"
               />
             </div>
           )}
@@ -309,7 +315,7 @@ export default function BrowseListings() {
       <div style={{ padding: '20px', maxWidth: 1200, margin: '0 auto' }}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: 40, color: '#6B5B4E' }}>
-            <div style={{ fontSize: 32, marginBottom: 16 }}>⏳</div>
+            <div style={{ fontSize: 32, marginBottom: 16 }} aria-hidden="true">⏳</div>
             <div>Loading listings...</div>
           </div>
         ) : filteredListings.length === 0 ? (
@@ -321,7 +327,7 @@ export default function BrowseListings() {
               borderRadius: 16,
             }}
           >
-            <div style={{ fontSize: 64, marginBottom: 20 }}>🔍</div>
+            <div style={{ fontSize: 64, marginBottom: 20 }} aria-hidden="true">🔍</div>
             <h2 style={{ color: '#1C1209', marginBottom: 12, fontSize: 20 }}>
               No Listings Found
             </h2>
@@ -363,16 +369,20 @@ export default function BrowseListings() {
                   e.currentTarget.style.boxShadow =
                     '0 4px 20px rgba(0,0,0,0.06)';
                 }}
+                role="article"
+                aria-label={`View details for ${listing.name || 'Property'} in ${listing.area || 'Kenya'}`}
               >
-                <div
-                  style={{
-                    height: 200,
-                    background: listing.images?.[0]
-                      ? `url("${listing.images[0]}") center/cover`
-                      : 'linear-gradient(135deg, #D4873A, #E8B86D)',
-                    position: 'relative',
-                  }}
-                >
+                {/* 🆕 UPDATED: Replaced CSS background with real <img> tag for Alt Text & SEO */}
+                <div style={{ height: 200, position: 'relative', background: 'linear-gradient(135deg, #D4873A, #E8B86D)' }}>
+                  {listing.images?.[0] ? (
+                    <img 
+                      src={listing.images[0]} 
+                      alt={`${listing.name || 'Student accommodation'} - ${listing.type || 'Property'} in ${listing.area || 'Kenya'}`}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      loading="lazy"
+                    />
+                  ) : null}
+                  
                   <div
                     style={{
                       position: 'absolute',
@@ -387,10 +397,9 @@ export default function BrowseListings() {
                       backdropFilter: 'blur(4px)',
                     }}
                   >
-                    {listing.type}
+                    {listing.type || 'Property'}
                   </div>
                   
-                  {/* --- UPDATED TIER BADGES (Stacked neatly) --- */}
                   <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {listing.is_featured && (
                       <div style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)', color: 'white', padding: '4px 10px', borderRadius: 6, fontSize: 10, fontWeight: 800, boxShadow: '0 2px 10px rgba(245, 158, 11, 0.4)', width: 'fit-content' }}>
@@ -406,7 +415,6 @@ export default function BrowseListings() {
                 </div>
                 
                 <div style={{ padding: 16 }}>
-                  {/* --- BASIC WARNING BANNER --- */}
                   {!listing.is_verified && !listing.is_featured && (
                     <div style={{ background: '#FEF08A', color: '#854D0E', padding: '8px', borderRadius: 6, fontSize: 11, fontWeight: 'bold', marginBottom: 12, border: '1px solid #EAB308', textAlign: 'center' }}>
                       ⚠️ UNVERIFIED. Proceed with caution.
@@ -424,7 +432,7 @@ export default function BrowseListings() {
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {listing.name}
+                    {listing.name || 'Unnamed Property'}
                   </h3>
                   <p
                     style={{
@@ -433,7 +441,7 @@ export default function BrowseListings() {
                       color: '#6B5B4E',
                     }}
                   >
-                    📍 {listing.area}, {listing.city}
+                    📍 {listing.area || 'Unknown Area'}, {listing.city || 'Kenya'}
                   </p>
                   <div
                     style={{
@@ -450,7 +458,7 @@ export default function BrowseListings() {
                         color: '#D4873A',
                       }}
                     >
-                      KSh {listing.price?.toLocaleString()}
+                      KSh {listing.price?.toLocaleString() || '0'}
                     </div>
                     <div
                       style={{
@@ -461,11 +469,11 @@ export default function BrowseListings() {
                         borderRadius: 6,
                       }}
                     >
-                      {listing.gender}
+                      {listing.gender || 'Mixed'}
                     </div>
                   </div>
                   <div style={{ fontSize: 12, color: '#6B5B4E' }}>
-                    🎓 {listing.institution} • {listing.distance}
+                    🎓 {listing.institution || 'Nearby University'} • {listing.distance || 'Distance not specified'}
                   </div>
                 </div>
               </div>
