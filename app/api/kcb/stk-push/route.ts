@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     // 🆕 PRODUCTION ENV VARIABLES
     const consumerKey = process.env.KCB_BUNI_CONSUMER_KEY
     const consumerSecret = process.env.KCB_BUNI_CONSUMER_SECRET
-    const callbackUrl = process.env.KCB_BUNI_CALLBACK_URL || 'https://ehani.co.ke/api/kcb-callback'
+    const callbackUrl = process.env.KCB_BUNI_CALLBACK_URL || 'https://ehani.co.ke/api/kcb/callback'
 
     console.log('=== KCB STK PUSH DEBUG (PRODUCTION) ===')
     console.log('Keys present:', !!consumerKey, !!consumerSecret)
