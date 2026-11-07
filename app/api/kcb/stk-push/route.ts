@@ -37,9 +37,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing KCB environment variables' }, { status: 500, headers: corsHeaders })
     }
 
-    // 🆕 2. Generate Authentication Token (PRODUCTION URL)
+    // 🆕 2. Generate Authentication Token (MATCHING KCB DOCS CURL EXACTLY)
     const credentials = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64')
-    const tokenUrl = 'https://buni.kcbgroup.com/token'
+    
+    // Note: The KCB docs show grant_type in BOTH the URL and the body for the token endpoint
+    const tokenUrl = 'https://buni.kcbgroup.com/token?grant_type=client_credentials'
     
     const tokenRes = await fetch(tokenUrl, {
       method: 'POST',
@@ -55,10 +57,15 @@ export async function POST(request: Request) {
     try {
       tokenData = JSON.parse(tokenText)
     } catch (e) {
-      return NextResponse.json({ error: 'Token endpoint returned HTML', snippet: tokenText.substring(0, 100) }, { status: 500, headers: corsHeaders })
+      console.error('Token endpoint returned non-JSON:', tokenText)
+      return NextResponse.json({ 
+        error: 'Token endpoint returned HTML/Error page', 
+        snippet: tokenText.substring(0, 200) 
+      }, { status: 500, headers: corsHeaders })
     }
 
     if (!tokenRes.ok || !tokenData.access_token) {
+      console.error('KCB Auth Failed Details:', tokenData)
       return NextResponse.json({ error: 'KCB Auth Failed', details: tokenData }, { status: 401, headers: corsHeaders })
     }
 
@@ -98,10 +105,12 @@ export async function POST(request: Request) {
     try {
       stkData = JSON.parse(stkText)
     } catch (e) {
-      return NextResponse.json({ error: 'STK endpoint returned HTML', snippet: stkText.substring(0, 100) }, { status: 500, headers: corsHeaders })
+      console.error('STK endpoint returned non-JSON:', stkText)
+      return NextResponse.json({ error: 'STK endpoint returned HTML/Error page', snippet: stkText.substring(0, 200) }, { status: 500, headers: corsHeaders })
     }
 
     if (!stkRes.ok) {
+      console.error('STK Push Failed Details:', stkData)
       return NextResponse.json({ 
         error: stkData.header?.statusDescription || 'STK Failed',
         details: stkData
