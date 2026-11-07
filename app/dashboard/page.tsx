@@ -451,7 +451,7 @@ export default function Dashboard() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 220 }}>
                       <input type="tel" placeholder="M-Pesa Phone (e.g. 0712...)" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #DDD0C4', fontSize: 14, outline: 'none' }} />
                       {!listing.is_verified && !listing.verification_payment_received && (
-                        <KcbPaymentButton phoneNumber={phoneNumber} amount={500} tier="verified" listingId={listing.id} onSuccess={(ref: any) => handleStkPushSent(ref, listing.id, 'verified')} />
+                        <KcbPaymentButton phoneNumber={phoneNumber} amount={50} tier="verified" listingId={listing.id} onSuccess={(ref: any) => handleStkPushSent(ref, listing.id, 'verified')} />
                       )}
                       {!listing.is_featured && (
                         <KcbPaymentButton phoneNumber={phoneNumber} amount={1500} tier="featured" listingId={listing.id} onSuccess={(ref: any) => handleStkPushSent(ref, listing.id, 'featured')} />
