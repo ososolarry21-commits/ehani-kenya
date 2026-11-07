@@ -2,13 +2,12 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { Buffer } from 'buffer';
 
-// Initialize Supabase client
+// Initialize Supabase client (Service Role Key is required for backend updates)
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 )
 
-// Define CORS headers to attach to ALL responses
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -24,23 +23,23 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { phoneNumber, amount, invoiceNumber } = body
 
-    const consumerKey = process.env.KCB_CONSUMER_KEY
-    const consumerSecret = process.env.KCB_CONSUMER_SECRET
-    const callbackUrl = process.env.KCB_CALLBACK_URL || 'https://ehani.co.ke/api/kcb-callback'
+    // 🆕 PRODUCTION ENV VARIABLES
+    const consumerKey = process.env.KCB_BUNI_CONSUMER_KEY
+    const consumerSecret = process.env.KCB_BUNI_CONSUMER_SECRET
+    const callbackUrl = process.env.KCB_BUNI_CALLBACK_URL || 'https://ehani.co.ke/api/kcb-callback'
 
-    console.log('=== KCB STK PUSH DEBUG ===')
+    console.log('=== KCB STK PUSH DEBUG (PRODUCTION) ===')
     console.log('Keys present:', !!consumerKey, !!consumerSecret)
     console.log('Callback:', callbackUrl)
     console.log('Raw Phone:', phoneNumber, 'Amount:', amount, 'Invoice:', invoiceNumber)
 
-    // 1. Check for keys
     if (!consumerKey || !consumerSecret) {
       return NextResponse.json({ error: 'Missing KCB environment variables' }, { status: 500, headers: corsHeaders })
     }
 
-    // 2. Generate Authentication Token
+    // 🆕 2. Generate Authentication Token (PRODUCTION URL)
     const credentials = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64')
-    const tokenUrl = 'https://accounts.buni.kcbgroup.com/oauth2/token'
+    const tokenUrl = 'https://buni.kcbgroup.com/token'
     
     const tokenRes = await fetch(tokenUrl, {
       method: 'POST',
@@ -63,10 +62,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'KCB Auth Failed', details: tokenData }, { status: 401, headers: corsHeaders })
     }
 
-    // 3. Format Payload (UPDATED per KCB instructions)
-    // KCB requires: TillNumber-Reference (NO spaces around the hyphen)
-    // Example output: 8151420-EHANI-REF12345
-    const formattedInvoice = `8151420-${invoiceNumber}`
+    // 🆕 3. Format Payload (Using KCB's Shared Paybill 522533 per document intro)
+    // Format required: KCBTILLNO-YOURACCREF (e.g., 522533-EH492B)
+    const formattedInvoice = `522533-${invoiceNumber}`
     
     let cleanPhone = String(phoneNumber).replace(/[\s\-\+]/g, '');
     if (cleanPhone.startsWith('0')) cleanPhone = cleanPhone.substring(1);
@@ -75,17 +73,16 @@ export async function POST(request: Request) {
     const stkPayload = {
       phoneNumber: formattedPhone,
       amount: amount.toString(),
-      invoiceNumber: formattedInvoice, // Strictly Till-Reference format
-      sharedShortCode: true,
+      invoiceNumber: formattedInvoice, 
+      sharedShortCode: true, // Mandatory per KCB docs for shared paybill
       orgShortCode: '',
       orgPassKey: '',
-      transactionDescription: 'Ehani Homes Verification', // UPDATED to match KCB's exact example
+      transactionDescription: 'Ehani Homes Verification',
       callbackUrl: callbackUrl,
     }
 
-    // 4. Send STK Push (Currently set to UAT for final testing before Go-Live)
-    // NOTE: Once KCB provides PROD keys, change this URL to: 'https://buni.kcbgroup.com/mm/api/request/1.0.0'
-    const stkUrl = 'https://uat.buni.kcbgroup.com/mm/api/request/1.0.0/stkpush'
+    // 🆕 4. Send STK Push (PRODUCTION URL)
+    const stkUrl = 'https://buni.kcbgroup.com/mm/api/request/1.0.0/stkpush'
     
     const stkRes = await fetch(stkUrl, {
       method: 'POST',
@@ -111,7 +108,7 @@ export async function POST(request: Request) {
       }, { status: stkRes.status, headers: corsHeaders })
     }
 
-    // 5. Update Supabase
+    // 5. Update Supabase (Mark as pending until callback confirms)
     const { error: dbError } = await supabase
       .from('listings')
       .update({ 
