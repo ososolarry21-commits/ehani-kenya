@@ -1,79 +1,62 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// Initialize Supabase client
-// Note: For backend webhooks, it's often best to use the SUPABASE_SERVICE_ROLE_KEY 
-// to bypass Row Level Security, but the ANON_KEY works if your RLS policies allow it.
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 )
 
 export async function POST(request: Request) {
   try {
-    const data = await request.json()
+    const body = await request.json()
     console.log('=== KCB CALLBACK RECEIVED ===')
-    console.log(JSON.stringify(data, null, 2))
+    console.log(JSON.stringify(body, null, 2))
 
-    const stkCallback = data.Body?.stkCallback
-
+    const stkCallback = body.Body?.stkCallback
     if (!stkCallback) {
-      console.error('Invalid callback payload')
-      return NextResponse.json({ status: 'failed', message: 'Invalid callback payload' }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid callback payload' }, { status: 400 })
     }
 
-    const { MerchantRequestID, CheckoutRequestID, ResultCode, ResultDesc } = stkCallback
+    const { ResultCode, ResultDesc, CheckoutRequestID, CallbackMetadata } = stkCallback
 
-    console.log('Result Code:', ResultCode)
-    console.log('Result Desc:', ResultDesc)
-    console.log('CheckoutRequestID:', CheckoutRequestID)
+    // Find the listing using the CheckoutRequestID we saved during the STK push
+    const { data: listing, error: fetchError } = await supabase
+      .from('listings')
+      .select('id')
+      .eq('checkout_request_id', CheckoutRequestID)
+      .single()
 
-    // ResultCode 0 = SUCCESS (per KCB Spec)
+    if (fetchError || !listing) {
+      console.error('Listing not found for CheckoutRequestID:', CheckoutRequestID)
+      // Still return 200 to KCB so they stop retrying
+      return NextResponse.json({ ResultCode: 0, ResultDesc: 'Accepted' }) 
+    }
+
     if (ResultCode === 0) {
-      const metadata = stkCallback.CallbackMetadata?.Item || []
-      
-      // Extract details from the metadata array
-      const mpesaReceipt = metadata.find((item: any) => item.Name === 'MpesaReceiptNumber')?.Value
-      const amount = metadata.find((item: any) => item.Name === 'Amount')?.Value
-      const phoneNumber = metadata.find((item: any) => item.Name === 'PhoneNumber')?.Value
+      // ✅ Payment Successful
+      const receiptItem = CallbackMetadata?.Item?.find((item: any) => item.Name === 'MpesaReceiptNumber')
 
-      console.log('✅ Payment Success!')
-      console.log('Receipt:', mpesaReceipt)
-      console.log('Amount:', amount)
-      console.log('Phone:', phoneNumber)
-
-      // 🆕 Update the database using your EXACT column names
-      const { error: updateError } = await supabase
-        .from('listings')
-        .update({ 
-          verification_payment_received: true,       // Sets the boolean to TRUE
-          verification_receipt: mpesaReceipt         // Saves the M-Pesa code (e.g., UJH8BAT68E)
-        })
-        .eq('checkout_request_id', CheckoutRequestID) // Matches the ID we saved during STK Push
-
-      if (updateError) {
-        console.error('❌ Failed to update database:', updateError)
-        return NextResponse.json({ status: 'error', message: 'Database update failed' }, { status: 500 })
-      }
-
-      console.log('✅ Database updated successfully for CheckoutRequestID:', CheckoutRequestID)
-      return NextResponse.json({ status: 'success', message: 'Payment verified and database updated' })
-      
-    } else {
-      // Handle failures (e.g., User cancelled, Insufficient funds)
-      console.log(`❌ Payment Failed: ${ResultDesc}`)
-      
-      // Optional: You can update the DB to reflect a failed attempt if you want
       await supabase
         .from('listings')
-        .update({ verification_payment_received: false })
-        .eq('checkout_request_id', CheckoutRequestID)
-
-      return NextResponse.json({ status: 'failed', message: ResultDesc })
+        .update({ 
+          verification_payment_received: true,
+          mpesa_receipt_number: receiptItem?.Value || null,
+          status: 'Pending Admin Approval' // Triggers the next step in your workflow
+        })
+        .eq('id', listing.id)
+      
+      console.log(`✅ Payment successful for listing ${listing.id}`)
+    } else {
+      // ❌ Payment Failed or Cancelled (e.g., ResultCode 1032 = Cancelled by user)
+      console.log(`❌ Payment failed for listing ${listing.id}: ${ResultDesc}`)
+      // We leave verification_payment_received as false so the landlord can retry
     }
 
+    // KCB expects a 200 OK response to acknowledge receipt of the callback
+    return NextResponse.json({ ResultCode: 0, ResultDesc: 'Accepted' })
+
   } catch (error: any) {
-    console.error('💥 Callback Error:', error)
-    return NextResponse.json({ status: 'error', message: error.message }, { status: 500 })
+    console.error('💥 CALLBACK CRASH:', error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
