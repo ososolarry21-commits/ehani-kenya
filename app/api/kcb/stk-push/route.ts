@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     // 'uat.buni.kcbgroup.com'. We are using the production domain, but the structure 
     // (URL param + body) matches their curl command exactly.
     const credentials = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64')
-    const tokenUrl = 'https://buni.kcbgroup.com/token?grant_type=client_credentials'
+    const tokenUrl = 'https://uat.buni.kcbgroup.com/token?grant_type=client_credentials'
     
     const tokenRes = await fetch(tokenUrl, {
       method: 'POST',
