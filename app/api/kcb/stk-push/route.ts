@@ -20,8 +20,7 @@ export async function OPTIONS(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    // invoiceNumber here is actually the Listing ID passed from frontend
-    const { phoneNumber, amount, invoiceNumber: listingId } = body 
+    const { phoneNumber, amount, invoiceNumber } = body 
 
     const consumerKey = process.env.KCB_BUNI_CONSUMER_KEY
     const consumerSecret = process.env.KCB_BUNI_CONSUMER_SECRET
@@ -51,7 +50,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'KCB Auth Failed' }, { status: 401 })
     }
 
-    // 🆕 FIX 1: Generate a short, clean reference code (e.g., EH293847)
     const shortRef = 'EH' + Math.floor(100000 + Math.random() * 900000);
     const formattedInvoice = `522533-${shortRef}`;
     
@@ -62,7 +60,7 @@ export async function POST(request: Request) {
     const stkPayload = {
       phoneNumber: formattedPhone,
       amount: amount.toString(),
-      invoiceNumber: formattedInvoice, // Sends short code to M-Pesa
+      invoiceNumber: formattedInvoice, 
       sharedShortCode: true,
       orgShortCode: '',
       orgPassKey: '',
@@ -89,18 +87,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: stkData.header?.statusDescription || 'STK Failed' }, { status: stkRes.status })
     }
 
-    // 🆕 FIX 2: Save the MerchantRequestID instead of CheckoutRequestID
-    // The MerchantRequestID is always a valid string, whereas CheckoutRequestID can be boolean false
     const merchantId = stkData.response?.MerchantRequestID;
 
     if (merchantId) {
+      // 🆕 FIX: Strip the "verified-" prefix from the invoiceNumber so it matches the UUID in the DB
+      let cleanListingId = invoiceNumber;
+      if (cleanListingId && cleanListingId.startsWith('verified-')) {
+          cleanListingId = cleanListingId.replace('verified-', '');
+      }
+
       const { error: dbError } = await supabase
         .from('listings')
         .update({ 
           verification_payment_received: false, 
-          checkout_request_id: merchantId // We store MerchantID here for reliable matching
+          checkout_request_id: merchantId 
         })
-        .eq('id', listingId)
+        .eq('id', cleanListingId)
 
       if (dbError) console.error('DB Error:', dbError)
     }
@@ -108,7 +110,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ 
       success: true, 
       message: 'STK Push sent successfully',
-      reference: formattedInvoice // Send short code back to frontend if needed
+      reference: formattedInvoice 
     }, { headers: corsHeaders })
 
   } catch (error: any) {
