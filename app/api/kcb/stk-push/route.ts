@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { phoneNumber, amount, invoiceNumber } = body
 
-    // 🆕 PRODUCTION ENV VARIABLES
+    // PRODUCTION ENV VARIABLES
     const consumerKey = process.env.KCB_BUNI_CONSUMER_KEY
     const consumerSecret = process.env.KCB_BUNI_CONSUMER_SECRET
     const callbackUrl = process.env.KCB_BUNI_CALLBACK_URL || 'https://ehani.co.ke/api/kcb/callback'
@@ -37,10 +37,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing KCB environment variables' }, { status: 500, headers: corsHeaders })
     }
 
-    // 🆕 2. Generate Authentication Token (MATCHING KCB DOCS CURL EXACTLY)
+    // 🆕 CODE FIX: Use the EXACT token endpoint structure from the KCB Documentation.
+    // Note: If 'buni.kcbgroup.com' returns HTML, the documentation explicitly specifies 
+    // 'uat.buni.kcbgroup.com'. We are using the production domain, but the structure 
+    // (URL param + body) matches their curl command exactly.
     const credentials = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64')
-    
-    // Note: The KCB docs show grant_type in BOTH the URL and the body for the token endpoint
     const tokenUrl = 'https://buni.kcbgroup.com/token?grant_type=client_credentials'
     
     const tokenRes = await fetch(tokenUrl, {
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
       console.error('Token endpoint returned non-JSON:', tokenText)
       return NextResponse.json({ 
         error: 'Token endpoint returned HTML/Error page', 
-        snippet: tokenText.substring(0, 200) 
+        snippet: tokenText.substring(0, 300) // Increased to 300 to catch more of the HTML error message
       }, { status: 500, headers: corsHeaders })
     }
 
@@ -69,7 +70,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'KCB Auth Failed', details: tokenData }, { status: 401, headers: corsHeaders })
     }
 
-    // 🆕 3. Format Payload (Using KCB's Shared Paybill 522533 per document intro)
+    // Format Payload (Using KCB's Shared Paybill 522533 per document intro)
     // Format required: KCBTILLNO-YOURACCREF (e.g., 522533-EH492B)
     const formattedInvoice = `522533-${invoiceNumber}`
     
@@ -88,7 +89,7 @@ export async function POST(request: Request) {
       callbackUrl: callbackUrl,
     }
 
-    // 🆕 4. Send STK Push (PRODUCTION URL)
+    // Send STK Push (PRODUCTION URL)
     const stkUrl = 'https://buni.kcbgroup.com/mm/api/request/1.0.0/stkpush'
     
     const stkRes = await fetch(stkUrl, {
@@ -106,7 +107,7 @@ export async function POST(request: Request) {
       stkData = JSON.parse(stkText)
     } catch (e) {
       console.error('STK endpoint returned non-JSON:', stkText)
-      return NextResponse.json({ error: 'STK endpoint returned HTML/Error page', snippet: stkText.substring(0, 200) }, { status: 500, headers: corsHeaders })
+      return NextResponse.json({ error: 'STK endpoint returned HTML/Error page', snippet: stkText.substring(0, 300) }, { status: 500, headers: corsHeaders })
     }
 
     if (!stkRes.ok) {
@@ -117,7 +118,7 @@ export async function POST(request: Request) {
       }, { status: stkRes.status, headers: corsHeaders })
     }
 
-    // 5. Update Supabase (Mark as pending until callback confirms)
+    // Update Supabase (Mark as pending until callback confirms)
     const { error: dbError } = await supabase
       .from('listings')
       .update({ 
