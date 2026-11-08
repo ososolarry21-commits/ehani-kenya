@@ -37,12 +37,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing KCB environment variables' }, { status: 500, headers: corsHeaders })
     }
 
-    // 🆕 CODE FIX: Use the EXACT token endpoint structure from the KCB Documentation.
-    // Note: If 'buni.kcbgroup.com' returns HTML, the documentation explicitly specifies 
-    // 'uat.buni.kcbgroup.com'. We are using the production domain, but the structure 
-    // (URL param + body) matches their curl command exactly.
+    // 🆕 CODE FIX: Using the EXACT Token Endpoint from your KCB Portal Screenshot
     const credentials = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64')
-    const tokenUrl = 'https://uat.buni.kcbgroup.com/token?grant_type=client_credentials'
+    const tokenUrl = 'https://api.buni.kcbgroup.com/token'
     
     const tokenRes = await fetch(tokenUrl, {
       method: 'POST',
@@ -61,7 +58,7 @@ export async function POST(request: Request) {
       console.error('Token endpoint returned non-JSON:', tokenText)
       return NextResponse.json({ 
         error: 'Token endpoint returned HTML/Error page', 
-        snippet: tokenText.substring(0, 300) // Increased to 300 to catch more of the HTML error message
+        snippet: tokenText.substring(0, 300) 
       }, { status: 500, headers: corsHeaders })
     }
 
@@ -90,7 +87,7 @@ export async function POST(request: Request) {
     }
 
     // Send STK Push (PRODUCTION URL)
-    const stkUrl = 'https://buni.kcbgroup.com/mm/api/request/1.0.0/stkpush'
+    const stkUrl = 'https://api.buni.kcbgroup.com/mm/api/request/1.0.0/stkpush'
     
     const stkRes = await fetch(stkUrl, {
       method: 'POST',
