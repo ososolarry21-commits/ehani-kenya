@@ -50,8 +50,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'KCB Auth Failed' }, { status: 401 })
     }
 
-    const shortRef = 'EH' + Math.floor(100000 + Math.random() * 900000);
-    const formattedInvoice = `EHANI-${shortRef}`;
+        // 🆕 FIX: Generate a purely numeric reference code (e.g., 522533-12345678)
+    // Banks often reject account numbers with letters.
+    const shortRef = Math.floor(10000000 + Math.random() * 90000000).toString(); 
+    const formattedInvoice = `522533-${shortRef}`;
     
     let cleanPhone = String(phoneNumber).replace(/[\s\-\+]/g, '');
     if (cleanPhone.startsWith('0')) cleanPhone = cleanPhone.substring(1);
