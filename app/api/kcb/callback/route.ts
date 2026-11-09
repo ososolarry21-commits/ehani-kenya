@@ -19,10 +19,10 @@ export async function POST(request: Request) {
 
     const { ResultCode, ResultDesc, MerchantRequestID, CallbackMetadata } = stkCallback
 
-    // 🆕 FIX: Look up using MerchantRequestID (which we saved in the STK step)
+    // Look up using MerchantRequestID
     const { data: listing, error: fetchError } = await supabase
       .from('listings')
-      .select('id')
+      .select('id, status')
       .eq('checkout_request_id', MerchantRequestID)
       .single()
 
@@ -35,12 +35,13 @@ export async function POST(request: Request) {
       // ✅ Payment Successful
       const receiptItem = CallbackMetadata?.Item?.find((item: any) => item.Name === 'MpesaReceiptNumber')
 
+      // 🆕 FIX: Set status to 'Pending Verification' so the Admin Panel shows the "Assign Agent" button
       await supabase
         .from('listings')
         .update({ 
           verification_payment_received: true,
           verification_receipt: receiptItem?.Value || null,
-          status: 'Pending Admin Approval' 
+          status: 'Pending Verification' 
         })
         .eq('id', listing.id)
       
