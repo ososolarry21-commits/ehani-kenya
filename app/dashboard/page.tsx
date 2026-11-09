@@ -258,7 +258,7 @@ export default function Dashboard() {
   }
 
   function handleStkPushSent(checkoutRequestId: string, listingId: string, tier: string) {
-    const tierName = tier === 'verified' ? 'Verification (KSh 10)' : 'Featured (KSh 1500)' 
+    const tierName = tier === 'verified' ? 'Verification (KSh 500)' : 'Featured (KSh 1500)' 
     alert(`M-Pesa prompt sent for ${tierName}! Please check your phone (${phoneNumber}) to enter your PIN.`)
   }
 
@@ -431,9 +431,25 @@ export default function Dashboard() {
                 </div>
                 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                  <span style={{ padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 600, background: listing.status === 'approved' || listing.status === 'Verified' ? '#D4EDDA' : listing.status === 'pending' || listing.status === 'Pending Admin Approval' ? '#FFF3CD' : '#F8D7DA', color: listing.status === 'approved' || listing.status === 'Verified' ? '#155724' : listing.status === 'pending' || listing.status === 'Pending Admin Approval' ? '#856404' : '#721C24' }}>
-                    {listing.status === 'approved' || listing.status === 'Verified' ? 'Approved' : listing.status === 'pending' || listing.status === 'Pending Admin Approval' ? 'Pending' : 'Rejected'}
-                  </span>
+                  
+                  {/* 🆕 UPDATED: Smart Status Badge Logic */}
+                  {(() => {
+                    let bg = '#F8D7DA', color = '#721C24', text = 'Rejected';
+                    if (listing.status === 'approved' || listing.status === 'Verified') {
+                      bg = '#D4EDDA'; color = '#155724'; text = 'Approved';
+                    } else if (listing.status === 'pending' || listing.status === 'Pending Admin Approval') {
+                      bg = '#FFF3CD'; color = '#856404'; text = 'Pending Approval';
+                    } else if (listing.status === 'Pending Verification') {
+                      bg = '#E3F2FD'; color = '#1976D2'; text = 'Payment Received - Awaiting Agent';
+                    } else if (listing.status === 'Rejected' || listing.is_rejected || listing.rejected) {
+                      bg = '#F8D7DA'; color = '#721C24'; text = 'Rejected';
+                    }
+                    return (
+                      <span style={{ padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 600, background: bg, color: color }}>
+                        {text}
+                      </span>
+                    );
+                  })()}
                   
                   {listing.is_verified && (
                     <span style={{ background: 'linear-gradient(135deg, #007BFF, #0056b3)', color: 'white', padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 700 }}>✓ VERIFIED</span>
@@ -443,15 +459,11 @@ export default function Dashboard() {
                     <span style={{ background: 'linear-gradient(135deg, #FFD700, #FFA500)', color: '#1C1209', padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 700 }}>⭐ FEATURED</span>
                   )}
                   
-                  {listing.verification_payment_received && !listing.is_verified && (
-                    <span style={{ background: '#E3F2FD', color: '#1976D2', padding: '6px 14px', borderRadius: 6, fontSize: 11, fontWeight: 600 }}>💰 Verification Payment Received - Awaiting Agent</span>
-                  )}
-                  
-                  { (listing.status === 'approved' || listing.status === 'Verified') && (!listing.is_verified || !listing.is_featured) && (
+                  { (listing.status === 'approved' || listing.status === 'Verified' || listing.status === 'Pending Verification') && (!listing.is_verified || !listing.is_featured) && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 220 }}>
                       <input type="tel" placeholder="M-Pesa Phone (e.g. 0712...)" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #DDD0C4', fontSize: 14, outline: 'none' }} />
                       {!listing.is_verified && !listing.verification_payment_received && (
-                        <KcbPaymentButton phoneNumber={phoneNumber} amount={10} tier="verified" listingId={listing.id} onSuccess={(ref: any) => handleStkPushSent(ref, listing.id, 'verified')} />
+                        <KcbPaymentButton phoneNumber={phoneNumber} amount={500} tier="verified" listingId={listing.id} onSuccess={(ref: any) => handleStkPushSent(ref, listing.id, 'verified')} />
                       )}
                       {!listing.is_featured && (
                         <KcbPaymentButton phoneNumber={phoneNumber} amount={1500} tier="featured" listingId={listing.id} onSuccess={(ref: any) => handleStkPushSent(ref, listing.id, 'featured')} />
