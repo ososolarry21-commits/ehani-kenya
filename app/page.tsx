@@ -1,6 +1,7 @@
 'use client'
 import { createClient } from '@supabase/supabase-js'
 import { useState } from 'react'
+import Link from 'next/link' // 🆕 Added Link for better Next.js routing
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -237,10 +238,18 @@ export default function Home() {
               </div>
             )}
 
-            <div style={{ textAlign: 'center', marginBottom: 20 }}>
+            <div style={{ textAlign: 'center', marginBottom: 12 }}>
               <button onClick={() => setShowReset(true)} style={{ background: 'transparent', border: 'none', color: '#6B5B4E', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>
                 Forgot Password?
               </button>
+            </div>
+
+            {/* 🆕 NEW: Guest Browsing Option - Solves the UX Flaw! */}
+            <div style={{ textAlign: 'center', marginBottom: 20, padding: '12px', background: '#FDF8F3', borderRadius: 8 }}>
+              <Link href="/browse" style={{ color: '#D4873A', textDecoration: 'none', fontSize: 14, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                Just browsing? View listings without an account
+              </Link>
             </div>
 
             <div style={{ borderTop: '1px solid #E0D8D0', paddingTop: 20, textAlign: 'center' }}>
