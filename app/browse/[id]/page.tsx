@@ -79,7 +79,16 @@ export default function ListingDetails() {
     }
   }
 
+  // 🆕 UPDATED: The Conversion Gate
   const handleContactClick = () => {
+    // 1. Check if user is logged in FIRST
+    if (!user) {
+      alert("Please log in or create a free account to view the landlord's contact information.")
+      router.push('/') // Redirects to your sleek login page
+      return
+    }
+    
+    // 2. If logged in, proceed with existing logic
     if (!listing.is_verified) {
       setShowContact(true)
       return
@@ -138,7 +147,7 @@ export default function ListingDetails() {
 
   return (
     <>
-      {/* 🆕 AEO: JSON-LD Schema for Real Estate Listing */}
+      {/* AEO: JSON-LD Schema for Real Estate Listing */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -223,7 +232,7 @@ export default function ListingDetails() {
               ) : null;
             })()}
             
-            {/* UPDATED BADGES */}
+            {/* BADGES */}
             <div style={{ position: 'absolute', top: 16, left: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
               {listing.is_featured && (
                 <span style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)', color: 'white', padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 800, boxShadow: '0 2px 10px rgba(245, 158, 11, 0.4)', width: 'fit-content' }}>
@@ -305,7 +314,6 @@ export default function ListingDetails() {
                 </div>
               )}
 
-              {/* 🆕 NEW: Reviews Section */}
               <ReviewsSection listingId={id as string} currentUser={user} />
             </div>
 
@@ -416,17 +424,17 @@ export default function ListingDetails() {
                       </button>
                       
                       {landlord?.email && (
-  <button 
-    onClick={() => {
-      const emailSubject = encodeURIComponent(`Inquiry about ${listing.name}`)
-      const emailBody = encodeURIComponent(`Hi, I'm interested in ${listing.name} located in ${listing.area}, ${listing.city}.\n\nPrice: KSh ${listing.price?.toLocaleString()}/month\n\nPlease provide more information.\n\nThank you!`)
-      window.open(`mailto:${landlord.email}?subject=${emailSubject}&body=${emailBody}`, '_blank')
-    }}
-    style={{ width: '100%', padding: '12px', background: 'white', color: '#007BFF', border: '2px solid #007BFF', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}
-  >
-    ✉️ Send Email
-  </button>
-)}
+                        <button 
+                          onClick={() => {
+                            const emailSubject = encodeURIComponent(`Inquiry about ${listing.name}`)
+                            const emailBody = encodeURIComponent(`Hi, I'm interested in ${listing.name} located in ${listing.area}, ${listing.city}.\n\nPrice: KSh ${listing.price?.toLocaleString()}/month\n\nPlease provide more information.\n\nThank you!`)
+                            window.open(`mailto:${landlord.email}?subject=${emailSubject}&body=${emailBody}`, '_blank')
+                          }}
+                          style={{ width: '100%', padding: '12px', background: 'white', color: '#007BFF', border: '2px solid #007BFF', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}
+                        >
+                          ✉️ Send Email
+                        </button>
+                      )}
                     </div>
                   )
                 )}
