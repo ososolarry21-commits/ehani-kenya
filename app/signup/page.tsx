@@ -252,9 +252,9 @@ export default function SignupPage() {
             </div>
           )}
 
-          {/* Back to Login Link */}
+          {/* 🆕 UPDATED: Back to Login Link in Brand Orange */}
           <div style={{ textAlign: 'center', borderTop: '1px solid #E0D8D0', paddingTop: 16 }}>
-            <Link href="/" style={{ color: '#6B5B4E', textDecoration: 'none', fontSize: 13, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <Link href="/" style={{ color: '#D4873A', textDecoration: 'none', fontSize: 13, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
               Already have an account? Log in
             </Link>
