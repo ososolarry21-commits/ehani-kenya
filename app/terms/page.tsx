@@ -69,7 +69,7 @@ export default function LegalPage() {
         ]} />
 
         <Clause number="2" title="LEGAL IDENTITY AND PLATFORM ROLE" content={[
-          "2.1 EHANI HOMES is a registered business name operated by Eugene Larry Ososo, of 1098-60200, Meru, Kenya. Hereinafter referred to as \"Ehani\", \"we\", \"us\" or \"our\"",
+          "2.1 EHANI HOMES is a registered business name operated by Eugene Larry Ososo, of 1098-60200, Meru, Kenya. Hereinafter referred to as \"Ehani\", \"we\", \"us\" or \"our\".",
           "2.2 Ehani operates a digital accommodation-discovery marketplace. Providers submit listings; students discover listings and may access authorised contact information when applicable conditions are met.",
           "2.3 Ehani is not the owner of every advertised property, a tenancy party, property manager, letting agent, rent/deposit intermediary, guarantor, conveyancing service or government inspection authority.",
           "2.4 Ehani does not receive or hold rent or tenancy deposits, negotiate tenancy terms, execute tenancy agreements, guarantee accommodation or arrange meetings between students and providers. Users communicate, inspect, negotiate and contract independently."
@@ -174,7 +174,7 @@ export default function LegalPage() {
           "14.3 Users should document agreements and seek legal/institutional guidance as needed. Platform moderation is not a court, tribunal, police or regulator."
         ]} />
 
-               <Clause number="15" title="FEES, PAYMENT PROCESSING AND REFUNDS" content={[
+        <Clause number="15" title="FEES, PAYMENT PROCESSING AND REFUNDS" content={[
           "15.1 Platform fees relate to Ehani services such as verification/renewal and are separate from rent, deposits and utility charges.",
           "15.2 Ehani currently uses KCB Buni APIs for M-Pesa payment processing and a KCB business bank account for settlement, subject to configuration changes.",
           "15.3 Ehani may receive transaction reference, amount, status, timestamp and reconciliation information. Payment credentials should be handled by providers; Ehani should not store full authentication credentials.",
@@ -338,7 +338,7 @@ export default function LegalPage() {
         ]} />
 
         <Clause number="36" title="PROCESSORS AND SERVICE PROVIDERS" content={[
-          "36.1 Current providers: Hosting.com (hosting), Supabase (database/email verification), KCB Buni APIs (M-Pesa), and KCB business banking (settlement).",
+          "36.1 Current providers: Vercel Inc. (hosting), Supabase (database/email verification), KCB Buni APIs (M-Pesa), and KCB business banking (settlement).",
           "36.2 Roles vary by activity. Identify processor functions, document instructions, execute written terms where required, assess subprocessors and monitor material changes.",
           "36.3 Contracts/settings should address confidentiality, security, access, incident notification, rights assistance, deletion/return, audit information, subprocessors and transfer safeguards.",
           "36.4 Providers may independently process data for law, fraud prevention, security or payment/banking obligations under their notices."
@@ -431,7 +431,7 @@ export default function LegalPage() {
         ]} />
       </PartSection>
 
-      {/* 🆕 PART C - Cookie Policy */}
+      {/* PART C - Cookie Policy */}
       <PartSection 
         id="part-c"
         title="PART C — COOKIE POLICY"
@@ -485,7 +485,7 @@ export default function LegalPage() {
         ]} />
 
         <Clause number="56" title="THIRD-PARTY SERVICES" content={[
-          "56.1 Some website functions may rely on third-party service providers. EHANI HOMES currently uses Supabase for database and email-verification functionality and Hosting.com for hosting; payment functionality is being integrated through KCB BUNI APIs.",
+          "56.1 Some website functions may rely on third-party service providers. EHANI HOMES currently uses Supabase for database and email-verification functionality and Vercel Inc. for hosting; payment functionality is integrated through KCB BUNI APIs.",
           "56.2 These providers may process technical information necessary to deliver their services. We will identify third-party technologies that actually set or access cookies or similar identifiers, explain their purposes, and provide links to relevant provider information where appropriate."
         ]} />
 
