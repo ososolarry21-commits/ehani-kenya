@@ -56,7 +56,7 @@ export default function LandlordsPage() {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
             </div>
             <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 8px 0', color: '#1C1209' }}>2. Verification Fee</h3>
-            <p style={{ fontSize: '14px', color: '#6B5B4E', margin: 0, lineHeight: '1.5' }}>A nominal KSh 1000 fee initiates the physical inspection process.</p>
+            <p style={{ fontSize: '14px', color: '#6B5B4E', margin: 0, lineHeight: '1.5' }}>A nominal KSh 500 fee initiates the physical inspection process.</p>
           </div>
 
           {/* Step 3 */}
@@ -166,7 +166,7 @@ export default function LandlordsPage() {
           </div>
           <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1C1209', margin: '0 0 8px 0' }}>Verified</h3>
           <p style={{ fontSize: '14px', color: '#6B5B4E', margin: '0 0 24px 0' }}>For landlords seeking maximum trust and inquiries.</p>
-          <div style={{ fontSize: '36px', fontWeight: '800', color: '#D4873A', marginBottom: '24px' }}>KSh 1000 <span style={{ fontSize: '14px', fontWeight: '400', color: '#6B5B4E' }}>/ listing</span></div>
+          <div style={{ fontSize: '36px', fontWeight: '800', color: '#D4873A', marginBottom: '24px' }}>KSh 500 <span style={{ fontSize: '14px', fontWeight: '400', color: '#6B5B4E' }}>/ listing</span></div>
           <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px 0', lineHeight: '2', color: '#4B5563', fontSize: '14px' }}>
             <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> <strong>Physical agent inspection</strong></li>
             <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Official "Ehani Verified" badge</li>
@@ -195,7 +195,7 @@ export default function LandlordsPage() {
         >
           <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1C1209', margin: '0 0 8px 0' }}>Premium</h3>
           <p style={{ fontSize: '14px', color: '#6B5B4E', margin: '0 0 24px 0' }}>For peak season dominance and high-volume agents.</p>
-          <div style={{ fontSize: '36px', fontWeight: '800', color: '#1C1209', marginBottom: '24px' }}>KSh 2,000 <span style={{ fontSize: '14px', fontWeight: '400', color: '#6B5B4E' }}>/ 30 days</span></div>
+          <div style={{ fontSize: '36px', fontWeight: '800', color: '#1C1209', marginBottom: '24px' }}>KSh 1,500 <span style={{ fontSize: '14px', fontWeight: '400', color: '#6B5B4E' }}>/ 30 days</span></div>
           <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px 0', lineHeight: '2', color: '#4B5563', fontSize: '14px' }}>
             <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> All Verified tier features</li>
             <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> "Top Pick" banner placement</li>
