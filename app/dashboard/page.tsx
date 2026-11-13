@@ -258,7 +258,7 @@ export default function Dashboard() {
   }
 
   function handleStkPushSent(checkoutRequestId: string, listingId: string, tier: string) {
-    const tierName = tier === 'verified' ? 'Verification (KSh 500)' : 'Featured (KSh 1500)' 
+    const tierName = tier === 'verified' ? 'Verification (KSh 1000)' : 'Featured (KSh 2000)' 
     alert(`M-Pesa prompt sent for ${tierName}! Please check your phone (${phoneNumber}) to enter your PIN.`)
   }
 
@@ -463,10 +463,10 @@ export default function Dashboard() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 220 }}>
                       <input type="tel" placeholder="M-Pesa Phone (e.g. 0712...)" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #DDD0C4', fontSize: 14, outline: 'none' }} />
                       {!listing.is_verified && !listing.verification_payment_received && (
-                        <KcbPaymentButton phoneNumber={phoneNumber} amount={500} tier="verified" listingId={listing.id} onSuccess={(ref: any) => handleStkPushSent(ref, listing.id, 'verified')} />
+                        <KcbPaymentButton phoneNumber={phoneNumber} amount={1000} tier="verified" listingId={listing.id} onSuccess={(ref: any) => handleStkPushSent(ref, listing.id, 'verified')} />
                       )}
                       {!listing.is_featured && (
-                        <KcbPaymentButton phoneNumber={phoneNumber} amount={1500} tier="featured" listingId={listing.id} onSuccess={(ref: any) => handleStkPushSent(ref, listing.id, 'featured')} />
+                        <KcbPaymentButton phoneNumber={phoneNumber} amount={2000} tier="featured" listingId={listing.id} onSuccess={(ref: any) => handleStkPushSent(ref, listing.id, 'featured')} />
                       )}
                     </div>
                   )}
