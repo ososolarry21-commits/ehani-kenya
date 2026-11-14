@@ -18,16 +18,19 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [role, setRole] = useState<'student' | 'landlord'>('student')
   const [selectedTier, setSelectedTier] = useState<string>('')
+  const [referredBy, setReferredBy] = useState<string>('') // 🆕 Affiliate tracking state
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Auto-select role and tier from URL parameters (from Pricing Page)
+  // Auto-select role, tier, and referrer from URL parameters
   useEffect(() => {
     const urlRole = searchParams.get('role')
     const urlTier = searchParams.get('tier')
+    const urlRef = searchParams.get('ref') // 🆕 Capture the ref parameter
     
     if (urlRole === 'landlord') setRole('landlord')
     if (urlTier) setSelectedTier(urlTier)
+    if (urlRef) setReferredBy(urlRef) // 🆕 Save it to state
   }, [searchParams])
 
   async function handleSignUp(e: React.FormEvent) {
@@ -49,7 +52,8 @@ export default function SignupPage() {
           role: role,
           full_name: fullName,
           phone: phone,
-          tier: selectedTier || 'free' 
+          tier: selectedTier || 'free',
+          referred_by: referredBy || null // 🆕 Pass the referrer to Supabase metadata
         } 
       }
     })
@@ -70,9 +74,10 @@ export default function SignupPage() {
     setLoading(false)
   }
 
+  // 🆕 UPDATED: Reflects the new KSh 1,000 Verified pricing
   const getTierName = () => {
     switch(selectedTier) {
-      case 'verified': return 'Verified (KSh 500)'
+      case 'verified': return 'Verified (KSh 1,000)'
       case 'premium': return 'Premium (KSh 1,500)'
       default: return 'Free Starter'
     }
@@ -252,7 +257,7 @@ export default function SignupPage() {
             </div>
           )}
 
-          {/* 🆕 UPDATED: Only "Log in" is orange */}
+          {/* Back to Login Link */}
           <div style={{ textAlign: 'center', borderTop: '1px solid #E0D8D0', paddingTop: 16, fontSize: 13, color: '#6B5B4E' }}>
             Already have an account?{' '}
             <Link href="/" style={{ color: '#D4873A', textDecoration: 'none', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
