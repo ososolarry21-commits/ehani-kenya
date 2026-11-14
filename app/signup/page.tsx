@@ -1,7 +1,7 @@
 'use client'
 import { createClient } from '@supabase/supabase-js'
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, usePathname } from 'next/navigation'
 import Link from 'next/link'
 
 const supabase = createClient(
@@ -11,6 +11,8 @@ const supabase = createClient(
 
 export default function SignupPage() {
   const searchParams = useSearchParams()
+  const pathname = usePathname() // 🆕 Get the clean URL path
+  
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
@@ -22,19 +24,30 @@ export default function SignupPage() {
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // 🆕 ROBUST URL Parameter Reading
+  // 🆕 ROBUST URL Parameter Reading (Handles both ?ref= and /join/)
   useEffect(() => {
+    // 1. Check standard query parameters (e.g., ?role=landlord&ref=x)
     const urlRole = searchParams.get('role')
     const urlTier = searchParams.get('tier')
     const urlRef = searchParams.get('ref')
     
-    // Debugging: Check your browser console (F12) to see what the URL is passing
-    console.log('URL Parameters detected:', { urlRole, urlTier, urlRef })
+    // 2. Check the clean affiliate path (e.g., /join/olantern)
+    let pathRef = null
+    let pathRole = null
+    if (pathname && pathname.startsWith('/join/')) {
+      pathRef = pathname.split('/join/')[1] // Extracts 'olantern'
+      pathRole = 'landlord' // The rewrite is specifically for landlords
+    }
 
-    if (urlRole === 'landlord') setRole('landlord')
+    console.log('URL Parameters detected:', { urlRole, urlRef, pathRole, pathRef })
+
+    // Apply the values
+    if (urlRole === 'landlord' || pathRole === 'landlord') setRole('landlord')
     if (urlTier) setSelectedTier(urlTier)
-    if (urlRef) setReferredBy(urlRef) 
-  }, [searchParams])
+    if (urlRef) setReferredBy(urlRef)
+    else if (pathRef) setReferredBy(pathRef)
+
+  }, [searchParams, pathname])
 
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault()
@@ -77,6 +90,7 @@ export default function SignupPage() {
     setLoading(false)
   }
 
+  // 🆕 UPDATED: Reflects your new KSh 2,000 Premium pricing
   const getTierName = () => {
     switch(selectedTier) {
       case 'verified': return 'Verified (KSh 1,000)'
