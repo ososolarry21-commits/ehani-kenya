@@ -20,6 +20,15 @@ const nextConfig = {
       },
     ]
   },
+  // 🆕 ADDED: Clean affiliate link routing
+  async rewrites() {
+    return [
+      {
+        source: '/join/:ref',
+        destination: '/signup?role=landlord&ref=:ref',
+      },
+    ]
+  },
 }
 
 module.exports = nextConfig
