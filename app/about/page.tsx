@@ -20,8 +20,8 @@ export default function AboutPage() {
         <h1 style={{ fontSize: '48px', fontWeight: '800', color: '#1C1209', marginBottom: '24px', lineHeight: '1.1', letterSpacing: '-1px' }}>
           Building the trusted infrastructure <br />for student housing in Kenya.
         </h1>
-        <p style={{ fontSize: '18px', color: '#6B5B4E', maxWidth: '600px', margin: '0 auto', lineHeight: '1.6' }}>
-          Ehani Kenya is redefining how students find accommodation and how landlords fill vacancies. We replace market friction and rental scams with physical verification and digital trust.
+        <p style={{ fontSize: '18px', color: '#6B5B4E', maxWidth: '650px', margin: '0 auto', lineHeight: '1.6' }}>
+          Ehani Homes is redefining how students find accommodation and how landlords fill vacancies. We replace the physical exhaustion of the housing hunt with digital certainty, and turn invisible vacancies into filled rooms.
         </p>
       </div>
 
@@ -30,13 +30,13 @@ export default function AboutPage() {
         <div style={{ flex: '1 1 400px', background: '#F9FAFB', padding: '40px', borderRadius: '16px', border: '1px solid #F0EAE3' }}>
           <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#1C1209', marginBottom: '16px' }}>The Market Problem</h2>
           <p style={{ fontSize: '15px', color: '#4B5563', lineHeight: '1.6', margin: 0 }}>
-            The student housing market in Kenya is highly fragmented. Students frequently encounter unreliable listings, hidden fees, and rental scams, leading to financial loss and unsafe living conditions. Conversely, legitimate landlords struggle with high vacancy rates and an influx of unqualified inquiries.
+            The student housing hunt in Kenya is a logistical nightmare. Students waste hours walking kilometers in the sun or rain, only to find rooms are already taken or nothing like the description. Meanwhile, good landlords lose money every day their clean, well-priced rooms sit empty, relying on passive "To Let" signs while thousands of digital-native students search on their phones. It’s a broken system of information asymmetry.
           </p>
         </div>
         <div style={{ flex: '1 1 400px', background: '#1C1209', padding: '40px', borderRadius: '16px', color: 'white' }}>
           <h2 style={{ fontSize: '22px', fontWeight: '700', marginBottom: '16px' }}>The Ehani Solution</h2>
           <p style={{ fontSize: '15px', color: '#D1D5DB', lineHeight: '1.6', margin: 0 }}>
-            We bridge this gap through a dual-sided marketplace. We empower landlords with digital tools to showcase their properties, while deploying physical field agents to verify every listing. This creates a closed-loop ecosystem of trust, ensuring safety for students and quality leads for property owners.
+            Ehani Homes is the bridge between digital search and physical reality. We don’t just aggregate listings; we send Campus Scouts to physically verify availability, pricing, and basic amenities. We replace physical guessing with digital certainty, saving students their most valuable asset—their time—while giving landlords active, high-quality visibility to fill vacancies faster.
           </p>
         </div>
       </div>
@@ -55,7 +55,7 @@ export default function AboutPage() {
             </div>
             <h3 style={{ fontSize: '18px', fontWeight: '700', margin: '0 0 12px 0', color: '#1C1209' }}>Physical Verification</h3>
             <p style={{ fontSize: '15px', color: '#6B5B4E', margin: 0, lineHeight: '1.6' }}>
-              We don't just aggregate data; we validate it. Our field agents physically inspect properties to ensure they exist, are safe, and match the digital listing.
+              We don't just aggregate data; we validate it. Our Campus Scouts physically inspect properties to ensure they exist, are available, and match the digital listing. We replace uncertainty with data.
             </p>
           </div>
 
@@ -64,9 +64,9 @@ export default function AboutPage() {
             <div style={{ width: '48px', height: '48px', background: '#FDF8F3', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D4873A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             </div>
-            <h3 style={{ fontSize: '18px', fontWeight: '700', margin: '0 0 12px 0', color: '#1C1209' }}>Market Transparency</h3>
+            <h3 style={{ fontSize: '18px', fontWeight: '700', margin: '0 0 12px 0', color: '#1C1209' }}>Digital Certainty</h3>
             <p style={{ fontSize: '15px', color: '#6B5B4E', margin: 0, lineHeight: '1.6' }}>
-              By standardizing listing details, pricing, and availability, we eliminate information asymmetry and empower students to make data-driven housing decisions.
+              By standardizing listing details, pricing, and availability, we eliminate the need for students to physically chase dead-end leads, empowering them to make data-driven housing decisions from their phones.
             </p>
           </div>
 
@@ -75,9 +75,9 @@ export default function AboutPage() {
             <div style={{ width: '48px', height: '48px', background: '#FDF8F3', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D4873A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
-            <h3 style={{ fontSize: '18px', fontWeight: '700', margin: '0 0 12px 0', color: '#1C1209' }}>Community Focus</h3>
+            <h3 style={{ fontSize: '18px', fontWeight: '700', margin: '0 0 12px 0', color: '#1C1209' }}>Active Visibility</h3>
             <p style={{ fontSize: '15px', color: '#6B5B4E', margin: 0, lineHeight: '1.6' }}>
-              Built specifically for the Kenyan higher education ecosystem, our platform is tailored to the unique geographic and financial realities of local students.
+              A handwritten sign isn't enough anymore. We put properties directly in front of thousands of ready-to-move-in students, turning passive vacancies into active, filled rooms for landlords.
             </p>
           </div>
 
@@ -89,16 +89,16 @@ export default function AboutPage() {
         <h3 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '16px', color: '#1C1209', letterSpacing: '-0.5px' }}>
           The Future of Student Living
         </h3>
-        <p style={{ color: '#6B5B4E', marginBottom: '32px', fontSize: '16px', maxWidth: '600px', margin: '0 auto 32px auto', lineHeight: '1.6' }}>
-          We are currently scaling our verification network across major university towns in Kenya. Our goal is to become the definitive standard for trust in the East African student housing market.
+        <p style={{ color: '#6B5B4E', marginBottom: '32px', fontSize: '16px', maxWidth: '650px', margin: '0 auto 32px auto', lineHeight: '1.6' }}>
+          We are currently scaling our Campus Scout verification network across major university towns in Kenya. Our goal is to become the definitive logistical standard for the East African student housing market.
         </p>
         
         <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-          <a href="/" style={{ color: '#1C1209', fontWeight: '600', fontSize: '15px', textDecoration: 'none', background: 'white', padding: '12px 24px', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
-            Explore the Platform
+          <a href="/browse" style={{ color: '#1C1209', fontWeight: '600', fontSize: '15px', textDecoration: 'none', background: 'white', padding: '12px 24px', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
+            Browse Verified Rooms
           </a>
-          <a href="mailto:support@ehani.co.ke?subject=Partnership Inquiry" style={{ color: 'white', fontWeight: '600', fontSize: '15px', textDecoration: 'none', background: '#D4873A', padding: '12px 24px', borderRadius: '8px' }}>
-            Partner With Us
+          <a href="/signup?role=landlord" style={{ color: 'white', fontWeight: '600', fontSize: '15px', textDecoration: 'none', background: '#D4873A', padding: '12px 24px', borderRadius: '8px' }}>
+            List Your Property
           </a>
         </div>
       </div>
@@ -106,7 +106,7 @@ export default function AboutPage() {
       {/* Footer Link */}
       <div style={{ marginTop: '60px', textAlign: 'center' }}>
         <Link href="/" style={{ color: '#6B5B4E', textDecoration: 'none', fontSize: '13px', fontWeight: '500' }}>
-          © 2026 Ehani Kenya. All rights reserved.
+          © {new Date().getFullYear()} Ehani Homes. All rights reserved.
         </Link>
       </div>
     </div>
