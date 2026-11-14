@@ -18,19 +18,22 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [role, setRole] = useState<'student' | 'landlord'>('student')
   const [selectedTier, setSelectedTier] = useState<string>('')
-  const [referredBy, setReferredBy] = useState<string>('') // 🆕 Affiliate tracking state
+  const [referredBy, setReferredBy] = useState<string>('') 
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Auto-select role, tier, and referrer from URL parameters
+  // 🆕 ROBUST URL Parameter Reading
   useEffect(() => {
     const urlRole = searchParams.get('role')
     const urlTier = searchParams.get('tier')
-    const urlRef = searchParams.get('ref') // 🆕 Capture the ref parameter
+    const urlRef = searchParams.get('ref')
     
+    // Debugging: Check your browser console (F12) to see what the URL is passing
+    console.log('URL Parameters detected:', { urlRole, urlTier, urlRef })
+
     if (urlRole === 'landlord') setRole('landlord')
     if (urlTier) setSelectedTier(urlTier)
-    if (urlRef) setReferredBy(urlRef) // 🆕 Save it to state
+    if (urlRef) setReferredBy(urlRef) 
   }, [searchParams])
 
   async function handleSignUp(e: React.FormEvent) {
@@ -53,7 +56,7 @@ export default function SignupPage() {
           full_name: fullName,
           phone: phone,
           tier: selectedTier || 'free',
-          referred_by: referredBy || null // 🆕 Pass the referrer to Supabase metadata
+          referred_by: referredBy || null // 🆕 Saves the affiliate name to Supabase
         } 
       }
     })
@@ -74,7 +77,6 @@ export default function SignupPage() {
     setLoading(false)
   }
 
-  // 🆕 UPDATED: Reflects the new KSh 1,000 Verified pricing
   const getTierName = () => {
     switch(selectedTier) {
       case 'verified': return 'Verified (KSh 1,000)'
@@ -83,7 +85,6 @@ export default function SignupPage() {
     }
   }
 
-  // 🎨 Compact Input Style (Matches optimized Login Page)
   const inputStyle: React.CSSProperties = { 
     width: '100%', padding: '12px 14px', marginBottom: 10, boxSizing: 'border-box', 
     border: '1px solid #E0D8D0', borderRadius: 8, fontSize: 14,
@@ -108,7 +109,6 @@ export default function SignupPage() {
         maxWidth: 400,
         width: '100%'
       }}>
-        {/* Compact Logo Area */}
         <div style={{ 
           display: 'flex', 
           flexDirection: 'column', 
@@ -124,12 +124,10 @@ export default function SignupPage() {
         </div>
 
         <form onSubmit={handleSignUp}>
-          {/* Compact Title */}
           <h2 style={{ margin: '0 0 12px 0', color: '#1C1209', textAlign: 'center', fontSize: 20, fontWeight: 800 }}>
             Create Account
           </h2>
 
-          {/* Selected Tier Banner (Compact) */}
           {selectedTier && (
             <div style={{ 
               background: '#FDF8F3', 
@@ -145,35 +143,10 @@ export default function SignupPage() {
             </div>
           )}
           
-          {/* Full Name */}
-          <input
-            placeholder="Full Name"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            required
-            style={inputStyle}
-          />
-
-          {/* Phone Number */}
-          <input
-            placeholder="Phone Number (e.g., 0712345678)"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            required
-            style={inputStyle}
-          />
+          <input placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} required style={inputStyle} />
+          <input placeholder="Phone Number (e.g., 0712345678)" value={phone} onChange={(e) => setPhone(e.target.value)} required style={inputStyle} />
+          <input type="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} required style={inputStyle} />
           
-          {/* Email */}
-          <input
-            type="email"
-            placeholder="Email Address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={inputStyle}
-          />
-          
-          {/* Password with Industry Standard SVG Icon */}
           <div style={{ position: 'relative', marginBottom: 12 }}>
             <input
               type={showPassword ? 'text' : 'password'}
@@ -200,7 +173,6 @@ export default function SignupPage() {
             </button>
           </div>
 
-          {/* Role Selection */}
           <div style={{ marginBottom: 16 }}>
             <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#1C1209', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.5px' }}>I am a:</label>
             <div style={{ display: 'flex', gap: 8 }}>
@@ -231,7 +203,6 @@ export default function SignupPage() {
             </div>
           </div>
           
-          {/* Sign Up Button */}
           <button 
             type="submit"
             disabled={loading}
@@ -245,7 +216,6 @@ export default function SignupPage() {
             {loading ? 'Creating Account...' : 'Sign Up'}
           </button>
 
-          {/* Success/Error Message */}
           {msg && (
             <div style={{ 
               padding: 10, 
@@ -257,7 +227,6 @@ export default function SignupPage() {
             </div>
           )}
 
-          {/* Back to Login Link */}
           <div style={{ textAlign: 'center', borderTop: '1px solid #E0D8D0', paddingTop: 16, fontSize: 13, color: '#6B5B4E' }}>
             Already have an account?{' '}
             <Link href="/" style={{ color: '#D4873A', textDecoration: 'none', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
