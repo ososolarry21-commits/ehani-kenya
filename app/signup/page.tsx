@@ -78,7 +78,7 @@ export default function SignupPage() {
   const getTierName = () => {
     switch(selectedTier) {
       case 'verified': return 'Verified (KSh 1,000)'
-      case 'premium': return 'Premium (KSh 1,500)'
+      case 'premium': return 'Premium (KSh 2,000)'
       default: return 'Free Starter'
     }
   }
