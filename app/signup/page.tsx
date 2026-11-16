@@ -18,7 +18,6 @@ export default function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  // 🆕 UPDATED: Added 'staff' to the role type
   const [role, setRole] = useState<'student' | 'landlord' | 'staff'>('student')
   const [selectedTier, setSelectedTier] = useState<string>('')
   const [referredBy, setReferredBy] = useState<string>('') 
@@ -181,7 +180,7 @@ export default function SignupPage() {
             </button>
           </div>
 
-          {/* 🆕 UPDATED: 3-Button Layout for Mobile */}
+          {/* 🆕 UPDATED: Clearer "Institution Staff" Label */}
           <div style={{ marginBottom: 16 }}>
             <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#1C1209', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.5px' }}>I am a:</label>
             <div style={{ display: 'flex', gap: 6 }}>
@@ -201,13 +200,13 @@ export default function SignupPage() {
                 type="button"
                 onClick={() => setRole('staff')}
                 style={{ 
-                  flex: 1, padding: '10px 4px', 
+                  flex: 1.3, padding: '10px 2px', 
                   background: role === 'staff' ? '#1C1209' : 'white', 
                   color: role === 'staff' ? 'white' : '#1C1209',
-                  border: '1px solid #E0D8D0', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 12, transition: 'all 0.2s' 
+                  border: '1px solid #E0D8D0', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 11, transition: 'all 0.2s' 
                 }}
               >
-                Staff
+                Institution Staff
               </button>
               <button 
                 type="button"
