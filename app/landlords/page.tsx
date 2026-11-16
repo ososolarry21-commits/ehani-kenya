@@ -56,7 +56,7 @@ export default function LandlordsPage() {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
             </div>
             <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 8px 0', color: '#1C1209' }}>2. Verification Fee</h3>
-            <p style={{ fontSize: '14px', color: '#6B5B4E', margin: 0, lineHeight: '1.5' }}>A nominal KSh 1000 fee initiates the physical inspection process.</p>
+            <p style={{ fontSize: '14px', color: '#6B5B4E', margin: 0, lineHeight: '1.5' }}>A nominal KSh 1,000 fee initiates the physical inspection process.</p>
           </div>
 
           {/* Step 3 */}
