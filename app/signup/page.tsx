@@ -195,7 +195,7 @@ export default function SignupPage() {
                   border: '1px solid #E0D8D0', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 12, transition: 'all 0.2s' 
                 }}
               >
-                🎓 Student
+                Student
               </button>
               <button 
                 type="button"
@@ -207,7 +207,7 @@ export default function SignupPage() {
                   border: '1px solid #E0D8D0', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 12, transition: 'all 0.2s' 
                 }}
               >
-                👨‍🏫 Staff
+                Staff
               </button>
               <button 
                 type="button"
@@ -219,7 +219,7 @@ export default function SignupPage() {
                   border: '1px solid #E0D8D0', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 12, transition: 'all 0.2s' 
                 }}
               >
-                🏠 Landlord
+                Landlord
               </button>
             </div>
           </div>
