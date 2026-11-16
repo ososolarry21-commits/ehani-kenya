@@ -11,37 +11,32 @@ const supabase = createClient(
 
 export default function SignupPage() {
   const searchParams = useSearchParams()
-  const pathname = usePathname() // 🆕 Get the clean URL path
+  const pathname = usePathname()
   
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [role, setRole] = useState<'student' | 'landlord'>('student')
+  // 🆕 UPDATED: Added 'staff' to the role type
+  const [role, setRole] = useState<'student' | 'landlord' | 'staff'>('student')
   const [selectedTier, setSelectedTier] = useState<string>('')
   const [referredBy, setReferredBy] = useState<string>('') 
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // 🆕 ROBUST URL Parameter Reading (Handles both ?ref= and /join/)
   useEffect(() => {
-    // 1. Check standard query parameters (e.g., ?role=landlord&ref=x)
     const urlRole = searchParams.get('role')
     const urlTier = searchParams.get('tier')
     const urlRef = searchParams.get('ref')
     
-    // 2. Check the clean affiliate path (e.g., /join/olantern)
     let pathRef = null
     let pathRole = null
     if (pathname && pathname.startsWith('/join/')) {
-      pathRef = pathname.split('/join/')[1] // Extracts 'olantern'
-      pathRole = 'landlord' // The rewrite is specifically for landlords
+      pathRef = pathname.split('/join/')[1]
+      pathRole = 'landlord' 
     }
 
-    console.log('URL Parameters detected:', { urlRole, urlRef, pathRole, pathRef })
-
-    // Apply the values
     if (urlRole === 'landlord' || pathRole === 'landlord') setRole('landlord')
     if (urlTier) setSelectedTier(urlTier)
     if (urlRef) setReferredBy(urlRef)
@@ -69,7 +64,7 @@ export default function SignupPage() {
           full_name: fullName,
           phone: phone,
           tier: selectedTier || 'free',
-          referred_by: referredBy || null // 🆕 Saves the affiliate name to Supabase
+          referred_by: referredBy || null
         } 
       }
     })
@@ -90,7 +85,6 @@ export default function SignupPage() {
     setLoading(false)
   }
 
-  // 🆕 UPDATED: Reflects your new KSh 2,000 Premium pricing
   const getTierName = () => {
     switch(selectedTier) {
       case 'verified': return 'Verified (KSh 1,000)'
@@ -187,29 +181,42 @@ export default function SignupPage() {
             </button>
           </div>
 
+          {/* 🆕 UPDATED: 3-Button Layout for Mobile */}
           <div style={{ marginBottom: 16 }}>
             <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#1C1209', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.5px' }}>I am a:</label>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 6 }}>
               <button 
                 type="button"
                 onClick={() => setRole('student')}
                 style={{ 
-                  flex: 1, padding: '10px', 
+                  flex: 1, padding: '10px 4px', 
                   background: role === 'student' ? '#1C1209' : 'white', 
                   color: role === 'student' ? 'white' : '#1C1209',
-                  border: '1px solid #E0D8D0', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13, transition: 'all 0.2s' 
+                  border: '1px solid #E0D8D0', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 12, transition: 'all 0.2s' 
                 }}
               >
                 🎓 Student
               </button>
               <button 
                 type="button"
+                onClick={() => setRole('staff')}
+                style={{ 
+                  flex: 1, padding: '10px 4px', 
+                  background: role === 'staff' ? '#1C1209' : 'white', 
+                  color: role === 'staff' ? 'white' : '#1C1209',
+                  border: '1px solid #E0D8D0', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 12, transition: 'all 0.2s' 
+                }}
+              >
+                👨‍🏫 Staff
+              </button>
+              <button 
+                type="button"
                 onClick={() => setRole('landlord')}
                 style={{ 
-                  flex: 1, padding: '10px', 
+                  flex: 1, padding: '10px 4px', 
                   background: role === 'landlord' ? '#1C1209' : 'white', 
                   color: role === 'landlord' ? 'white' : '#1C1209',
-                  border: '1px solid #E0D8D0', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13, transition: 'all 0.2s' 
+                  border: '1px solid #E0D8D0', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 12, transition: 'all 0.2s' 
                 }}
               >
                 🏠 Landlord
