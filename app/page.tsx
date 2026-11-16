@@ -8,11 +8,12 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 )
 
-export default function Home() {
+export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [role, setRole] = useState<'student' | 'landlord'>('student')
+  // 🆕 UPDATED: Added 'staff' to the role type
+  const [role, setRole] = useState<'student' | 'landlord' | 'staff'>('student')
   const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
   
@@ -114,10 +115,16 @@ export default function Home() {
         return
       }
 
-      if (dbRole === 'student') window.location.href = '/browse'
-      else if (dbRole === 'admin') window.location.href = '/admin'
-      else if (dbRole === 'agent') window.location.href = '/agent'
-      else window.location.href = '/dashboard'
+      // 🆕 UPDATED: Route both students and staff to the browse page
+      if (dbRole === 'student' || dbRole === 'staff') {
+        window.location.href = '/browse'
+      } else if (dbRole === 'admin') {
+        window.location.href = '/admin'
+      } else if (dbRole === 'agent') {
+        window.location.href = '/agent'
+      } else {
+        window.location.href = '/dashboard'
+      }
     }
     setLoading(false)
   }
@@ -146,7 +153,6 @@ export default function Home() {
         maxWidth: 400,
         width: '100%'
       }}>
-        {/* Compact Logo Area */}
         <div style={{ 
           display: 'flex', 
           flexDirection: 'column', 
@@ -211,7 +217,6 @@ export default function Home() {
                   color: '#6B5B4E', display: 'flex', alignItems: 'center'
                 }}
               >
-                {/* 🆕 INDUSTRY STANDARD SVG ICONS */}
                 {showPassword ? (
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
                 ) : (
@@ -220,13 +225,44 @@ export default function Home() {
               </button>
             </div>
 
+            {/* 🆕 UPDATED: 3-Button Layout for Mobile */}
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#1C1209', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.5px' }}>I am a:</label>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" onClick={() => setRole('student')} style={{ flex: 1, padding: '10px', background: role === 'student' ? '#1C1209' : 'white', color: role === 'student' ? 'white' : '#1C1209', border: '1px solid #E0D8D0', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13, transition: 'all 0.2s' }}>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button 
+                  type="button" 
+                  onClick={() => setRole('student')} 
+                  style={{ 
+                    flex: 1, padding: '10px 4px', 
+                    background: role === 'student' ? '#1C1209' : 'white', 
+                    color: role === 'student' ? 'white' : '#1C1209', 
+                    border: '1px solid #E0D8D0', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 12, transition: 'all 0.2s' 
+                  }}
+                >
                   🎓 Student
                 </button>
-                <button type="button" onClick={() => setRole('landlord')} style={{ flex: 1, padding: '10px', background: role === 'landlord' ? '#1C1209' : 'white', color: role === 'landlord' ? 'white' : '#1C1209', border: '1px solid #E0D8D0', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13, transition: 'all 0.2s' }}>
+                <button 
+                  type="button" 
+                  onClick={() => setRole('staff')} 
+                  style={{ 
+                    flex: 1, padding: '10px 4px', 
+                    background: role === 'staff' ? '#1C1209' : 'white', 
+                    color: role === 'staff' ? 'white' : '#1C1209', 
+                    border: '1px solid #E0D8D0', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 12, transition: 'all 0.2s' 
+                  }}
+                >
+                  👨‍🏫 Staff
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => setRole('landlord')} 
+                  style={{ 
+                    flex: 1, padding: '10px 4px', 
+                    background: role === 'landlord' ? '#1C1209' : 'white', 
+                    color: role === 'landlord' ? 'white' : '#1C1209', 
+                    border: '1px solid #E0D8D0', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 12, transition: 'all 0.2s' 
+                  }}
+                >
                   🏠 Landlord
                 </button>
               </div>
@@ -242,7 +278,6 @@ export default function Home() {
               </div>
             )}
 
-            {/* 🆕 COMPACT SIDE-BY-SIDE LINKS */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <button onClick={() => setShowReset(true)} style={{ background: 'transparent', border: 'none', color: '#6B5B4E', cursor: 'pointer', fontSize: 12, fontWeight: 500, padding: 0 }}>
                 Forgot Password?
