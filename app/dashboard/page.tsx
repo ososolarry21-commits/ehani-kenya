@@ -471,8 +471,18 @@ export default function Dashboard() {
                     </div>
                   )}
 
+                  {/* 🆕 ADDED: Edit Button */}
+                  <button 
+                    onClick={() => router.push(`/dashboard/edit-listing/${listing.id}`)} 
+                    style={{ padding: '8px 16px', background: '#E3F2FD', color: '#1976D2', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}
+                  >
+                    ✏️ Edit
+                  </button>
+
                   {/* 🆕 UPDATED: Triggers the custom modal instead of native confirm */}
-                  <button onClick={() => handleDeleteClick(listing)} style={{ padding: '8px 16px', background: '#F8D7DA', color: '#721C24', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Delete</button>
+                  <button onClick={() => handleDeleteClick(listing)} style={{ padding: '8px 16px', background: '#F8D7DA', color: '#721C24', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
+                    🗑️ Delete
+                  </button>
                 </div>
               </div>
             ))}
