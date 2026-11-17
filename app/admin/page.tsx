@@ -8,6 +8,9 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 )
 
+// 🛡️ Fields that affect the physical/trust reality of a listing
+const MATERIAL_FIELDS = ['price', 'deposit', 'type', 'area', 'city', 'institution', 'description']
+
 export default function AdminPanel() {
   const [user, setUser] = useState<any>(null)
   const [listings, setListings] = useState<any[]>([])
@@ -50,7 +53,6 @@ export default function AdminPanel() {
     setLoading(false)
   }
 
-  // 🚀 OPTIMIZED: Fetches listings, assignments, and agent names in ONE single query
   async function fetchListings() {
     try {
       const { data: listingsData, error: listingsError } = await supabase
@@ -82,7 +84,6 @@ export default function AdminPanel() {
 
       const processed = listingsData.map((listing: any) => {
         const assignments = listing.verification_assignments || []
-        
         const activeAssignment = assignments.find((a: any) => a.status !== 'completed')
         const completedAssignment = assignments.find((a: any) => a.status === 'completed')
         
@@ -106,7 +107,6 @@ export default function AdminPanel() {
     }
   }
 
-  // 🆕 NEW: Fetch pending reviews
   async function fetchPendingReviews() {
     const { data } = await supabase
       .from('reviews')
@@ -121,54 +121,35 @@ export default function AdminPanel() {
     if (data) setPendingReviews(data)
   }
 
-  // 🆕 FIXED: Handle Approve/Reject actions. Reject now PERMANENTLY DELETES the review.
   async function handleReviewAction(reviewId: string, action: 'approve' | 'reject', responseText: string = '') {
     try {
       if (action === 'reject') {
-        // 🗑️ Permanently delete the review from the database
-        const { error } = await supabase
-          .from('reviews')
-          .delete()
-          .eq('id', reviewId)
-          
+        const { error } = await supabase.from('reviews').delete().eq('id', reviewId)
         if (error) throw error
       } else {
-        // ✅ Approve the review
         const { error } = await supabase
           .from('reviews')
-          .update({ 
-            is_approved: true,
-            admin_response: responseText.trim() || null
-          })
+          .update({ is_approved: true, admin_response: responseText.trim() || null })
           .eq('id', reviewId)
-          
         if (error) throw error
       }
-
-      // 🚀 INSTANT FEEDBACK: Remove the review from the UI immediately
       setPendingReviews(prev => prev.filter(r => r.id !== reviewId))
-      
       alert(action === 'approve' ? '✅ Review Approved!' : '❌ Review Rejected & Deleted!')
-      
     } catch (error: any) {
       alert('Error: ' + error.message)
     }
   }
 
-  // ✅ NEW: Approve and make live
   async function handleApprove(listingId: string) {
     if (!confirm('Approve this listing and make it LIVE?')) return
     try {
-      await supabase
-        .from('listings')
-        .update({ 
-          status: 'Verified',
-          is_verified: true,
-          is_rejected: false,
-          rejected: false,
-          rejection_reason: null
-        })
-        .eq('id', listingId)
+      await supabase.from('listings').update({ 
+        status: 'Verified',
+        is_verified: true,
+        is_rejected: false,
+        rejected: false,
+        rejection_reason: null
+      }).eq('id', listingId)
       
       alert('✅ Listing approved and is now LIVE!')
       await fetchListings()
@@ -177,23 +158,19 @@ export default function AdminPanel() {
     }
   }
 
-  // ❌ NEW: Reject with reason
   async function handleReject(listingId: string) {
     if (!rejectionReason.trim()) {
       alert('⚠️ Please provide a reason for rejection.')
       return
     }
     try {
-      await supabase
-        .from('listings')
-        .update({ 
-          status: 'Rejected',
-          is_verified: false,
-          is_rejected: true,
-          rejected: true,
-          rejection_reason: rejectionReason
-        })
-        .eq('id', listingId)
+      await supabase.from('listings').update({ 
+        status: 'Rejected',
+        is_verified: false,
+        is_rejected: true,
+        rejected: true,
+        rejection_reason: rejectionReason
+      }).eq('id', listingId)
       
       alert('❌ Listing rejected.')
       setShowRejectModal(null)
@@ -204,21 +181,80 @@ export default function AdminPanel() {
     }
   }
 
-  // Legacy approve (kept for backwards compatibility if needed)
   async function approveListing(listingId: string) {
     if (!confirm('Approve this listing?')) return
     const listing = listings.find(l => l.id === listingId)
     const shouldAutoVerify = listing?.verification_payment_received && (listing?.proof_image_url || listing?.verification_photos?.length > 0)
 
     try {
-      await supabase
-        .from('listings')
-        .update({ 
-          status: 'Verified',
-          is_verified: shouldAutoVerify
-        })
-        .eq('id', listingId)
+      await supabase.from('listings').update({ 
+        status: 'Verified',
+        is_verified: shouldAutoVerify
+      }).eq('id', listingId)
       alert('✅ Listing approved!')
+      await fetchListings()
+    } catch (error: any) {
+      alert('Error: ' + error.message)
+    }
+  }
+
+  // 🛡️ NEW: Approve a landlord's revision
+  async function handleApproveRevision(listingId: string) {
+    if (!confirm('Approve these edits? Note: Material changes (price, photos, location, description) will strip the Verified badge and require re-verification.')) return
+    try {
+      const { data: row } = await supabase.from('listings').select('*').eq('id', listingId).single()
+      if (!row?.pending_data) {
+        alert('No pending edits found.')
+        return
+      }
+      
+      const rev = typeof row.pending_data === 'string' ? JSON.parse(row.pending_data) : row.pending_data
+
+      // Check if the changes are material (affect trust/physical reality)
+      const material =
+        JSON.stringify(rev.images) !== JSON.stringify(row.images) ||
+        MATERIAL_FIELDS.some(f => String(rev[f]) !== String(row[f]))
+
+      const updatePayload: any = {
+        name: rev.name,
+        price: rev.price,
+        deposit: rev.deposit,
+        area: rev.area,
+        city: rev.city,
+        institution: rev.institution,
+        distance: rev.distance,
+        gender: rev.gender,
+        description: rev.description,
+        amenities: rev.amenities,
+        images: rev.images,
+        has_pending_edits: false,
+        pending_data: null,
+      }
+
+      // 🛡️ Material change = strip badge, force re-verification.
+      if (material) {
+        updatePayload.is_verified = false
+        updatePayload.status = 'pending'
+        updatePayload.verified_at = null
+      }
+
+      await supabase.from('listings').update(updatePayload).eq('id', listingId)
+      alert('✅ Edits approved!' + (material ? ' Verified badge removed for re-verification due to material changes.' : ''))
+      await fetchListings()
+    } catch (error: any) {
+      alert('Error: ' + error.message)
+    }
+  }
+
+  // 🛡️ NEW: Reject a landlord's revision (live data remains untouched)
+  async function handleRejectRevision(listingId: string) {
+    if (!confirm('Reject these edits? The listing will remain exactly as it was before the edits.')) return
+    try {
+      await supabase.from('listings').update({ 
+        has_pending_edits: false, 
+        pending_data: null 
+      }).eq('id', listingId)
+      alert('❌ Edits rejected. Live listing remains unchanged.')
       await fetchListings()
     } catch (error: any) {
       alert('Error: ' + error.message)
@@ -253,10 +289,7 @@ export default function AdminPanel() {
 
       const { error } = await supabase
         .from('verification_assignments')
-        .insert({
-          listing_id: assignListingId,
-          agent_id: selectedAgentId
-        })
+        .insert({ listing_id: assignListingId, agent_id: selectedAgentId })
 
       if (error) throw error
 
@@ -310,7 +343,6 @@ export default function AdminPanel() {
         </button>
       </nav>
 
-      {/* 🆕 NEW: Admin Tab Switcher */}
       <div style={{ padding: '20px 60px 0', maxWidth: 1400, margin: '0 auto', display: 'flex', gap: 12 }}>
         <button 
           onClick={() => setActiveAdminTab('listings')}
@@ -334,10 +366,8 @@ export default function AdminPanel() {
         </button>
       </div>
 
-      {/* 🏠 LISTINGS TAB CONTENT */}
       {activeAdminTab === 'listings' && (
         <div style={{ padding: '40px 60px', maxWidth: 1400, margin: '0 auto' }}>
-          {/* Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20, marginBottom: 30 }}>
             <div style={{ background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
               <div style={{ fontSize: 32, fontWeight: 800, color: '#1C1209' }}>{stats.total}</div>
@@ -357,7 +387,6 @@ export default function AdminPanel() {
             </div>
           </div>
 
-          {/* Filter Tabs */}
           <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
             {['all', 'pending_approval', 'pending_verification', 'verified', 'rejected'].map((f) => (
               <button 
@@ -376,7 +405,6 @@ export default function AdminPanel() {
             ))}
           </div>
 
-          {/* Listings */}
           {filteredListings.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 60, background: 'white', borderRadius: 12 }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>📭</div>
@@ -412,6 +440,29 @@ export default function AdminPanel() {
                             <span style={{ fontSize: 11, color: '#FF9800', fontWeight: 500 }}>(Pending Verification)</span>
                           )}
                         </p>
+                      )}
+
+                      {/* 🛡️ NEW: Pending Edits Alert Block */}
+                      {listing.has_pending_edits && (
+                        <div style={{ marginTop: 16, padding: 16, background: '#FFF3CD', borderRadius: 8, border: '1px solid #FFEEBA' }}>
+                          <p style={{ margin: '0 0 12px 0', fontSize: 13, color: '#856404', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            ✏️ Edited by Landlord – Awaiting Admin Review
+                          </p>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button 
+                              onClick={() => handleApproveRevision(listing.id)}
+                              style={{ flex: 1, padding: '8px 12px', background: '#2E7D32', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}
+                            >
+                              ✅ Approve Edits
+                            </button>
+                            <button 
+                              onClick={() => handleRejectRevision(listing.id)}
+                              style={{ flex: 1, padding: '8px 12px', background: '#C62828', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}
+                            >
+                              ❌ Reject Edits
+                            </button>
+                          </div>
+                        </div>
                       )}
 
                       {listing.status === 'Pending Admin Approval' && (
@@ -476,16 +527,10 @@ export default function AdminPanel() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 140 }}>
                       {listing.status === 'Pending Admin Approval' && (
                         <>
-                          <button 
-                            onClick={() => handleApprove(listing.id)}
-                            style={{ padding: '10px 16px', background: '#2E7D32', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700 }}
-                          >
+                          <button onClick={() => handleApprove(listing.id)} style={{ padding: '10px 16px', background: '#2E7D32', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700 }}>
                             ✅ Approve & Go Live
                           </button>
-                          <button 
-                            onClick={() => setShowRejectModal(listing.id)}
-                            style={{ padding: '10px 16px', background: 'white', color: '#C62828', border: '1px solid #C62828', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}
-                          >
+                          <button onClick={() => setShowRejectModal(listing.id)} style={{ padding: '10px 16px', background: 'white', color: '#C62828', border: '1px solid #C62828', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>
                             ❌ Reject
                           </button>
                         </>
@@ -525,7 +570,6 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* ⭐ REVIEWS TAB CONTENT */}
       {activeAdminTab === 'reviews' && (
         <div style={{ padding: '40px 60px', maxWidth: 1400, margin: '0 auto' }}>
           <h2 style={{ margin: '0 0 24px 0', color: '#1C1209' }}>Pending Reviews ({pendingReviews.length})</h2>
@@ -584,7 +628,6 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* Assign Agent Modal */}
       {showAssignModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div style={{ background: 'white', padding: 40, borderRadius: 16, maxWidth: 400, width: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
@@ -613,7 +656,6 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* Reject Modal */}
       {showRejectModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div style={{ background: 'white', padding: 30, borderRadius: 16, maxWidth: 450, width: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
