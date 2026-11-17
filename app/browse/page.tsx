@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
-import Lightbox from '../../components/Lightbox'; // 🆕 ADDED
+import Lightbox from '../../components/Lightbox';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -17,7 +17,7 @@ export default function BrowseListings() {
   const [filterGender, setFilterGender] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [lightbox, setLightbox] = useState<{ images: string[]; index: number } | null>(null); // 🆕 ADDED
+  const [lightbox, setLightbox] = useState<{ images: string[]; index: number } | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -104,22 +104,29 @@ export default function BrowseListings() {
           </button>
           {showFilters && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, animation: 'slideDown 0.3s ease-out' }}>
+              
+              {/* 🆕 UPDATED: Synced with actual database values */}
               <select value={filterType} onChange={(e) => setFilterType(e.target.value)} style={{ width: '100%', padding: '12px', border: '2px solid #DDD0C4', borderRadius: 8, fontSize: 16, background: 'white', color: '#1C1209', boxSizing: 'border-box' }} aria-label="Filter by property type">
                 <option value="">All Property Types</option>
                 <option>Bedsitter</option>
                 <option>Single Room</option>
-                <option>1-Bedroom</option>
+                <option>1 Bedroom</option>
+                <option>2 Bedrooms</option>
+                <option>3+ Bedrooms</option>
                 <option>Shared Room</option>
-                <option>Hostel</option>
                 <option>Studio</option>
+                <option>Other</option>
               </select>
+              
+              {/* 🆕 UPDATED: "All Genders" changed to "Any" to avoid confusion with "Mixed" */}
               <select value={filterGender} onChange={(e) => setFilterGender(e.target.value)} style={{ width: '100%', padding: '12px', border: '2px solid #DDD0C4', borderRadius: 8, fontSize: 16, background: 'white', color: '#1C1209', boxSizing: 'border-box' }} aria-label="Filter by gender preference">
-                <option value="">All Genders</option>
+                <option value="">Any</option>
                 <option>Mixed</option>
                 <option>Ladies Only</option>
                 <option>Gents Only</option>
               </select>
-              <input type="number" placeholder="💰 Max Price (KSh)" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} style={{ width: '100%', padding: '12px', border: '2px solid #DDD0C4', borderRadius: 8, fontSize: 16, boxSizing: 'border-box', color: '#1C1209' }} aria-label="Maximum price in Kenyan Shillings" />
+              
+              <input type="number" placeholder="Max Price (KSh)" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} style={{ width: '100%', padding: '12px', border: '2px solid #DDD0C4', borderRadius: 8, fontSize: 16, boxSizing: 'border-box', color: '#1C1209' }} aria-label="Maximum price in Kenyan Shillings" />
             </div>
           )}
           <div style={{ fontSize: 13, color: '#6B5B4E', marginTop: 8 }}>Showing <strong>{filteredListings.length}</strong> of {listings.length} listings</div>
@@ -151,7 +158,6 @@ export default function BrowseListings() {
                 role="article"
                 aria-label={`View details for ${listing.name || 'Property'} in ${listing.area || 'Kenya'}`}
               >
-                {/* 🆕 UPDATED: Added onClick handler with e.stopPropagation() to open Lightbox */}
                 <div style={{ height: 200, position: 'relative', background: 'linear-gradient(135deg, #D4873A, #E8B86D)' }}>
                   {listing.images?.[0] ? (
                     <img 
@@ -159,7 +165,7 @@ export default function BrowseListings() {
                       alt={`${listing.name || 'Student accommodation'} - ${listing.type || 'Property'} in ${listing.area || 'Kenya'}`}
                       style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'zoom-in' }}
                       onClick={(e) => {
-                        e.stopPropagation(); // 🛡️ Prevents navigating to the details page
+                        e.stopPropagation();
                         setLightbox({ images: listing.images, index: 0 });
                       }}
                       loading="lazy"
@@ -200,7 +206,7 @@ export default function BrowseListings() {
         )}
       </div>
 
-      {/* 🆕 ADDED: Render Lightbox at the page level */}
+      {/* Render Lightbox at the page level */}
       {lightbox && (
         <Lightbox
           images={lightbox.images}
