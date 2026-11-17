@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
+import Lightbox from '../../components/Lightbox'; // 🆕 ADDED
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -16,6 +17,7 @@ export default function BrowseListings() {
   const [filterGender, setFilterGender] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [lightbox, setLightbox] = useState<{ images: string[]; index: number } | null>(null); // 🆕 ADDED
   const router = useRouter();
 
   useEffect(() => {
@@ -34,12 +36,11 @@ export default function BrowseListings() {
       return;
     }
 
-    // SMART SORTING: Featured (1) > Verified (2) > Basic/Undefined (3)
     const sortedData = (data || []).sort((a, b) => {
       const getTierValue = (listing: any) => {
         if (listing.is_featured) return 1;
         if (listing.is_verified) return 2;
-        return 3; // basic or null/undefined
+        return 3;
       };
       return getTierValue(a) - getTierValue(b);
     });
@@ -67,196 +68,43 @@ export default function BrowseListings() {
       listing.name?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesType = filterType === '' || listing.type === filterType;
-    const matchesGender =
-      filterGender === '' || listing.gender === filterGender;
+    const matchesGender = filterGender === '' || listing.gender === filterGender;
     const matchesPrice = maxPrice === '' || listing.price <= Number(maxPrice);
 
     return matchesSearch && matchesType && matchesGender && matchesPrice;
   });
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#FDF8F3',
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-        overflowX: 'hidden',
-      }}
-    >
+    <div style={{ minHeight: '100vh', background: '#FDF8F3', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", overflowX: 'hidden' }}>
       {/* Navigation */}
-      <nav
-        style={{
-          background: 'white',
-          padding: '12px 20px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          boxShadow: '0 2px 15px rgba(0,0,0,0.05)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 100,
-        }}
-      >
-        {/* 🆕 UPDATED: More descriptive alt text for SEO */}
-        <div
-          style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
-          onClick={() => router.push('/')}
-        >
-          <img
-            src="/logo.png"
-            alt="Ehani Homes Logo - Verified Student Accommodation in Kenya"
-            style={{
-              height: '45px',
-              width: 'auto',
-              objectFit: 'contain',
-            }}
-          />
+      <nav style={{ background: 'white', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 15px rgba(0,0,0,0.05)', position: 'sticky', top: 0, zIndex: 100 }}>
+        <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => router.push('/')}>
+          <img src="/logo.png" alt="Ehani Homes Logo - Verified Student Accommodation in Kenya" style={{ height: '45px', width: 'auto', objectFit: 'contain' }} />
         </div>
-
         <div style={{ display: 'flex', gap: 8 }}>
-          <button
-            onClick={() => router.push('/browse/saved')}
-            style={{
-              padding: '8px 12px',
-              background: 'transparent',
-              border: '2px solid #DDD0C4',
-              borderRadius: 8,
-              cursor: 'pointer',
-              fontSize: 18,
-            }}
-            aria-label="View saved listings"
-          >
-            ❤️
-          </button>
-          <button
-            onClick={() => router.push('/')}
-            style={{
-              padding: '8px 16px',
-              background: '#D4873A',
-              color: 'white',
-              border: 'none',
-              borderRadius: 8,
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: 14,
-            }}
-          >
-            Login
-          </button>
+          <button onClick={() => router.push('/browse/saved')} style={{ padding: '8px 12px', background: 'transparent', border: '2px solid #DDD0C4', borderRadius: 8, cursor: 'pointer', fontSize: 18 }} aria-label="View saved listings">❤️</button>
+          <button onClick={() => router.push('/')} style={{ padding: '8px 16px', background: '#D4873A', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>Login</button>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <div
-        style={{
-          background: 'linear-gradient(135deg, #1C1209 0%, #3A2A1D 100%)',
-          minHeight: '220px',
-          padding: '40px 20px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center',
-        }}
-      >
+      <div style={{ background: 'linear-gradient(135deg, #1C1209 0%, #3A2A1D 100%)', minHeight: '220px', padding: '40px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
         <div>
-          <h1
-            style={{
-              fontSize: 'clamp(24px, 5vw, 36px)',
-              fontWeight: 700,
-              margin: 0,
-              color: 'white',
-              lineHeight: 1.3,
-            }}
-          >
-            Find Your Perfect
-            <br />
-            Student Home 🏠
-          </h1>
-          <p
-            style={{
-              fontSize: 14,
-              opacity: 0.8,
-              margin: '12px 0 0 0',
-              color: '#DDD0C4',
-            }}
-          >
-            Browse verified student accommodation near top Kenyan universities
-          </p>
+          <h1 style={{ fontSize: 'clamp(24px, 5vw, 36px)', fontWeight: 700, margin: 0, color: 'white', lineHeight: 1.3 }}>Find Your Perfect<br />Student Home 🏠</h1>
+          <p style={{ fontSize: 14, opacity: 0.8, margin: '12px 0 0 0', color: '#DDD0C4' }}>Browse verified student accommodation near top Kenyan universities</p>
         </div>
       </div>
 
       {/* Search & Filters */}
-      <div
-        style={{
-          padding: '20px',
-          background: 'white',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-        }}
-      >
+      <div style={{ padding: '20px', background: 'white', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <input
-            placeholder="🔍 Search universities, areas, or property names..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '14px',
-              border: '2px solid #DDD0C4',
-              borderRadius: 10,
-              fontSize: 16,
-              outline: 'none',
-              marginBottom: 12,
-              boxSizing: 'border-box',
-              color: '#1C1209',
-            }}
-            aria-label="Search listings by university, area, or name"
-          />
-
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            style={{
-              width: '100%',
-              padding: '12px',
-              background: showFilters ? '#1C1209' : '#F0EAE3',
-              color: showFilters ? 'white' : '#1C1209',
-              border: 'none',
-              borderRadius: 8,
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: 14,
-              marginBottom: 12,
-              transition: 'all 0.2s ease',
-            }}
-            aria-expanded={showFilters}
-          >
+          <input placeholder="🔍 Search universities, areas, or property names..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', padding: '14px', border: '2px solid #DDD0C4', borderRadius: 10, fontSize: 16, outline: 'none', marginBottom: 12, boxSizing: 'border-box', color: '#1C1209' }} aria-label="Search listings by university, area, or name" />
+          <button onClick={() => setShowFilters(!showFilters)} style={{ width: '100%', padding: '12px', background: showFilters ? '#1C1209' : '#F0EAE3', color: showFilters ? 'white' : '#1C1209', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 14, marginBottom: 12, transition: 'all 0.2s ease' }} aria-expanded={showFilters}>
             {showFilters ? '✕ Hide Filters' : '⚙️ Show Filters'}
           </button>
-
           {showFilters && (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 10,
-                animation: 'slideDown 0.3s ease-out',
-              }}
-            >
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '2px solid #DDD0C4',
-                  borderRadius: 8,
-                  fontSize: 16,
-                  background: 'white',
-                  color: '#1C1209',
-                  boxSizing: 'border-box',
-                }}
-                aria-label="Filter by property type"
-              >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, animation: 'slideDown 0.3s ease-out' }}>
+              <select value={filterType} onChange={(e) => setFilterType(e.target.value)} style={{ width: '100%', padding: '12px', border: '2px solid #DDD0C4', borderRadius: 8, fontSize: 16, background: 'white', color: '#1C1209', boxSizing: 'border-box' }} aria-label="Filter by property type">
                 <option value="">All Property Types</option>
                 <option>Bedsitter</option>
                 <option>Single Room</option>
@@ -265,49 +113,16 @@ export default function BrowseListings() {
                 <option>Hostel</option>
                 <option>Studio</option>
               </select>
-              <select
-                value={filterGender}
-                onChange={(e) => setFilterGender(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '2px solid #DDD0C4',
-                  borderRadius: 8,
-                  fontSize: 16,
-                  background: 'white',
-                  color: '#1C1209',
-                  boxSizing: 'border-box',
-                }}
-                aria-label="Filter by gender preference"
-              >
+              <select value={filterGender} onChange={(e) => setFilterGender(e.target.value)} style={{ width: '100%', padding: '12px', border: '2px solid #DDD0C4', borderRadius: 8, fontSize: 16, background: 'white', color: '#1C1209', boxSizing: 'border-box' }} aria-label="Filter by gender preference">
                 <option value="">All Genders</option>
                 <option>Mixed</option>
                 <option>Ladies Only</option>
                 <option>Gents Only</option>
               </select>
-              <input
-                type="number"
-                placeholder="💰 Max Price (KSh)"
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '2px solid #DDD0C4',
-                  borderRadius: 8,
-                  fontSize: 16,
-                  boxSizing: 'border-box',
-                  color: '#1C1209',
-                }}
-                aria-label="Maximum price in Kenyan Shillings"
-              />
+              <input type="number" placeholder="💰 Max Price (KSh)" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} style={{ width: '100%', padding: '12px', border: '2px solid #DDD0C4', borderRadius: 8, fontSize: 16, boxSizing: 'border-box', color: '#1C1209' }} aria-label="Maximum price in Kenyan Shillings" />
             </div>
           )}
-
-          <div style={{ fontSize: 13, color: '#6B5B4E', marginTop: 8 }}>
-            Showing <strong>{filteredListings.length}</strong> of{' '}
-            {listings.length} listings
-          </div>
+          <div style={{ fontSize: 13, color: '#6B5B4E', marginTop: 8 }}>Showing <strong>{filteredListings.length}</strong> of {listings.length} listings</div>
         </div>
       </div>
 
@@ -319,162 +134,65 @@ export default function BrowseListings() {
             <div>Loading listings...</div>
           </div>
         ) : filteredListings.length === 0 ? (
-          <div
-            style={{
-              textAlign: 'center',
-              padding: 60,
-              background: 'white',
-              borderRadius: 16,
-            }}
-          >
+          <div style={{ textAlign: 'center', padding: 60, background: 'white', borderRadius: 16 }}>
             <div style={{ fontSize: 64, marginBottom: 20 }} aria-hidden="true">🔍</div>
-            <h2 style={{ color: '#1C1209', marginBottom: 12, fontSize: 20 }}>
-              No Listings Found
-            </h2>
-            <p style={{ color: '#6B5B4E', fontSize: 14 }}>
-              Try adjusting your search filters
-            </p>
+            <h2 style={{ color: '#1C1209', marginBottom: 12, fontSize: 20 }}>No Listings Found</h2>
+            <p style={{ color: '#6B5B4E', fontSize: 14 }}>Try adjusting your search filters</p>
           </div>
         ) : (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-              gap: 20,
-            }}
-          >
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
             {filteredListings.map((listing, index) => (
               <div
                 key={listing.id}
-                onClick={() => {
-                  trackView(listing.id);
-                  router.push(`/browse/${listing.id}`);
-                }}
-                style={{
-                  background: 'white',
-                  borderRadius: 12,
-                  overflow: 'hidden',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-                  cursor: 'pointer',
-                  transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                  animation: `fadeInUp 0.5s ease-out ${index * 0.05}s both`,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-5px)';
-                  e.currentTarget.style.boxShadow =
-                    '0 12px 30px rgba(0,0,0,0.12)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow =
-                    '0 4px 20px rgba(0,0,0,0.06)';
-                }}
+                onClick={() => { trackView(listing.id); router.push(`/browse/${listing.id}`); }}
+                style={{ background: 'white', borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.06)', cursor: 'pointer', transition: 'transform 0.2s ease, box-shadow 0.2s ease', animation: `fadeInUp 0.5s ease-out ${index * 0.05}s both` }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 12px 30px rgba(0,0,0,0.12)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.06)'; }}
                 role="article"
                 aria-label={`View details for ${listing.name || 'Property'} in ${listing.area || 'Kenya'}`}
               >
-                {/* 🆕 UPDATED: Replaced CSS background with real <img> tag for Alt Text & SEO */}
+                {/* 🆕 UPDATED: Added onClick handler with e.stopPropagation() to open Lightbox */}
                 <div style={{ height: 200, position: 'relative', background: 'linear-gradient(135deg, #D4873A, #E8B86D)' }}>
                   {listing.images?.[0] ? (
                     <img 
                       src={listing.images[0]} 
                       alt={`${listing.name || 'Student accommodation'} - ${listing.type || 'Property'} in ${listing.area || 'Kenya'}`}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'zoom-in' }}
+                      onClick={(e) => {
+                        e.stopPropagation(); // 🛡️ Prevents navigating to the details page
+                        setLightbox({ images: listing.images, index: 0 });
+                      }}
                       loading="lazy"
                     />
-                  ) : null}
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 14, fontWeight: 600 }}>📷 No Photos</div>
+                  )}
                   
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: 10,
-                      right: 10,
-                      background: 'rgba(28,18,9,0.85)',
-                      color: 'white',
-                      padding: '4px 10px',
-                      borderRadius: 6,
-                      fontSize: 11,
-                      fontWeight: 700,
-                      backdropFilter: 'blur(4px)',
-                    }}
-                  >
+                  <div style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(28,18,9,0.85)', color: 'white', padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, backdropFilter: 'blur(4px)' }}>
                     {listing.type || 'Property'}
                   </div>
                   
                   <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {listing.is_featured && (
-                      <div style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)', color: 'white', padding: '4px 10px', borderRadius: 6, fontSize: 10, fontWeight: 800, boxShadow: '0 2px 10px rgba(245, 158, 11, 0.4)', width: 'fit-content' }}>
-                        🌟 FEATURED
-                      </div>
+                      <div style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)', color: 'white', padding: '4px 10px', borderRadius: 6, fontSize: 10, fontWeight: 800, boxShadow: '0 2px 10px rgba(245, 158, 11, 0.4)', width: 'fit-content' }}>🌟 FEATURED</div>
                     )}
                     {listing.is_verified && (
-                      <div style={{ background: 'linear-gradient(135deg, #007BFF, #0056b3)', color: 'white', padding: '4px 10px', borderRadius: 6, fontSize: 10, fontWeight: 800, boxShadow: '0 2px 10px rgba(0, 123, 255, 0.3)', width: 'fit-content' }}>
-                        ✓ VERIFIED
-                      </div>
+                      <div style={{ background: 'linear-gradient(135deg, #007BFF, #0056b3)', color: 'white', padding: '4px 10px', borderRadius: 6, fontSize: 10, fontWeight: 800, boxShadow: '0 2px 10px rgba(0, 123, 255, 0.3)', width: 'fit-content' }}>✓ VERIFIED</div>
                     )}
                   </div>
                 </div>
                 
                 <div style={{ padding: 16 }}>
                   {!listing.is_verified && !listing.is_featured && (
-                    <div style={{ background: '#FEF08A', color: '#854D0E', padding: '8px', borderRadius: 6, fontSize: 11, fontWeight: 'bold', marginBottom: 12, border: '1px solid #EAB308', textAlign: 'center' }}>
-                      ⚠️ UNVERIFIED. Proceed with caution.
-                    </div>
+                    <div style={{ background: '#FEF08A', color: '#854D0E', padding: '8px', borderRadius: 6, fontSize: 11, fontWeight: 'bold', marginBottom: 12, border: '1px solid #EAB308', textAlign: 'center' }}>⚠️ UNVERIFIED. Proceed with caution.</div>
                   )}
-
-                  <h3
-                    style={{
-                      margin: '0 0 6px 0',
-                      fontSize: 16,
-                      fontWeight: 700,
-                      color: '#1C1209',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {listing.name || 'Unnamed Property'}
-                  </h3>
-                  <p
-                    style={{
-                      margin: '0 0 12px 0',
-                      fontSize: 13,
-                      color: '#6B5B4E',
-                    }}
-                  >
-                    📍 {listing.area || 'Unknown Area'}, {listing.city || 'Kenya'}
-                  </p>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: 8,
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 18,
-                        fontWeight: 800,
-                        color: '#D4873A',
-                      }}
-                    >
-                      KSh {listing.price?.toLocaleString() || '0'}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        color: '#6B5B4E',
-                        background: '#F0EAE3',
-                        padding: '4px 8px',
-                        borderRadius: 6,
-                      }}
-                    >
-                      {listing.gender || 'Mixed'}
-                    </div>
+                  <h3 style={{ margin: '0 0 6px 0', fontSize: 16, fontWeight: 700, color: '#1C1209', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{listing.name || 'Unnamed Property'}</h3>
+                  <p style={{ margin: '0 0 12px 0', fontSize: 13, color: '#6B5B4E' }}>📍 {listing.area || 'Unknown Area'}, {listing.city || 'Kenya'}</p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: '#D4873A' }}>KSh {listing.price?.toLocaleString() || '0'}</div>
+                    <div style={{ fontSize: 12, color: '#6B5B4E', background: '#F0EAE3', padding: '4px 8px', borderRadius: 6 }}>{listing.gender || 'Mixed'}</div>
                   </div>
-                  <div style={{ fontSize: 12, color: '#6B5B4E' }}>
-                    🎓 {listing.institution || 'Nearby University'} • {listing.distance || 'Distance not specified'}
-                  </div>
+                  <div style={{ fontSize: 12, color: '#6B5B4E' }}>🎓 {listing.institution || 'Nearby University'} • {listing.distance || 'Distance not specified'}</div>
                 </div>
               </div>
             ))}
@@ -482,15 +200,18 @@ export default function BrowseListings() {
         )}
       </div>
 
+      {/* 🆕 ADDED: Render Lightbox at the page level */}
+      {lightbox && (
+        <Lightbox
+          images={lightbox.images}
+          startIndex={lightbox.index}
+          onClose={() => setLightbox(null)}
+        />
+      )}
+
       <style>{`
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slideDown {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
     </div>
   );
