@@ -1,682 +1,308 @@
-'use client';
-import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
-import { useRouter, useParams } from 'next/navigation';
+'use client'
+import { useEffect, useState } from 'react'
+import { createClient } from '@supabase/supabase-js'
+import { useRouter, useParams } from 'next/navigation'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-);
+)
 
-export default function EditListing() {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [uploadingImages, setUploadingImages] = useState(false);
-  const [fetching, setFetching] = useState(true);
-  const router = useRouter();
-  const params = useParams();
-  const listingId = params.id as string;
+const AMENITIES_LIST = ['WiFi', 'Water', 'Parking', 'Security', 'Furnished', 'Laundry', 'Balcony', 'Backup Generator']
 
-  const [form, setForm] = useState({
-    name: '',
-    area: '',
-    city: 'Nairobi',
-    price: '',
-    deposit: '',
-    institution: '',
-    distance: '',
-    type: 'Bedsitter',
-    gender: 'Mixed',
-    description: '',
-    amenities: '',
-  });
-  const [images, setImages] = useState<File[]>([]);
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  const [existingImages, setExistingImages] = useState<string[]>([]);
-  const [removeImages, setRemoveImages] = useState<string[]>([]);
+export default function EditListingPage() {
+  const router = useRouter()
+  const params = useParams()
+  const listingId = params.id as string
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) router.push('/');
-      else {
-        setUser(data.user);
-        fetchListing(data.user.id);
-      }
-    });
-  }, []);
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [uploadingImages, setUploadingImages] = useState(false)
 
-  async function fetchListing(userId: string) {
-    const { data, error } = await supabase
+  const [formData, setFormData] = useState({
+    name: '', type: 'Bedsitter', price: '', deposit: '', area: '', city: '',
+    institution: '', distance: '', gender: 'Mixed', description: '', amenities: [] as string[]
+  })
+  
+  // Separate existing images (URLs) from new images (Files)
+  const [existingImages, setExistingImages] = useState<string[]>([])
+  const [newImages, setNewImages] = useState<File[]>([])
+  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([])
+
+  useEffect(() => { 
+    checkUserAndFetchListing() 
+  }, [])
+
+  async function checkUserAndFetchListing() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { router.push('/'); return }
+    setUser(user)
+
+    const { data: listing, error } = await supabase
       .from('listings')
       .select('*')
       .eq('id', listingId)
-      .eq('landlord_id', userId)
-      .single();
+      .single()
 
-    if (error || !data) {
-      alert("Listing not found or you don't have permission to edit it.");
-      router.push('/dashboard');
-      return;
+    if (error || !listing) {
+      alert('Listing not found.')
+      router.push('/dashboard')
+      return
     }
 
-    setForm({
-      name: data.name || '',
-      area: data.area || '',
-      city: data.city || 'Nairobi',
-      price: data.price?.toString() || '',
-      deposit: data.deposit?.toString() || '',
-      institution: data.institution || '',
-      distance: data.distance || '',
-      type: data.type || 'Bedsitter',
-      gender: data.gender || 'Mixed',
-      description: data.description || '',
-      amenities: data.amenities?.join(', ') || '',
-    });
+    // Security check: Ensure the logged-in user owns this listing
+    if (listing.landlord_id !== user.id) {
+      alert('You do not have permission to edit this listing.')
+      router.push('/dashboard')
+      return
+    }
 
-    setExistingImages(data.images || []);
-    setFetching(false);
+    // Pre-fill form data
+    setFormData({
+      name: listing.name || '',
+      type: listing.type || 'Bedsitter',
+      price: listing.price?.toString() || '',
+      deposit: listing.deposit?.toString() || '',
+      area: listing.area || '',
+      city: listing.city || '',
+      institution: listing.institution || '',
+      distance: listing.distance || '',
+      gender: listing.gender || 'Mixed',
+      description: listing.description || '',
+      amenities: listing.amenities || []
+    })
+
+    // Pre-fill existing images
+    if (listing.images && Array.isArray(listing.images)) {
+      setExistingImages(listing.images)
+    }
+
+    setLoading(false)
+  }
+
+  const compressImage = async (file: File): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = (event) => {
+        const img = new Image()
+        img.src = event.target?.result as string
+        img.onload = () => {
+          const canvas = document.createElement('canvas')
+          const MAX_WIDTH = 1200
+          let width = img.width
+          let height = img.height
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width
+            width = MAX_WIDTH
+          }
+          canvas.width = width
+          canvas.height = height
+          const ctx = canvas.getContext('2d')
+          ctx?.drawImage(img, 0, 0, width, height)
+          canvas.toBlob((blob) => {
+            if (blob) resolve(blob)
+            else reject(new Error('Compression failed'))
+          }, 'image/jpeg', 0.7) 
+        }
+      }
+    })
   }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const files = Array.from(e.target.files);
-      setImages(files);
-      const previews = files.map((file) => URL.createObjectURL(file));
-      setImagePreviews(previews);
+      const selectedFiles = Array.from(e.target.files)
+      setNewImages(prev => [...prev, ...selectedFiles])
+      const previews = selectedFiles.map(file => URL.createObjectURL(file))
+      setNewImagePreviews(prev => [...prev, ...previews])
+      e.target.value = '' 
     }
-  };
-
-  const handleRemoveExistingImage = (imageUrl: string) => {
-    setRemoveImages([...removeImages, imageUrl]);
-    setExistingImages(existingImages.filter((img) => img !== imageUrl));
-  };
-
-  async function uploadImages() {
-    const urls: string[] = [...existingImages];
-    for (const image of images) {
-      const fileExt = image.name.split('.').pop();
-      const fileName = `${listingId}-${Date.now()}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('property-images')
-        .upload(filePath, image);
-
-      if (uploadError) continue;
-
-      const { data } = supabase.storage
-        .from('property-images')
-        .getPublicUrl(filePath);
-      if (data.publicUrl) urls.push(data.publicUrl);
-    }
-    return urls;
   }
 
-  async function handleSubmit(e: any) {
-    e.preventDefault();
-    if (!user) return;
-    setLoading(true);
+  const removeExistingImage = (indexToRemove: number) => {
+    setExistingImages(prev => prev.filter((_, index) => index !== indexToRemove))
+  }
 
+  const removeNewImage = (indexToRemove: number) => {
+    setNewImages(prev => prev.filter((_, index) => index !== indexToRemove))
+    setNewImagePreviews(prev => prev.filter((_, index) => index !== indexToRemove))
+  }
+
+  const toggleAmenity = (amenity: string) => {
+    setFormData(prev => {
+      const current = prev.amenities
+      if (current.includes(amenity)) return { ...prev, amenities: current.filter(a => a !== amenity) }
+      else return { ...prev, amenities: [...current, amenity] }
+    })
+  }
+
+  async function handleUpdateListing(e: React.FormEvent) {
+    e.preventDefault()
+    if (!user) return
+    
+    // Optional: Require at least one image total (existing + new)
+    if (existingImages.length + newImages.length === 0) {
+      alert('Please have at least one photo of the property.')
+      return
+    }
+
+    setSaving(true)
     try {
-      const amenitiesArray = form.amenities
-        .split(',')
-        .map((a) => a.trim())
-        .filter((a) => a);
+      let finalImages = [...existingImages]
 
-      let finalImages = existingImages;
-      if (images.length > 0 || removeImages.length > 0) {
-        setUploadingImages(true);
-        finalImages = await uploadImages();
-        setUploadingImages(false);
+      // Upload new images if any
+      if (newImages.length > 0) {
+        setUploadingImages(true)
+        const uploadPromises = newImages.map(async (file, index) => {
+          const compressedBlob = await compressImage(file)
+          const fileName = `${listingId}-${Date.now()}-${index}.jpg`
+          const { error: uploadError } = await supabase.storage
+            .from('property-images')
+            .upload(fileName, compressedBlob, { contentType: 'image/jpeg', upsert: true })
+          
+          if (uploadError) throw uploadError
+          const { data } = supabase.storage.from('property-images').getPublicUrl(fileName)
+          return data.publicUrl
+        })
+        const newUrls = await Promise.all(uploadPromises)
+        finalImages = [...finalImages, ...newUrls]
+        setUploadingImages(false)
       }
 
-      const { error } = await supabase
+      // Update the listing in the database
+      const { error: updateError } = await supabase
         .from('listings')
         .update({
-          name: form.name,
-          area: form.area,
-          city: form.city,
-          price: Number(form.price),
-          deposit: Number(form.deposit),
-          institution: form.institution,
-          distance: form.distance,
-          type: form.type,
-          gender: form.gender,
-          description: form.description,
-          amenities: amenitiesArray,
+          ...formData,
+          price: Number(formData.price),
+          deposit: formData.deposit ? Number(formData.deposit) : null,
           images: finalImages,
-          status: 'pending', // Reset to pending when edited
+          // Optional: Reset status to pending if major changes are made, or keep as is:
+          // status: 'pending' 
         })
-        .eq('id', listingId);
+        .eq('id', listingId)
 
-      if (error) throw error;
+      if (updateError) throw updateError
 
-      alert('Listing updated successfully! It will be reviewed again.');
-      router.push('/dashboard');
+      alert('Listing updated successfully!')
+      router.push('/dashboard')
     } catch (error: any) {
-      alert('Error updating listing: ' + error.message);
-    } finally {
-      setLoading(false);
+      setUploadingImages(false)
+      setSaving(false)
+      alert('Error updating listing: ' + error.message)
     }
   }
 
-  if (fetching) {
-    return (
-      <div
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: '#FDF8F3',
-        }}
-      >
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>⏳</div>
-          <div style={{ fontSize: 16, color: '#6B5B4E' }}>
-            Loading listing...
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#FDF8F3',
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-      }}
-    >
-      <nav
-        style={{
-          background: 'white',
-          padding: '20px 60px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          boxShadow: '0 2px 20px rgba(0,0,0,0.05)',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            cursor: 'pointer',
-          }}
-          onClick={() => router.push('/dashboard')}
-        >
-          <div style={{ fontSize: 24, fontWeight: 800, color: '#1C1209' }}>
-            Vesta<span style={{ color: '#D4873A' }}>.</span>
-          </div>
+    <div style={{ minHeight: '100vh', background: '#FDF8F3', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
+      <nav style={{ background: 'white', padding: '16px 60px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 20px rgba(0,0,0,0.05)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => router.push('/dashboard')}>
+          <img src="/logo.png" alt="Ehani Homes Logo" style={{ height: '50px', width: 'auto', objectFit: 'contain' }} />
+          <span style={{ fontWeight: 700, color: '#1C1209', fontSize: 18 }}>← Back to Dashboard</span>
         </div>
-        <button
-          onClick={() => router.push('/dashboard')}
-          style={{
-            padding: '10px 20px',
-            background: 'transparent',
-            border: '2px solid #DDD0C4',
-            borderRadius: 10,
-            cursor: 'pointer',
-            fontWeight: 600,
-          }}
-        >
-          ← Back to Dashboard
-        </button>
       </nav>
 
-      <div
-        style={{
-          background:
-            'url("https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1920&h=400&fit=crop") center/cover',
-          height: 250,
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 60px',
-        }}
-      >
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background:
-              'linear-gradient(to right, rgba(28,18,9,0.9), rgba(28,18,9,0.4))',
-          }}
-        />
-        <div style={{ position: 'relative', zIndex: 1, color: 'white' }}>
-          <h1 style={{ fontSize: 36, fontWeight: 700, margin: 0 }}>
-            Edit Property Listing
-          </h1>
-          <p style={{ fontSize: 16, opacity: 0.8, margin: '8px 0 0 0' }}>
-            Update your property details. Note: Changes will require
-            re-approval.
-          </p>
-        </div>
-      </div>
-
-      <div
-        style={{
-          maxWidth: 900,
-          margin: '-40px auto 60px',
-          padding: '0 20px',
-          position: 'relative',
-          zIndex: 2,
-        }}
-      >
-        <form
-          onSubmit={handleSubmit}
-          style={{
-            background: 'white',
-            padding: 40,
-            borderRadius: 20,
-            boxShadow: '0 10px 40px rgba(0,0,0,0.08)',
-          }}
-        >
-          {/* Existing Images */}
-          {existingImages.length > 0 && (
-            <div style={{ marginBottom: 30 }}>
-              <label style={labelStyle}>Current Photos</label>
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-                  gap: 12,
-                }}
-              >
-                {existingImages.map((img, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      position: 'relative',
-                      borderRadius: 10,
-                      overflow: 'hidden',
-                      aspectRatio: '1',
-                    }}
-                  >
-                    <img
-                      src={img}
-                      alt={`Current ${index + 1}`}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveExistingImage(img)}
-                      style={{
-                        position: 'absolute',
-                        top: 8,
-                        right: 8,
-                        background: '#DC3545',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '50%',
-                        width: 28,
-                        height: 28,
-                        cursor: 'pointer',
-                        fontSize: 16,
-                        fontWeight: 700,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      ×
-                    </button>
-                    {index === 0 && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          bottom: 8,
-                          left: 8,
-                          background: 'rgba(212,135,58,0.95)',
-                          color: 'white',
-                          padding: '4px 8px',
-                          borderRadius: 6,
-                          fontSize: 11,
-                          fontWeight: 700,
-                        }}
-                      >
-                        🏆 Cover
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Upload New Images */}
-          <div
-            style={{
-              marginBottom: 30,
-              padding: 30,
-              background:
-                'linear-gradient(135deg, rgba(212,135,58,0.05), rgba(232,184,109,0.05))',
-              borderRadius: 16,
-              border: '2px dashed #D4873A',
-            }}
-          >
-            <label
-              style={{
-                display: 'block',
-                marginBottom: 12,
-                fontWeight: 700,
-                color: '#1C1209',
-                fontSize: 16,
-              }}
-            >
-              📸 Add New Photos
+      <div style={{ padding: '40px 60px', maxWidth: 900, margin: '0 auto' }}>
+        <form onSubmit={handleUpdateListing} style={{ background: 'white', padding: 30, borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
+          <h2 style={{ margin: '0 0 24px 0', color: '#1C1209' }}>Edit Listing</h2>
+          
+          {/* Images Section */}
+          <div style={{ marginBottom: 24 }}>
+            <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#1C1209' }}>Property Images</label>
+            <input type="file" accept="image/*" multiple onChange={handleImageChange} style={{ display: 'none' }} id="image-upload-btn" />
+            <label htmlFor="image-upload-btn" style={{ display: 'inline-block', padding: '12px 24px', background: '#F0EAE3', color: '#1C1209', borderRadius: 8, cursor: 'pointer', fontWeight: 600, border: '2px dashed #DDD0C4', marginBottom: 16 }}>
+              📸 {newImages.length > 0 ? 'Add More Photos' : 'Choose New Photos'}
             </label>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleImageChange}
-              style={{
-                width: '100%',
-                padding: '16px',
-                background: 'white',
-                border: '2px solid #DDD0C4',
-                borderRadius: 10,
-                fontSize: 14,
-                cursor: 'pointer',
-              }}
-            />
-            {imagePreviews.length > 0 && (
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-                  gap: 12,
-                  marginTop: 20,
-                }}
-              >
-                {imagePreviews.map((preview, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      position: 'relative',
-                      borderRadius: 10,
-                      overflow: 'hidden',
-                      aspectRatio: '1',
-                    }}
-                  >
-                    <img
-                      src={preview}
-                      alt={`New ${index + 1}`}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                      }}
-                    />
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: 8,
-                        left: 8,
-                        background: 'rgba(42,157,90,0.95)',
-                        color: 'white',
-                        padding: '4px 8px',
-                        borderRadius: 6,
-                        fontSize: 11,
-                        fontWeight: 700,
-                      }}
-                    >
-                      NEW
+            
+            {/* Existing Images */}
+            {existingImages.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <p style={{ fontSize: 13, color: '#6B5B4E', marginBottom: 8 }}>Current Images:</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 10 }}>
+                  {existingImages.map((url, index) => (
+                    <div key={`existing-${index}`} style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', aspectRatio: '1' }}>
+                      <img src={url} alt={`Existing ${index + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <button type="button" onClick={() => removeExistingImage(index)} style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(220, 53, 69, 0.9)', color: 'white', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 'bold' }}>✕</button>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* New Image Previews */}
+            {newImagePreviews.length > 0 && (
+              <div style={{ marginTop: 16 }}>
+                <p style={{ fontSize: 13, color: '#6B5B4E', marginBottom: 8 }}>New Images to Upload:</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 10 }}>
+                  {newImagePreviews.map((preview, index) => (
+                    <div key={`new-${index}`} style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', aspectRatio: '1' }}>
+                      <img src={preview} alt={`New Preview ${index + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <button type="button" onClick={() => removeNewImage(index)} style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(220, 53, 69, 0.9)', color: 'white', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 'bold' }}>✕</button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
 
           {/* Form Fields */}
-          <h3 style={{ color: '#D4873A', marginBottom: 20, marginTop: 0 }}>
-            🏠 Basic Information
-          </h3>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 20,
-              marginBottom: 20,
-            }}
-          >
-            <div>
-              <label style={labelStyle}>Property Name *</label>
-              <input
-                required
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="e.g. JKUAT Gate B Bedsitters"
-                style={inputStyle as React.CSSProperties}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>Room Type *</label>
-              <select
-                value={form.type}
-                onChange={(e) => setForm({ ...form, type: e.target.value })}
-                style={inputStyle}
-              >
-                <option>Bedsitter</option>
-                <option>Single Room</option>
-                <option>1-Bedroom</option>
-                <option>Shared Room</option>
-                <option>Hostel</option>
-                <option>Studio</option>
-              </select>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16 }}>
+            <input placeholder="Property Name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8, width: '100%', boxSizing: 'border-box' }} />
+            <select value={formData.type} onChange={(e) => setFormData({...formData, type: e.target.value})} style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8, width: '100%', boxSizing: 'border-box', background: 'white' }}>
+              <option value="Bedsitter">Bedsitter</option>
+              <option value="Single Room">Single Room</option>
+              <option value="1 Bedroom">1 Bedroom</option>
+              <option value="2 Bedrooms">2 Bedrooms</option>
+              <option value="3+ Bedrooms">3+ Bedrooms</option>
+              <option value="Shared Room">Shared Room</option>
+              <option value="Studio">Studio</option>
+              <option value="Other">Other (Specify in description)</option>
+            </select>
+            <input type="number" placeholder="Price (KSh/month)" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} required style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8, width: '100%', boxSizing: 'border-box' }} />
+            <input type="number" placeholder="Deposit (KSh)" value={formData.deposit} onChange={(e) => setFormData({...formData, deposit: e.target.value})} style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8, width: '100%', boxSizing: 'border-box' }} />
+            <input placeholder="Area/Location" value={formData.area} onChange={(e) => setFormData({...formData, area: e.target.value})} required style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8, width: '100%', boxSizing: 'border-box' }} />
+            <input placeholder="City" value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} required style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8, width: '100%', boxSizing: 'border-box' }} />
+            <input placeholder="Nearest Institution" value={formData.institution} onChange={(e) => setFormData({...formData, institution: e.target.value})} required style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8, width: '100%', boxSizing: 'border-box' }} />
+            <input placeholder="Distance" value={formData.distance} onChange={(e) => setFormData({...formData, distance: e.target.value})} style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8, width: '100%', boxSizing: 'border-box' }} />
+            <select value={formData.gender} onChange={(e) => setFormData({...formData, gender: e.target.value})} style={{ padding: '12px 16px', border: '2px solid #DDD0C4', borderRadius: 8, width: '100%', boxSizing: 'border-box', background: 'white' }}>
+              <option value="Mixed">Mixed</option>
+              <option value="Ladies Only">Ladies Only</option>
+              <option value="Gents Only">Gents Only</option>
+            </select>
+          </div>
+
+          {/* Amenities */}
+          <div style={{ marginTop: 24, marginBottom: 24 }}>
+            <label style={{ display: 'block', marginBottom: 12, fontWeight: 600, color: '#1C1209' }}>Amenities & Features</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+              {AMENITIES_LIST.map(amenity => (
+                <button key={amenity} type="button" onClick={() => toggleAmenity(amenity)} style={{ padding: '10px 16px', background: formData.amenities.includes(amenity) ? '#D4873A' : '#f0f0f0', color: formData.amenities.includes(amenity) ? 'white' : '#333', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
+                  {formData.amenities.includes(amenity) ? '✓ ' : ''}{amenity}
+                </button>
+              ))}
             </div>
           </div>
 
-          <h3 style={{ color: '#D4873A', marginBottom: 20, marginTop: 30 }}>
-            📍 Location & Campus Proximity
-          </h3>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr 1fr',
-              gap: 20,
-              marginBottom: 20,
-            }}
-          >
-            <div>
-              <label style={labelStyle}>Area *</label>
-              <input
-                required
-                value={form.area}
-                onChange={(e) => setForm({ ...form, area: e.target.value })}
-                placeholder="e.g. Juja, Roysambu"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>City *</label>
-              <input
-                required
-                value={form.city}
-                onChange={(e) => setForm({ ...form, city: e.target.value })}
-                placeholder="e.g. Nairobi"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>Distance to Campus *</label>
-              <input
-                required
-                value={form.distance}
-                onChange={(e) => setForm({ ...form, distance: e.target.value })}
-                placeholder="e.g. 5 mins walk"
-                style={inputStyle}
-              />
-            </div>
-          </div>
-          <div style={{ marginBottom: 20 }}>
-            <label style={labelStyle}>Nearest University/College *</label>
-            <input
-              required
-              value={form.institution}
-              onChange={(e) =>
-                setForm({ ...form, institution: e.target.value })
-              }
-              placeholder="e.g. University of Nairobi, JKUAT, Strathmore..."
-              style={inputStyle}
+          {/* Description */}
+          <div style={{ marginBottom: 24 }}>
+            <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#1C1209' }}>Description & House Rules</label>
+            <textarea 
+              placeholder={formData.type === 'Other' ? "⚠️ Please specify the exact property type here..." : "Describe the property, amenities, location, and any house rules..."} 
+              value={formData.description} 
+              onChange={(e) => setFormData({...formData, description: e.target.value})} 
+              rows={4} 
+              style={{ width: '100%', padding: '12px 16px', border: `2px solid ${formData.type === 'Other' ? '#D4873A' : '#DDD0C4'}`, borderRadius: 8, boxSizing: 'border-box', transition: 'border-color 0.2s' }} 
             />
           </div>
 
-          <h3 style={{ color: '#D4873A', marginBottom: 20, marginTop: 30 }}>
-            💰 Financials
-          </h3>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 20,
-              marginBottom: 20,
-            }}
-          >
-            <div>
-              <label style={labelStyle}>Monthly Rent (KSh) *</label>
-              <input
-                required
-                type="number"
-                value={form.price}
-                onChange={(e) => setForm({ ...form, price: e.target.value })}
-                placeholder="e.g. 8500"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>Deposit (KSh)</label>
-              <input
-                type="number"
-                value={form.deposit}
-                onChange={(e) => setForm({ ...form, deposit: e.target.value })}
-                placeholder="e.g. 8500"
-                style={inputStyle}
-              />
-            </div>
-          </div>
-
-          <h3 style={{ color: '#D4873A', marginBottom: 20, marginTop: 30 }}>
-            📋 Rules & Amenities
-          </h3>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 20,
-              marginBottom: 20,
-            }}
-          >
-            <div>
-              <label style={labelStyle}>Gender Preference *</label>
-              <select
-                value={form.gender}
-                onChange={(e) => setForm({ ...form, gender: e.target.value })}
-                style={inputStyle}
-              >
-                <option>Mixed</option>
-                <option>Ladies Only</option>
-                <option>Gents Only</option>
-              </select>
-            </div>
-            <div>
-              <label style={labelStyle}>Amenities (comma separated)</label>
-              <input
-                value={form.amenities}
-                onChange={(e) =>
-                  setForm({ ...form, amenities: e.target.value })
-                }
-                placeholder="e.g. WiFi, Borehole, Security, Parking"
-                style={inputStyle}
-              />
-            </div>
-          </div>
-
-          <div style={{ marginBottom: 30 }}>
-            <label style={labelStyle}>Description & House Rules</label>
-            <textarea
-              value={form.description}
-              onChange={(e) =>
-                setForm({ ...form, description: e.target.value })
-              }
-              rows={4}
-              placeholder="Describe the property, visiting hours, noise rules, etc..."
-              style={{ ...inputStyle, resize: 'vertical' }}
-            />
-          </div>
-
-          <div style={{ display: 'flex', gap: 12 }}>
-            <button
-              type="button"
-              onClick={() => router.push('/dashboard')}
-              style={{
-                flex: 1,
-                padding: '16px',
-                background: '#F0EAE3',
-                color: '#1C1209',
-                border: 'none',
-                borderRadius: 12,
-                fontSize: 16,
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              disabled={loading || uploadingImages}
-              style={{
-                flex: 2,
-                padding: '16px',
-                background:
-                  loading || uploadingImages
-                    ? '#ccc'
-                    : 'linear-gradient(135deg, #D4873A, #E8B86D)',
-                color: 'white',
-                border: 'none',
-                borderRadius: 12,
-                fontSize: 16,
-                fontWeight: 700,
-                cursor: loading || uploadingImages ? 'not-allowed' : 'pointer',
-                boxShadow: '0 8px 20px rgba(212,135,58,0.3)',
-              }}
-            >
-              {uploadingImages
-                ? ' Uploading Images...'
-                : loading
-                ? 'Updating Listing...'
-                : 'Update Listing'}
-            </button>
-          </div>
+          <button type="submit" disabled={saving || uploadingImages} style={{ marginTop: 20, padding: '14px 32px', background: (saving || uploadingImages) ? '#999' : '#2A7A5A', color: 'white', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 700, width: '100%' }}>
+            {uploadingImages ? 'Uploading & Compressing...' : saving ? 'Saving Changes...' : 'Save Changes'}
+          </button>
         </form>
       </div>
     </div>
-  );
+  )
 }
-
-const labelStyle: any = {
-  display: 'block',
-  marginBottom: 8,
-  fontWeight: 600,
-  color: '#1C1209',
-  fontSize: 14,
-};
-const inputStyle: any = {
-  width: '100%',
-  padding: '14px 16px',
-  border: '1px solid #DDD0C4',
-  borderRadius: 10,
-  fontSize: 15,
-  boxSizing: 'border-box',
-  outline: 'none',
-};
