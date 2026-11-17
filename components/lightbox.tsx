@@ -19,13 +19,11 @@ export default function Lightbox({ images, startIndex = 0, onClose }: LightboxPr
     setZoomed(false)
   }, [startIndex, images])
 
-  // Lock body scroll while open
   useEffect(() => {
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = '' }
   }, [])
 
-  // Keyboard navigation
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
@@ -39,7 +37,6 @@ export default function Lightbox({ images, startIndex = 0, onClose }: LightboxPr
   const next = () => { setZoomed(false); setCurrent(c => (c + 1) % total) }
   const prev = () => { setZoomed(false); setCurrent(c => (c - 1 + total) % total) }
 
-  // Swipe support for mobile
   const onTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX }
   const onTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX.current === null) return
@@ -60,13 +57,11 @@ export default function Lightbox({ images, startIndex = 0, onClose }: LightboxPr
     >
       <style>{`@keyframes fadeIn{from{opacity:0}to{opacity:1}}`}</style>
 
-      {/* Top bar: counter + close */}
       <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', color: 'white' }}>
         <span style={{ fontSize: 15, fontWeight: 600, letterSpacing: 0.5 }}>{current + 1} / {total}</span>
         <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', color: 'white', width: 40, height: 40, borderRadius: '50%', cursor: 'pointer', fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
       </div>
 
-      {/* Main image area */}
       <div
         onClick={(e) => e.stopPropagation()}
         onTouchStart={onTouchStart}
@@ -74,12 +69,10 @@ export default function Lightbox({ images, startIndex = 0, onClose }: LightboxPr
         style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
       >
         {zoomed ? (
-          // ZOOM/PAN mode: whole image at natural size, scrollable
           <div style={{ width: '100%', height: '100%', overflow: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <img src={images[current]} alt={`Photo ${current + 1}`} style={{ maxWidth: 'none', width: '100%', objectFit: 'contain', cursor: 'zoom-out' }} onClick={() => setZoomed(false)} />
           </div>
         ) : (
-          // FIT mode: entire image visible, never cropped
           <img
             src={images[current]}
             alt={`Photo ${current + 1}`}
@@ -88,7 +81,6 @@ export default function Lightbox({ images, startIndex = 0, onClose }: LightboxPr
           />
         )}
 
-        {/* Navigation Arrows */}
         {total > 1 && (
           <>
             <button onClick={(e) => { e.stopPropagation(); prev() }} style={navBtn('left')}>‹</button>
@@ -97,7 +89,6 @@ export default function Lightbox({ images, startIndex = 0, onClose }: LightboxPr
         )}
       </div>
 
-      {/* Bottom: hint + thumbnails */}
       <div onClick={(e) => e.stopPropagation()} style={{ padding: '12px 20px 20px', textAlign: 'center' }}>
         <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12, margin: '0 0 12px 0' }}>
           {zoomed ? 'Tap image to fit • swipe arrows to change' : 'Tap image to zoom • swipe or use arrows'}
