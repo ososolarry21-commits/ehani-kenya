@@ -288,7 +288,7 @@ export default function ListingDetails() {
                     <div style={{ fontWeight: 600, color: '#1C1209' }}>{listing.deposit ? `KSh ${listing.deposit.toLocaleString()}` : 'None'}</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: 12, color: '#999', marginBottom: 4 }}>Distance</div>
+                    <div style={{ fontSize: 12, color: '#999', marginBottom: 4 }}>Distance from Institution</div>
                     <div style={{ fontWeight: 600, color: '#1C1209' }}>{listing.distance || 'N/A'}</div>
                   </div>
                 </div>
