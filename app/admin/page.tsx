@@ -140,24 +140,47 @@ export default function AdminPanel() {
     }
   }
 
+  // ✅ FIXED: Approve and make live — now ALSO applies & clears any pending landlord edits
   async function handleApprove(listingId: string) {
-    if (!confirm('Approve this listing and make it LIVE?')) return
+    const listing = listings.find(l => l.id === listingId)
+    const hasEdits = listing?.has_pending_edits && listing?.pending_data
+
+    const message = hasEdits
+      ? '⚠️ This listing has pending landlord edits. Approving will APPLY those edits AND make the listing LIVE. Continue?'
+      : 'Approve this listing and make it LIVE?'
+    if (!confirm(message)) return
+
     try {
-      await supabase.from('listings').update({ 
+      const updatePayload: any = {
         status: 'Verified',
         is_verified: true,
         is_rejected: false,
         rejected: false,
-        rejection_reason: null
-      }).eq('id', listingId)
-      
-      alert('✅ Listing approved and is now LIVE!')
+        rejection_reason: null,
+        has_pending_edits: false, // 🆕 THE FIX: clears the yellow box
+        pending_data: null        // 🆕 THE FIX: clears the hidden draft
+      }
+
+      // 🆕 If the landlord had parked edits, apply them so their work isn't silently lost
+      if (hasEdits) {
+        const rev = typeof listing.pending_data === 'string' ? JSON.parse(listing.pending_data) : listing.pending_data
+        Object.assign(updatePayload, {
+          name: rev.name, price: rev.price, deposit: rev.deposit, area: rev.area,
+          city: rev.city, institution: rev.institution, distance: rev.distance,
+          gender: rev.gender, description: rev.description, amenities: rev.amenities,
+          images: rev.images
+        })
+      }
+
+      await supabase.from('listings').update(updatePayload).eq('id', listingId)
+      alert('✅ Listing approved and is now LIVE!' + (hasEdits ? ' Landlord edits applied.' : ''))
       await fetchListings()
     } catch (error: any) {
       alert('Error: ' + error.message)
     }
   }
 
+  // ✅ FIXED: Rejecting now also clears pending edits (the listing is rejected; the draft is moot)
   async function handleReject(listingId: string) {
     if (!rejectionReason.trim()) {
       alert('⚠️ Please provide a reason for rejection.')
@@ -169,7 +192,9 @@ export default function AdminPanel() {
         is_verified: false,
         is_rejected: true,
         rejected: true,
-        rejection_reason: rejectionReason
+        rejection_reason: rejectionReason,
+        has_pending_edits: false, // 🆕 THE FIX
+        pending_data: null        // 🆕 THE FIX
       }).eq('id', listingId)
       
       alert('❌ Listing rejected.')
@@ -181,6 +206,7 @@ export default function AdminPanel() {
     }
   }
 
+  // ✅ FIXED: Legacy approve — also clears pending flags for consistency
   async function approveListing(listingId: string) {
     if (!confirm('Approve this listing?')) return
     const listing = listings.find(l => l.id === listingId)
@@ -189,7 +215,9 @@ export default function AdminPanel() {
     try {
       await supabase.from('listings').update({ 
         status: 'Verified',
-        is_verified: shouldAutoVerify
+        is_verified: shouldAutoVerify,
+        has_pending_edits: false, // 🆕 THE FIX
+        pending_data: null        // 🆕 THE FIX
       }).eq('id', listingId)
       alert('✅ Listing approved!')
       await fetchListings()
@@ -198,7 +226,7 @@ export default function AdminPanel() {
     }
   }
 
-  // 🛡️ NEW: Approve a landlord's revision
+  // 🛡️ Approve a landlord's revision (with material-change safeguard)
   async function handleApproveRevision(listingId: string) {
     if (!confirm('Approve these edits? Note: Material changes (price, photos, location, description) will strip the Verified badge and require re-verification.')) return
     try {
@@ -210,7 +238,6 @@ export default function AdminPanel() {
       
       const rev = typeof row.pending_data === 'string' ? JSON.parse(row.pending_data) : row.pending_data
 
-      // Check if the changes are material (affect trust/physical reality)
       const material =
         JSON.stringify(rev.images) !== JSON.stringify(row.images) ||
         MATERIAL_FIELDS.some(f => String(rev[f]) !== String(row[f]))
@@ -231,7 +258,6 @@ export default function AdminPanel() {
         pending_data: null,
       }
 
-      // 🛡️ Material change = strip badge, force re-verification.
       if (material) {
         updatePayload.is_verified = false
         updatePayload.status = 'pending'
@@ -246,7 +272,7 @@ export default function AdminPanel() {
     }
   }
 
-  // 🛡️ NEW: Reject a landlord's revision (live data remains untouched)
+  // 🛡️ Reject a landlord's revision (live data remains untouched)
   async function handleRejectRevision(listingId: string) {
     if (!confirm('Reject these edits? The listing will remain exactly as it was before the edits.')) return
     try {
@@ -255,6 +281,21 @@ export default function AdminPanel() {
         pending_data: null 
       }).eq('id', listingId)
       alert('❌ Edits rejected. Live listing remains unchanged.')
+      await fetchListings()
+    } catch (error: any) {
+      alert('Error: ' + error.message)
+    }
+  }
+
+  // 🆕 NEW: Manual escape hatch — discard pending edits without applying them
+  async function discardPendingEdits(listingId: string) {
+    if (!confirm('Discard the landlord\'s pending edits WITHOUT applying them? The live listing stays exactly as it is.')) return
+    try {
+      await supabase.from('listings').update({ 
+        has_pending_edits: false, 
+        pending_data: null 
+      }).eq('id', listingId)
+      alert('🔄 Pending edits discarded. Yellow box cleared.')
       await fetchListings()
     } catch (error: any) {
       alert('Error: ' + error.message)
@@ -442,7 +483,7 @@ export default function AdminPanel() {
                         </p>
                       )}
 
-                      {/* 🛡️ NEW: Pending Edits Alert Block */}
+                      {/* 🛡️ Pending Edits Alert Block — now with a 3rd escape-hatch button */}
                       {listing.has_pending_edits && (
                         <div style={{ marginTop: 16, padding: 16, background: '#FFF3CD', borderRadius: 8, border: '1px solid #FFEEBA' }}>
                           <p style={{ margin: '0 0 12px 0', fontSize: 13, color: '#856404', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -462,6 +503,13 @@ export default function AdminPanel() {
                               ❌ Reject Edits
                             </button>
                           </div>
+                          {/* 🆕 NEW: Manual discard — clears the yellow box without touching live data */}
+                          <button 
+                            onClick={() => discardPendingEdits(listing.id)}
+                            style={{ marginTop: 8, width: '100%', padding: '8px 12px', background: '#6B7280', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}
+                          >
+                            🔄 Discard Pending Edits (keep live data as-is)
+                          </button>
                         </div>
                       )}
 
